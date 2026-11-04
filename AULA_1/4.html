@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aula 1 • Parte 4 — O Conceito Real de Amortização | CEST</title>
+    <meta name="author" content="Prof. Msc. Philipe Sampaio Lima">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23002060'/><circle cx='50' cy='50' r='30' fill='%230080FF'/><text x='50' y='58' font-size='24' font-weight='bold' fill='white' text-anchor='middle'>4</text></svg>">
+    
+    <style>
+        :root {
+            --primary: #002060;
+            --primary-dark: #001138;
+            --primary-light: #003399;
+            --secondary: #0080FF;
+            --secondary-light: #E6F2FF;
+            --accent: #00A3FF;
+            --background: #F4F7FA;
+            --surface: #FFFFFF;
+            --text-primary: #0F172A;
+            --text-secondary: #475569;
+            --text-muted: #64748B;
+            --border: #CBD5E1;
+            --success: #059669;
+            --warning: #D97706;
+            --danger: #DC2626;
+            --radius-md: 12px;
+            --shadow-md: 0 8px 24px -4px rgba(0, 32, 96, 0.12);
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: #0b1329;
+            color: var(--text-primary);
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .stage {
+            width: 96vw;
+            height: 54vw;
+            max-width: 1600px;
+            max-height: 900px;
+            background-color: var(--background);
+            border-radius: var(--radius-md);
+            box-shadow: 0 15px 45px rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .slide-topbar {
+            height: 52px;
+            background-color: var(--primary);
+            color: #FFFFFF;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 1.5rem;
+            flex-shrink: 0;
+            border-bottom: 2px solid var(--secondary);
+        }
+        .topbar-left { display: flex; align-items: center; gap: 12px; font-weight: 700; font-size: 0.9rem; }
+        .topbar-badge {
+            background-color: rgba(255,255,255,0.15); padding: 3px 8px; border-radius: 4px; color: var(--secondary-light); font-size: 0.75rem;
+        }
+        .topbar-right { display: flex; align-items: center; gap: 15px; font-size: 0.85rem; color: rgba(255,255,255,0.85); }
+
+        .slide-viewport { flex-grow: 1; position: relative; overflow: hidden; }
+        .slide {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            padding: 2.2rem 3rem; display: flex; flex-direction: column; opacity: 0; visibility: hidden;
+            transform: translateX(30px); transition: all 0.28s ease-out; overflow-y: auto;
+        }
+        .slide.active { opacity: 1; visibility: visible; transform: translateX(0); z-index: 2; }
+
+        .slide-tag { color: var(--secondary); font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.35rem; }
+        .slide-title { font-size: 1.85rem; font-weight: 800; color: var(--primary); line-height: 1.25; margin-bottom: 1.25rem; }
+        .slide-content { font-size: 1.08rem; line-height: 1.6; color: var(--text-secondary); flex-grow: 1; display: flex; flex-direction: column; justify-content: center; }
+
+        .highlight-box {
+            background-color: var(--surface); border-left: 5px solid var(--secondary); padding: 1.25rem 1.75rem;
+            border-radius: 0 var(--radius-md) var(--radius-md) 0; box-shadow: var(--shadow-md); margin: 1rem 0;
+        }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.2rem; }
+        .card-panel { background: var(--surface); padding: 1.4rem; border-radius: var(--radius-md); border: 1px solid var(--border); }
+
+        .sim-container {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; background: var(--surface); padding: 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--border);
+        }
+        .form-row { display: flex; flex-direction: column; gap: 0.2rem; margin-bottom: 0.5rem; }
+        .form-row label { font-weight: 600; color: var(--primary); font-size: 0.82rem; }
+        .form-row input { padding: 0.45rem 0.65rem; border: 1px solid var(--border); border-radius: 6px; font-weight: 600; }
+        .btn-calc { background: var(--secondary); color: #fff; border: none; padding: 0.65rem; border-radius: 6px; font-weight: 700; cursor: pointer; transition: 0.2s; width: 100%; }
+        .btn-calc:hover { background: var(--primary); }
+
+        .chart-box {
+            background: #fff; border: 1px solid var(--border); border-radius: 6px; padding: 0.75rem; display: flex; flex-direction: column; align-items: center; justify-content: center; margin-top: 0.5rem;
+        }
+
+        .slide-footer {
+            height: 56px; background-color: var(--surface); border-top: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: space-between; padding: 0 1.5rem; flex-shrink: 0;
+        }
+        .nav-controls { display: flex; align-items: center; gap: 10px; }
+        .btn-nav {
+            background-color: var(--background); border: 1px solid var(--border); color: var(--primary);
+            padding: 6px 14px; border-radius: 6px; font-weight: 700; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; gap: 6px;
+        }
+        .btn-nav:hover { background-color: var(--secondary); color: #FFFFFF; }
+        .progress-indicator { font-weight: 700; font-size: 0.88rem; color: var(--text-muted); }
+    </style>
+</head>
+<body>
+
+    <div class="stage">
+        <div class="slide-topbar">
+            <div class="topbar-left">
+                <span>CEST • MATEMÁTICA FINANCEIRA</span>
+                <span class="topbar-badge">Aula 1 • Parte 4</span>
+            </div>
+            <div class="topbar-right">
+                <span>Prof. Msc. Philipe Sampaio Lima</span>
+                <button class="btn-nav" id="btnFullscreen" style="padding:4px 8px; font-size:0.75rem;">⛶ Ecrã Completo</button>
+            </div>
+        </div>
+
+        <div class="slide-viewport">
+            
+            <!-- SLIDE 1: ABERTURA -->
+            <div class="slide active">
+                <span class="slide-tag">Fundamentação Teórica e Prática</span>
+                <h1 class="slide-title" style="font-size:2.35rem;">O Conceito Real de Amortização</h1>
+                <div class="slide-content">
+                    <div class="highlight-box">
+                        <h3 style="color:var(--primary); font-size:1.25rem; margin-bottom:0.5rem;">Tópicos Centrais Desta Sessão:</h3>
+                        <p>1. O significado da palavra <strong>amortizar</strong>: extinguir, abater ou liquidar gradualmente o capital concedido.</p>
+                        <p>2. A soma acumulada das amortizações: como conferir a integridade matemática da quitação contratual.</p>
+                        <p>3. A amortização extraordinária: o impacto da antecipação de capital na redução do prazo ou da prestação.</p>
+                        <p>4. Simulador interativo demonstrando a velocidade de amortização com gráfico dinâmico em SVG.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SLIDE 2: DEFINIÇÃO RIGOROSA -->
+            <div class="slide">
+                <span class="slide-tag">Definição Operacional</span>
+                <h2 class="slide-title">Amortizar é Devolver o Principal</h2>
+                <div class="slide-content">
+                    <p style="margin-bottom:1rem;">No vocabulário corporativo, amortização refere-se especificamente ao <strong>reembolso do capital original</strong> tomado por empréstimo:</p>
+                    <div class="grid-2">
+                        <div class="card-panel" style="border-top:4px solid var(--secondary);">
+                            <h4 style="color:var(--primary); margin-bottom:0.4rem;">Princípio da Equivalência da Quitação</h4>
+                            <p style="font-size:0.95rem;">Em qualquer plano de financiamento sem carência residual, a <strong>soma de todas as amortizações individuais</strong> deve ser rigorosamente igual ao valor financiado no início:</p>
+                            <div style="background:var(--background); padding:0.6rem; border-radius:6px; font-weight:700; margin-top:0.5rem; color:var(--primary);">
+                                Soma das Amortizações = Capital Financiado (PV)
+                            </div>
+                        </div>
+                        <div class="card-panel" style="border-top:4px solid var(--danger);">
+                            <h4 style="color:var(--danger); margin-bottom:0.4rem;">Onde Ficam os Juros?</h4>
+                            <p style="font-size:0.95rem;">Os juros são contabilizados à parte como custo financeiro acumulado. A soma das prestações sempre excede o capital financiado exatamente pelo valor total de juros desembolsados.</p>
+                            <div style="background:var(--background); padding:0.6rem; border-radius:6px; font-weight:700; margin-top:0.5rem; color:var(--danger);">
+                                Soma das Prestações = PV + Juros Totais
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SLIDE 3: O CASO DA AMORTIZAÇÃO EXTRAORDINÁRIA -->
+            <div class="slide">
+                <span class="slide-tag">Decisão Estratégica</span>
+                <h2 class="slide-title">Amortização Extraordinária: Aceleração da Quitação</h2>
+                <div class="slide-content">
+                    <p style="margin-bottom:0.8rem;">Quando a empresa usufrui de superavit no fluxo de caixa, o gestor pode realizar um <strong>aporte extraordinário</strong> diretamente no saldo principal:</p>
+                    <div class="grid-2">
+                        <div class="card-panel">
+                            <h4 style="color:var(--success); margin-bottom:0.4rem;">Opção 1: Redução do Prazo Contratual</h4>
+                            <p style="font-size:0.92rem;">• O valor da prestação mensal permanece constante.<br>• O número de meses restantes diminui acentuadamente.<br>• <strong>Impacto:</strong> Elimina um expressivo volume de juros futuros que incidiriam nos períodos cortados.</p>
+                        </div>
+                        <div class="card-panel">
+                            <h4 style="color:var(--secondary); margin-bottom:0.4rem;">Opção 2: Redução da Prestação Mensal</h4>
+                            <p style="font-size:0.92rem;">• O prazo restante de vencimento contratual permanece o mesmo.<br>• O valor das parcelas futuras cai proporcionalmente ao novo saldo devedor.<br>• <strong>Impacto:</strong> Alivia a pressão imediata sobre as saídas periódicas do caixa.</p>
+                        </div>
+                    </div>
+                    <div class="highlight-box" style="margin-top:1rem;">
+                        <strong>Orientação do Administrador:</strong> Amortizações extras devem abater exclusivamente o saldo devedor (principal), sem permitir que a instituição financeira aplique cobrança antecipada de juros não decorridos!
+                    </div>
+                </div>
+            </div>
+
+            <!-- SLIDE 4: EXEMPLO PRÁTICO RESOLVIDO -->
+            <div class="slide">
+                <span class="slide-tag">Exemplo Numérico</span>
+                <h2 class="slide-title">Impacto de uma Amortização Extraordinária</h2>
+                <div class="slide-content">
+                    <p><strong>Cenário:</strong> Uma fábrica têxtil possui saldo devedor de <strong>R$ 80.000,00</strong> a uma taxa de <strong>2% ao mês</strong>. A empresa recebe um recebível inesperado e decide amortizar <strong>R$ 30.000,00</strong> no principal:</p>
+                    <div class="card-panel" style="margin-top:0.8rem;">
+                        <h4 style="color:var(--primary); margin-bottom:0.4rem;">Demonstração Comparativa da Despesa Financeira:</h4>
+                        <p>1. <strong>Sem o aporte:</strong> Os juros do mês seguinte seriam calculados sobre R$ 80.000,00:</p>
+                        <p style="padding-left:1rem; font-weight:700; color:var(--danger);">Juros = 80.000 × 0,02 = R$ 1.600,00 no mês</p>
+                        <p style="margin-top:0.4rem;">2. <strong>Com a amortização de R$ 30.000,00:</strong> O saldo devedor cai imediatamente para R$ 50.000,00:</p>
+                        <p style="padding-left:1rem; font-weight:700; color:var(--success);">Novos Juros = 50.000 × 0,02 = R$ 1.000,00 no mês</p>
+                        <p style="margin-top:0.5rem; border-top:1px solid var(--border); padding-top:0.4rem;">
+                            <strong>Poupança Direta:</strong> A amortização proporcionou uma economia mensal de <strong>R$ 600,00</strong> em juros líquidos, preservando a liquidez corporativa.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SLIDE 5: SIMULADOR 4 COM GRÁFICO DINÂMICO -->
+            <div class="slide">
+                <span class="slide-tag">Simulador Interativo com SVG</span>
+                <h2 class="slide-title">Simulador: Efeito de Amortizações no Saldo Devedor</h2>
+                <div class="slide-content">
+                    <div class="sim-container">
+                        <div>
+                            <div class="form-row">
+                                <label>Saldo Devedor Inicial (R$):</label>
+                                <input type="number" id="s4_sd" value="80000" step="5000">
+                            </div>
+                            <div class="form-row">
+                                <label>Amortização Ordinária do Mês (R$):</label>
+                                <input type="number" id="s4_amort_ord" value="5000" step="500">
+                            </div>
+                            <div class="form-row">
+                                <label>Amortização Extraordinária Opcional (R$):</label>
+                                <input type="number" id="s4_amort_extra" value="20000" step="1000">
+                            </div>
+                            <div class="form-row">
+                                <label>Taxa de Juros Mensal (%):</label>
+                                <input type="number" id="s4_taxa" value="2.0" step="0.1">
+                            </div>
+                            <button class="btn-calc" onclick="calcularSimulador4()">Recalcular e Atualizar Gráfico</button>
+                        </div>
+                        <div style="background:var(--background); padding:1rem; border-radius:8px; display:flex; flex-direction:column; justify-content:space-between; border:1px solid var(--border);">
+                            <div>
+                                <span style="font-size:0.8rem; color:var(--text-muted); font-weight:600;">Saldo Devedor Remanescente:</span>
+                                <div id="s4_res_sd" style="font-size:1.45rem; font-weight:800; color:var(--primary);">R$ 55.000,00</div>
+                                <div id="s4_res_economia" style="font-size:0.85rem; color:var(--success); font-weight:700; margin-top:2px;">
+                                    Economia de juros mensais: R$ 400,00 decorrentes do aporte extra.
+                                </div>
+                            </div>
+
+                            <div class="chart-box">
+                                <span style="font-size:0.75rem; font-weight:700; color:var(--text-muted); margin-bottom:4px;">REDUÇÃO DO SALDO DEVEDOR</span>
+                                <svg id="s4_svg_chart" viewBox="0 0 320 80" style="width:100%; height:75px;">
+                                    <!-- Dinâmico via JS -->
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SLIDE 6: QUIZ INTERATIVO -->
+            <div class="slide">
+                <span class="slide-tag">Verificação Formativa</span>
+                <h2 class="slide-title">Verificação de Fixação: Princípio do Saldo Vivo</h2>
+                <div class="slide-content">
+                    <p style="font-size:1.15rem; margin-bottom:1rem;">
+                        Uma companhia contraiu um financiamento de <strong>R$ 120.000,00</strong>. Após 10 meses efetuando pagamentos regulares, a contabilidade apurou que o total acumulado das <strong>amortizações parciais realizadas atingiu R$ 45.000,00</strong>. Qual o valor do saldo devedor nessa data?
+                    </p>
+                    <div style="display:flex; flex-direction:column; gap:0.6rem; margin:1rem 0;">
+                        <button class="btn-nav" onclick="checkQuiz4(1, this)" style="justify-content:flex-start; padding:0.75rem 1rem;">
+                            A) R$ 75.000,00 (120.000 - 45.000), visto que a dívida só decresce pelas amortizações efetuadas.
+                        </button>
+                        <button class="btn-nav" onclick="checkQuiz4(2, this)" style="justify-content:flex-start; padding:0.75rem 1rem;">
+                            B) Menos de R$ 75.000,00, pois devem ser deduzidos também todos os juros pagos nos 10 meses.
+                        </button>
+                        <button class="btn-nav" onclick="checkQuiz4(3, this)" style="justify-content:flex-start; padding:0.75rem 1rem;">
+                            C) R$ 120.000,00, dado que o saldo permanece inalterado até à última prestação.
+                        </button>
+                    </div>
+                    <div id="quiz-fb-4" class="highlight-box" style="display:none; margin-top:0.4rem;"></div>
+                </div>
+            </div>
+
+            <!-- SLIDE 7: SÍNTESE DA PARTE 4 -->
+            <div class="slide">
+                <span class="slide-tag">Fechamento da Parte 4</span>
+                <h2 class="slide-title">Síntese e Encaminhamento</h2>
+                <div class="slide-content">
+                    <div class="card-panel">
+                        <h3 style="color:var(--primary); margin-bottom:0.6rem;">Resumo Operacional:</h3>
+                        <p>✔ Amortização é o mecanismo único que reduz o saldo da dívida original.</p>
+                        <p>✔ Os juros representam o custo do dinheiro e nunca amortizam o principal emprestado.</p>
+                        <p>✔ Amortizações extraordinárias promovem expressiva economia de despesas financeiras futuras.</p>
+                    </div>
+                    <div class="highlight-box" style="margin-top:1.2rem; text-align:center;">
+                        <h4 style="color:var(--secondary); font-size:1.15rem;">Próxima Apresentação (5.html):</h4>
+                        <p style="margin-top:0.3rem;">Vamos investigar como os <strong>Prazos, as Taxas de Juros e o Custo Efetivo Total (CET)</strong> determinam o volume total de recursos transferidos aos credores.</p>
+                        <a href="5.html" class="btn-nav" style="display:inline-flex; margin-top:0.8rem; background:var(--secondary); color:#fff; border:none; padding:0.65rem 1.5rem;">
+                            Avançar para Aula 1 • Parte 5 (5.html) &rarr;
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="slide-footer">
+            <div class="nav-controls">
+                <button class="btn-nav" id="btnPrev">← Anterior (↑)</button>
+                <button class="btn-nav" id="btnNext">Próximo (↓) →</button>
+            </div>
+            <div class="progress-indicator" id="slideIndicator">Slide 01 de 07</div>
+            <div>
+                <a href="3.html" class="btn-nav" style="text-decoration:none;">⮌ Voltar à Parte 3</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const slides = document.querySelectorAll('.slide');
+        const totalSlides = slides.length;
+        let currentSlide = 0;
+        const slideIndicator = document.getElementById('slideIndicator');
+        const btnPrev = document.getElementById('btnPrev');
+        const btnNext = document.getElementById('btnNext');
+        const btnFullscreen = document.getElementById('btnFullscreen');
+
+        function updateSlide(index) {
+            slides.forEach((s, idx) => s.classList.toggle('active', idx === index));
+            slideIndicator.textContent = `Slide ${String(index + 1).padStart(2, '0')} de ${String(totalSlides).padStart(2, '0')}`;
+        }
+
+        function nextSlide() {
+            if (currentSlide < totalSlides - 1) {
+                currentSlide++;
+                updateSlide(currentSlide);
+            } else {
+                window.location.href = "5.html";
+            }
+        }
+
+        function prevSlide() {
+            if (currentSlide > 0) {
+                currentSlide--;
+                updateSlide(currentSlide);
+            } else {
+                window.location.href = "3.html";
+            }
+        }
+
+        btnNext.addEventListener('click', nextSlide);
+        btnPrev.addEventListener('click', prevSlide);
+
+        window.addEventListener('keydown', (e) => {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') return;
+            if (e.key === 'ArrowDown' || e.key === 'PageDown' || e.key === 'ArrowRight') {
+                e.preventDefault();
+                nextSlide();
+            } else if (e.key === 'ArrowUp' || e.key === 'PageUp' || e.key === 'ArrowLeft') {
+                e.preventDefault();
+                prevSlide();
+            } else if (e.key === 'f' || e.key === 'F') {
+                toggleFullscreen();
+            }
+        });
+
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(() => {});
+            } else {
+                if (document.exitFullscreen) document.exitFullscreen();
+            }
+        }
+        btnFullscreen.addEventListener('click', toggleFullscreen);
+
+        const fmtBRL = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
+
+        function calcularSimulador4() {
+            const sdInicial = parseFloat(document.getElementById('s4_sd').value) || 0;
+            const amortOrd = parseFloat(document.getElementById('s4_amort_ord').value) || 0;
+            const amortExtra = parseFloat(document.getElementById('s4_amort_extra').value) || 0;
+            const taxa = (parseFloat(document.getElementById('s4_taxa').value) || 0) / 100;
+
+            const totalAmort = amortOrd + amortExtra;
+            const sdFinal = Math.max(0, sdInicial - totalAmort);
+            const economiaJuros = amortExtra * taxa;
+
+            document.getElementById('s4_res_sd').textContent = fmtBRL.format(sdFinal);
+            document.getElementById('s4_res_economia').textContent = 
+                `Economia direta: ${fmtBRL.format(economiaJuros)}/mês a menos de juros devido ao aporte extra de ${fmtBRL.format(amortExtra)}.`;
+
+            desenharGraficoS4(sdInicial, totalAmort, sdFinal);
+        }
+
+        function desenharGraficoS4(inicial, amortizado, residual) {
+            const maxVal = Math.max(inicial, 1);
+            const hIni = Math.max(12, (inicial / maxVal) * 55);
+            const hAmort = Math.max(12, (amortizado / maxVal) * 55);
+            const hRes = Math.max(12, (residual / maxVal) * 55);
+
+            const svg = document.getElementById('s4_svg_chart');
+            svg.innerHTML = `
+                <line x1="20" y1="65" x2="300" y2="65" stroke="#CBD5E1" stroke-width="1.5"/>
+                
+                <!-- Barra Inicial -->
+                <rect x="40" y="${65 - hIni}" width="40" height="${hIni}" rx="3" fill="#64748B"/>
+                <text x="60" y="${60 - hIni}" font-size="8" font-weight="bold" fill="#64748B" text-anchor="middle">${fmtBRL.format(inicial)}</text>
+                <text x="60" y="75" font-size="8" fill="#64748B" text-anchor="middle">Saldo Inicial</text>
+
+                <!-- Barra Amortizada -->
+                <rect x="140" y="${65 - hAmort}" width="40" height="${hAmort}" rx="3" fill="#059669"/>
+                <text x="160" y="${60 - hAmort}" font-size="8" font-weight="bold" fill="#059669" text-anchor="middle">${fmtBRL.format(amortizado)}</text>
+                <text x="160" y="75" font-size="8" fill="#059669" font-weight="bold" text-anchor="middle">Amortizado</text>
+
+                <!-- Barra Residual -->
+                <rect x="240" y="${65 - hRes}" width="40" height="${hRes}" rx="3" fill="#002060"/>
+                <text x="260" y="${60 - hRes}" font-size="8" font-weight="bold" fill="#002060" text-anchor="middle">${fmtBRL.format(residual)}</text>
+                <text x="260" y="75" font-size="8" fill="#002060" font-weight="bold" text-anchor="middle">Saldo Final</text>
+            `;
+        }
+
+        calcularSimulador4();
+
+        function checkQuiz4(op, btn) {
+            const fb = document.getElementById('quiz-fb-4');
+            fb.style.display = 'block';
+            if (op === 1) {
+                fb.style.borderLeftColor = 'var(--success)';
+                fb.innerHTML = `<h4 style="color:var(--success);">Exato! (Alternativa A)</h4>
+                <p>O saldo devedor reflete o capital inicial menos as amortizações acumuladas: 120.000 - 45.000 = <strong>R$ 75.000,00</strong>. Os juros pagos remuneraram o credor e não alteram o abatimento do saldo principal.</p>`;
+            } else {
+                fb.style.borderLeftColor = 'var(--danger)';
+                fb.innerHTML = `<h4 style="color:var(--danger);">Atenção!</h4>
+                <p>Os juros não são descontados do saldo devedor: apenas a fração da prestação classificada como amortização abate o principal.</p>`;
+            }
+        }
+    </script>
+</body>
+</html>

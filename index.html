@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unidade III: Sistemas de Amortização | Prof. Msc. Philipe Sampaio Lima - CEST</title>
+    <meta name="description" content="Portal oficial da Unidade III da disciplina Matemática Financeira do Curso de Administração do CEST, ministrada pelo Prof. Msc. Philipe Sampaio Lima.">
+    <meta name="author" content="Prof. Msc. Philipe Sampaio Lima">
+    
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23002060'/><path d='M25 70 L45 35 L60 55 L75 30' stroke='%230080FF' stroke-width='8' fill='none' stroke-linecap='round'/><circle cx='75' cy='30' r='5' fill='%230080FF'/></svg>">
+
+    <style>
+        :root {
+            --primary: #002060;
+            --primary-dark: #001138;
+            --primary-light: #003399;
+            --secondary: #0080FF;
+            --secondary-light: #E6F2FF;
+            --accent: #00A3FF;
+            --background: #F4F7FA;
+            --surface: #FFFFFF;
+            --surface-card: #FFFFFF;
+            --text-primary: #0F172A;
+            --text-secondary: #475569;
+            --text-muted: #64748B;
+            --border: #CBD5E1;
+            --border-focus: #0080FF;
+            --success: #059669;
+            --font-main: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            --radius-sm: 6px;
+            --radius-md: 12px;
+            --radius-lg: 18px;
+            --shadow-sm: 0 1px 3px rgba(0, 32, 96, 0.05);
+            --shadow-md: 0 4px 20px -2px rgba(0, 32, 96, 0.08);
+            --shadow-lg: 0 12px 30px -4px rgba(0, 32, 96, 0.12);
+            --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            --max-width: 1240px;
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        html { scroll-behavior: smooth; font-size: 16px; }
+        body {
+            font-family: var(--font-main);
+            background-color: var(--background);
+            color: var(--text-primary);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+        }
+        a { color: var(--secondary); text-decoration: none; transition: var(--transition); }
+        a:hover { color: var(--primary-light); }
+        .container { width: 100%; max-width: var(--max-width); margin: 0 auto; padding: 0 1.5rem; }
+
+        header {
+            position: sticky; top: 0; z-index: 1000;
+            background-color: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border);
+            box-shadow: var(--shadow-sm);
+        }
+        .nav-container { display: flex; align-items: center; justify-content: space-between; height: 72px; }
+        .brand-logo { display: flex; align-items: center; gap: 12px; font-weight: 700; color: var(--primary); font-size: 1.15rem; }
+        .brand-logo svg { width: 38px; height: 38px; flex-shrink: 0; }
+        .brand-divider { width: 1px; height: 24px; background-color: var(--border); }
+        .brand-sub { font-size: 0.85rem; color: var(--text-muted); font-weight: 500; }
+        .nav-links { display: flex; align-items: center; gap: 1.5rem; list-style: none; }
+        .nav-link { font-size: 0.925rem; font-weight: 500; color: var(--text-secondary); padding: 0.5rem 0; position: relative; }
+        .nav-link:hover, .nav-link.active { color: var(--primary); }
+        .nav-link:hover::after, .nav-link.active::after {
+            content: ''; position: absolute; bottom: 0; left: 0; width: 100%; height: 2px; background-color: var(--secondary);
+        }
+
+        #hero {
+            padding: 4.5rem 0 4rem;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: #FFFFFF;
+            position: relative;
+            overflow: hidden;
+        }
+        #hero::before {
+            content: ''; position: absolute; top: -20%; right: -10%; width: 500px; height: 500px;
+            background: radial-gradient(circle, rgba(0,128,255,0.18) 0%, rgba(0,0,0,0) 70%);
+            border-radius: 50%; pointer-events: none;
+        }
+        .hero-grid { display: grid; grid-template-columns: 1.25fr 0.75fr; gap: 3rem; align-items: center; }
+        .hero-badge {
+            display: inline-flex; align-items: center; gap: 8px;
+            background-color: rgba(255, 255, 255, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.22);
+            padding: 6px 14px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; color: var(--secondary-light);
+            margin-bottom: 1.25rem;
+        }
+        .hero-title { font-size: clamp(2.1rem, 3.8vw, 3rem); font-weight: 800; line-height: 1.2; letter-spacing: -0.03em; margin-bottom: 1.25rem; }
+        .hero-description { font-size: 1.05rem; color: rgba(255, 255, 255, 0.88); margin-bottom: 2rem; line-height: 1.6; }
+        .hero-card {
+            background: rgba(255, 255, 255, 0.06); backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.18); border-radius: var(--radius-md); padding: 2rem;
+            box-shadow: var(--shadow-lg);
+        }
+        .hero-card-header { border-bottom: 1px solid rgba(255, 255, 255, 0.15); padding-bottom: 0.85rem; margin-bottom: 1.2rem; }
+        .hero-card-title { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--secondary-light); font-weight: 700; }
+        .hero-card-body { display: flex; flex-direction: column; gap: 1rem; }
+        .info-item { display: flex; align-items: flex-start; gap: 12px; }
+        .info-icon { width: 20px; height: 20px; color: var(--secondary); margin-top: 2px; flex-shrink: 0; }
+        .info-label { font-size: 0.8rem; color: rgba(255, 255, 255, 0.65); display: block; }
+        .info-val { font-size: 0.95rem; font-weight: 600; color: #FFFFFF; }
+
+        section { padding: 4.5rem 0; }
+        .section-header { text-align: center; max-width: 800px; margin: 0 auto 3.2rem; }
+        .section-tag {
+            display: inline-block; font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em;
+            color: var(--secondary); background-color: var(--secondary-light); padding: 4px 12px; border-radius: 12px; margin-bottom: 0.75rem;
+        }
+        .section-title { font-size: clamp(1.8rem, 3vw, 2.3rem); font-weight: 700; color: var(--primary); letter-spacing: -0.02em; line-height: 1.25; margin-bottom: 1rem; }
+        .section-description { font-size: 1.05rem; color: var(--text-secondary); }
+
+        .meetings-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2rem; }
+        .meeting-card {
+            background-color: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md);
+            overflow: hidden; display: flex; flex-direction: column; box-shadow: var(--shadow-sm); transition: var(--transition);
+        }
+        .meeting-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); border-color: var(--secondary); }
+        .meeting-header {
+            background-color: var(--primary); color: #FFFFFF; padding: 1.3rem 1.5rem; display: flex; justify-content: space-between; align-items: center;
+        }
+        .meeting-title { font-size: 1.1rem; font-weight: 700; }
+        .meeting-badge { background-color: rgba(255, 255, 255, 0.16); color: var(--secondary-light); font-size: 0.75rem; font-weight: 700; padding: 3px 9px; border-radius: 10px; text-transform: uppercase; }
+        .meeting-body { padding: 1.5rem; flex-grow: 1; display: flex; flex-direction: column; }
+        .meeting-theme { font-size: 0.95rem; font-weight: 700; color: var(--primary); margin-bottom: 0.75rem; border-bottom: 2px solid var(--secondary-light); padding-bottom: 0.5rem; }
+        .meeting-desc { font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 1.25rem; flex-grow: 1; }
+        
+        .files-list { display: flex; flex-direction: column; gap: 0.45rem; margin-top: auto; }
+        .file-link-item {
+            display: flex; align-items: center; justify-content: space-between; padding: 0.55rem 0.85rem; border-radius: var(--radius-sm);
+            background-color: var(--background); border: 1px solid var(--border); color: var(--primary); font-size: 0.84rem; font-weight: 600;
+            transition: var(--transition);
+        }
+        .file-link-item:hover { background-color: var(--secondary); color: #FFFFFF; border-color: var(--secondary); }
+        .badge-num {
+            background-color: var(--secondary-light); color: var(--primary); font-size: 0.72rem; padding: 2px 6px; border-radius: 4px; font-weight: 700;
+        }
+        .file-link-item:hover .badge-num { background-color: rgba(255,255,255,0.25); color: #FFFFFF; }
+        
+        .action-links {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px dashed var(--border);
+        }
+        .btn-action-card {
+            text-align: center; padding: 0.55rem; font-size: 0.8rem; font-weight: 700; border-radius: var(--radius-sm);
+            background: var(--secondary-light); color: var(--primary); border: 1px solid var(--border); transition: 0.2s;
+        }
+        .btn-action-card:hover { background: var(--primary); color: #FFFFFF; }
+        .btn-action-card.gabarito { background: #ECFDF5; color: var(--success); border-color: #A7F3D0; }
+        .btn-action-card.gabarito:hover { background: var(--success); color: #FFFFFF; }
+
+        .clicker-box {
+            background-color: var(--surface); border: 1px solid var(--border); border-left: 5px solid var(--secondary);
+            border-radius: var(--radius-md); padding: 2rem; box-shadow: var(--shadow-sm); margin-top: 2.5rem;
+            display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; align-items: center;
+        }
+        .clicker-title { font-size: 1.2rem; font-weight: 700; color: var(--primary); margin-bottom: 0.75rem; display: flex; align-items: center; gap: 10px; }
+        .clicker-keys { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.85rem; }
+        .key-badge-card { display: flex; align-items: center; gap: 10px; background-color: var(--background); padding: 0.65rem 0.9rem; border-radius: var(--radius-sm); border: 1px solid var(--border); }
+        kbd {
+            background-color: #FFFFFF; border: 1px solid var(--border); border-bottom: 2px solid var(--text-muted);
+            border-radius: 4px; padding: 3px 8px; font-family: monospace; font-size: 0.85rem; font-weight: 700; color: var(--primary);
+        }
+        .key-desc { font-size: 0.85rem; color: var(--text-secondary); font-weight: 500; }
+
+        footer { background-color: var(--primary-dark); color: #FFFFFF; padding: 3.5rem 0 2rem; border-top: 1px solid rgba(255, 255, 255, 0.1); margin-top: 4rem; }
+        .footer-grid { display: grid; grid-template-columns: 1.5fr 1fr 1fr; gap: 3rem; margin-bottom: 2.5rem; }
+        .footer-brand { font-size: 1.15rem; font-weight: 700; margin-bottom: 0.85rem; }
+        .footer-desc { font-size: 0.85rem; color: rgba(255, 255, 255, 0.7); line-height: 1.6; }
+        .footer-title { font-size: 0.9rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--secondary-light); margin-bottom: 1rem; }
+        .footer-bottom { border-top: 1px solid rgba(255, 255, 255, 0.1); padding-top: 1.75rem; display: flex; justify-content: space-between; align-items: center; font-size: 0.825rem; color: rgba(255, 255, 255, 0.5); }
+
+        @media (max-width: 992px) {
+            .hero-grid { grid-template-columns: 1fr; }
+            .meetings-grid { grid-template-columns: 1fr; }
+            .clicker-box { grid-template-columns: 1fr; gap: 1.5rem; }
+            .footer-grid { grid-template-columns: 1fr; gap: 2rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="container nav-container">
+            <a href="index.html" class="brand-logo" aria-label="Portal Inicial CEST">
+                <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="100" height="100" rx="16" fill="#002060"/>
+                    <path d="M20 75 V30 L50 30 L50 75" stroke="#FFFFFF" stroke-width="8" stroke-linejoin="round"/>
+                    <path d="M50 30 L80 30 L80 75" stroke="#FFFFFF" stroke-width="8" stroke-linejoin="round"/>
+                    <path d="M30 52 H70" stroke="#0080FF" stroke-width="8"/>
+                </svg>
+                <span>CEST</span>
+                <span class="brand-divider"></span>
+                <span class="brand-sub">Administração • Matemática Financeira</span>
+            </a>
+            <ul class="nav-links">
+                <li><a href="#aulas" class="nav-link active">Apresentações</a></li>
+                <li><a href="#passador" class="nav-link">Passador Físico</a></li>
+                <li><a href="#ementa" class="nav-link">Conteúdo Programático</a></li>
+            </ul>
+        </div>
+    </header>
+
+    <main>
+        <section id="hero">
+            <div class="container hero-grid">
+                <div>
+                    <div class="hero-badge">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+                        Unidade III • 3 Aulas Completas (10 Horas/Aula)
+                    </div>
+                    <h1 class="hero-title">Sistemas de Amortização de Empréstimos e Financiamentos</h1>
+                    <p class="hero-description">
+                        Ambiente digital interativo para condução de aulas expositivo-dialogadas. Análise de dívidas, tabelas Price e SAC, decomposição de parcelas, comparativos multissistema e suporte à tomada de decisão empresarial.
+                    </p>
+                    <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                        <a href="AULA_1/1.html" class="file-link-item" style="background-color: var(--secondary); color:#fff; border:none; padding:0.9rem 1.6rem; font-size:0.95rem; border-radius:var(--radius-sm);">
+                            Iniciar Aula 1 (Fundamentos)
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-left:8px;"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="hero-card">
+                    <div class="hero-card-header">
+                        <span class="hero-card-title">Ficha Técnica da Unidade III</span>
+                    </div>
+                    <div class="hero-card-body">
+                        <div class="info-item">
+                            <svg class="info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                            <div>
+                                <span class="info-label">Disciplina & Código</span>
+                                <span class="info-val">Matemática Financeira (1798)</span>
+                            </div>
+                        </div>
+                        <div class="info-item">
+                            <svg class="info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                            <div>
+                                <span class="info-label">Docente Responsável</span>
+                                <span class="info-val">Prof. Msc. Philipe Sampaio Lima</span>
+                            </div>
+                        </div>
+                        <div class="info-item">
+                            <svg class="info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                            <div>
+                                <span class="info-label">Curso & Instituição</span>
+                                <span class="info-val">Administração • CEST</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- MAPA DAS APRESENTAÇÕES -->
+        <section id="aulas">
+            <div class="container">
+                <div class="section-header">
+                    <span class="section-tag">Cronograma Didático</span>
+                    <h2 class="section-title">Apresentações e Módulos de Aprendizagem</h2>
+                    <p class="section-description">Acesse os 10 arquivos de cada aula presencial, os cadernos de atividades avaliativas e os gabaritos com memória de cálculo.</p>
+                </div>
+
+                <div class="meetings-grid">
+                    <!-- AULA 1 -->
+                    <div class="meeting-card">
+                        <div class="meeting-header">
+                            <span class="meeting-title">Aula 1</span>
+                            <span class="meeting-badge">Fundamentos</span>
+                        </div>
+                        <div class="meeting-body">
+                            <h4 class="meeting-theme">Conceitos e Evolução da Dívida</h4>
+                            <p class="meeting-desc">Conceito de amortização, decomposição da prestação em juros e amortização, cálculo do saldo devedor, juros periódicos, estrutura da planilha e interpretação gerencial.</p>
+                            <div class="files-list">
+                                <a href="AULA_1/1.html" class="file-link-item"><span>1. Dilema do Administrador</span><span class="badge-num">1.html</span></a>
+                                <a href="AULA_1/2.html" class="file-link-item"><span>2. Anatomia da Prestação</span><span class="badge-num">2.html</span></a>
+                                <a href="AULA_1/3.html" class="file-link-item"><span>3. Dinâmica do Saldo Devedor</span><span class="badge-num">3.html</span></a>
+                                <a href="AULA_1/4.html" class="file-link-item"><span>4. Conceito Real de Amortização</span><span class="badge-num">4.html</span></a>
+                                <a href="AULA_1/5.html" class="file-link-item"><span>5. Prazos, Taxas e Custo Total</span><span class="badge-num">5.html</span></a>
+                                <a href="AULA_1/6.html" class="file-link-item"><span>6. Estrutura da Planilha</span><span class="badge-num">6.html</span></a>
+                                <a href="AULA_1/7.html" class="file-link-item"><span>7. Construção Manual da Tabela</span><span class="badge-num">7.html</span></a>
+                                <a href="AULA_1/8.html" class="file-link-item"><span>8. Simulador de Decomposição</span><span class="badge-num">8.html</span></a>
+                                <a href="AULA_1/9.html" class="file-link-item"><span>9. Análise Gerencial de Contratos</span><span class="badge-num">9.html</span></a>
+                                <a href="AULA_1/10.html" class="file-link-item"><span>10. Estudo de Caso Integrador</span><span class="badge-num">10.html</span></a>
+                            </div>
+                            <div class="action-links">
+                                <a href="AULA_1/atividade.html" class="btn-action-card">Atividade Prática 1</a>
+                                <a href="AULA_1/gabarito.html" class="btn-action-card gabarito">Gabarito Passo a Passo</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- AULA 2 -->
+                    <div class="meeting-card">
+                        <div class="meeting-header">
+                            <span class="meeting-title">Aula 2</span>
+                            <span class="meeting-badge">Sistema Price</span>
+                        </div>
+                        <div class="meeting-body">
+                            <h4 class="meeting-theme">Sistema Francês de Amortização</h4>
+                            <p class="meeting-desc">Prestações constantes, cálculo analítico da parcela, apuração de juros sobre o saldo devedor, amortizações crescentes, montagem da tabela Price e simulações ao vivo.</p>
+                            <div class="files-list">
+                                <a href="AULA_2/1.html" class="file-link-item"><span>1. Origem e Conceito Price</span><span class="badge-num">1.html</span></a>
+                                <a href="AULA_2/2.html" class="file-link-item"><span>2. Característica da Parcela Fixa</span><span class="badge-num">2.html</span></a>
+                                <a href="AULA_2/3.html" class="file-link-item"><span>3. Cálculo da Prestação</span><span class="badge-num">3.html</span></a>
+                                <a href="AULA_2/4.html" class="file-link-item"><span>4. Cálculo dos Juros Periódicos</span><span class="badge-num">4.html</span></a>
+                                <a href="AULA_2/5.html" class="file-link-item"><span>5. Amortização Crescente</span><span class="badge-num">5.html</span></a>
+                                <a href="AULA_2/6.html" class="file-link-item"><span>6. Dinâmica da Inversão</span><span class="badge-num">6.html</span></a>
+                                <a href="AULA_2/7.html" class="file-link-item"><span>7. Construção da Tabela Price</span><span class="badge-num">7.html</span></a>
+                                <a href="AULA_2/8.html" class="file-link-item"><span>8. Simulador Tabela Price</span><span class="badge-num">8.html</span></a>
+                                <a href="AULA_2/9.html" class="file-link-item"><span>9. Impacto no Fluxo de Caixa</span><span class="badge-num">9.html</span></a>
+                                <a href="AULA_2/10.html" class="file-link-item"><span>10. Decisões no Sistema Price</span><span class="badge-num">10.html</span></a>
+                            </div>
+                            <div class="action-links">
+                                <a href="AULA_2/atividade.html" class="btn-action-card">Atividade Prática 2</a>
+                                <a href="AULA_2/gabarito.html" class="btn-action-card gabarito">Gabarito Passo a Passo</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- AULA 3 -->
+                    <div class="meeting-card">
+                        <div class="meeting-header">
+                            <span class="meeting-title">Aula 3</span>
+                            <span class="meeting-badge">SAC e Comparação</span>
+                        </div>
+                        <div class="meeting-body">
+                            <h4 class="meeting-theme">SAC, Sistema Americano e Comparativos</h4>
+                            <p class="meeting-desc">Amortização constante, parcelas decrescentes, montagem da tabela SAC, funcionamento do Sistema Americano, confronto direto de custos e matriz estratégica de decisão.</p>
+                            <div class="files-list">
+                                <a href="AULA_3/1.html" class="file-link-item"><span>1. Conceito e Mecânica do SAC</span><span class="badge-num">1.html</span></a>
+                                <a href="AULA_3/2.html" class="file-link-item"><span>2. Cálculo da Amortização Fixa</span><span class="badge-num">2.html</span></a>
+                                <a href="AULA_3/3.html" class="file-link-item"><span>3. Prestações Decrescentes</span><span class="badge-num">3.html</span></a>
+                                <a href="AULA_3/4.html" class="file-link-item"><span>4. Construção da Tabela SAC</span><span class="badge-num">4.html</span></a>
+                                <a href="AULA_3/5.html" class="file-link-item"><span>5. Sistema Americano (SAA)</span><span class="badge-num">5.html</span></a>
+                                <a href="AULA_3/6.html" class="file-link-item"><span>6. Confronto Direto SAC vs Price</span><span class="badge-num">6.html</span></a>
+                                <a href="AULA_3/7.html" class="file-link-item"><span>7. Análise dos Juros Totais</span><span class="badge-num">7.html</span></a>
+                                <a href="AULA_3/8.html" class="file-link-item"><span>8. Impacto no Caixa Corporativo</span><span class="badge-num">8.html</span></a>
+                                <a href="AULA_3/9.html" class="file-link-item"><span>9. Grande Simulador Comparativo</span><span class="badge-num">9.html</span></a>
+                                <a href="AULA_3/10.html" class="file-link-item"><span>10. Matriz de Decisão Gerencial</span><span class="badge-num">10.html</span></a>
+                            </div>
+                            <div class="action-links">
+                                <a href="AULA_3/atividade.html" class="btn-action-card">Atividade Prática 3</a>
+                                <a href="AULA_3/gabarito.html" class="btn-action-card gabarito">Gabarito Passo a Passo</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CONTROLE COM PASSADOR FÍSICO -->
+                <div class="clicker-box" id="passador">
+                    <div>
+                        <h3 class="clicker-title">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="4"/><circle cx="12" cy="8" r="2"/><circle cx="12" cy="14" r="1.5"/><circle cx="12" cy="18" r="1.5"/></svg>
+                            Compatibilidade com Passador Físico de Slides
+                        </h3>
+                        <p style="font-size:0.925rem; color:var(--text-secondary); line-height:1.6;">
+                            Todas as apresentações contam com suporte para passadores de slides sem fio (controles USB/Bluetooth). Os botões de hardware realizam a troca de slides sem interferir nos formulários dos simuladores.
+                        </p>
+                    </div>
+                    <div class="clicker-keys">
+                        <div class="key-badge-card">
+                            <kbd>↓ Seta Baixo</kbd>
+                            <span class="key-desc">Avançar slide</span>
+                        </div>
+                        <div class="key-badge-card">
+                            <kbd>↑ Seta Cima</kbd>
+                            <span class="key-desc">Recuar slide</span>
+                        </div>
+                        <div class="key-badge-card">
+                            <kbd>→</kbd> ou <kbd>PgDn</kbd>
+                            <span class="key-desc">Avanço alternativo</span>
+                        </div>
+                        <div class="key-badge-card">
+                            <kbd>F</kbd> ou <kbd>Botão Tela</kbd>
+                            <span class="key-desc">Tela cheia (16:9)</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- EMENTA DETALHADA -->
+        <section id="ementa" style="background-color:#FFFFFF; border-top:1px solid var(--border);">
+            <div class="container">
+                <div class="section-header">
+                    <span class="section-tag">Estrutura Curricular</span>
+                    <h2 class="section-title">Conteúdo Programático da Unidade III</h2>
+                    <p class="section-description">A base quantitativa e gerencial para tomada de decisão em operações de crédito e financiamentos corporativos.</p>
+                </div>
+                <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem;">
+                    <div style="background:var(--background); padding:1.5rem; border-radius:var(--radius-md); border:1px solid var(--border);">
+                        <h4 style="color:var(--primary); font-size:1.05rem; margin-bottom:0.75rem;">Módulo 1: Fundamentos</h4>
+                        <ul style="color:var(--text-secondary); font-size:0.88rem; line-height:1.7; list-style:disc; padding-left:1.2rem;">
+                            <li>Definição estrutural de amortização.</li>
+                            <li>Composição da parcela: Prestação = Amortização + Juros.</li>
+                            <li>Apuração do saldo devedor e incidência dos juros.</li>
+                            <li>Construção e leitura da planilha financeira de amortização.</li>
+                        </ul>
+                    </div>
+                    <div style="background:var(--background); padding:1.5rem; border-radius:var(--radius-md); border:1px solid var(--border);">
+                        <h4 style="color:var(--primary); font-size:1.05rem; margin-bottom:0.75rem;">Módulo 2: Sistema Price</h4>
+                        <ul style="color:var(--text-secondary); font-size:0.88rem; line-height:1.7; list-style:disc; padding-left:1.2rem;">
+                            <li>Metodologia e premissas do Sistema Francês.</li>
+                            <li>Cálculo da prestação constante: PV × [i / (1 - (1+i)^(-n))].</li>
+                            <li>Comportamento dos juros decrescentes e amortização crescente.</li>
+                            <li>Aplicações em financiamentos bancários e bens duráveis.</li>
+                        </ul>
+                    </div>
+                    <div style="background:var(--background); padding:1.5rem; border-radius:var(--radius-md); border:1px solid var(--border);">
+                        <h4 style="color:var(--primary); font-size:1.05rem; margin-bottom:0.75rem;">Módulo 3: SAC e Comparativos</h4>
+                        <ul style="color:var(--text-secondary); font-size:0.88rem; line-height:1.7; list-style:disc; padding-left:1.2rem;">
+                            <li>Amortização constante: A = Saldo Inicial / n.</li>
+                            <li>Prestações e juros decrescentes no tempo.</li>
+                            <li>Sistema Americano de Amortização (quitação única do principal).</li>
+                            <li>Comparação de juros totais, fluxo de caixa e risco financeiro.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-grid">
+                <div>
+                    <div class="footer-brand">CEST — Centro Universitário Santa Terezinha</div>
+                    <p class="footer-desc">
+                        Curso de Administração • Disciplina de Matemática Financeira.<br>
+                        Material didático desenvolvido para projeção em sala de aula, simulações em tempo real e estudos dirigidos.
+                    </p>
+                </div>
+                <div>
+                    <h4 class="footer-title">Navegação Rápida</h4>
+                    <div style="display:flex; flex-direction:column; gap:0.4rem; font-size:0.85rem;">
+                        <a href="AULA_1/1.html" style="color:rgba(255,255,255,0.7);">Aula 1 • Fundamentos de Amortização</a>
+                        <a href="AULA_2/1.html" style="color:rgba(255,255,255,0.7);">Aula 2 • Sistema Francês (Price)</a>
+                        <a href="AULA_3/1.html" style="color:rgba(255,255,255,0.7);">Aula 3 • SAC e Comparativos</a>
+                    </div>
+                </div>
+                <div>
+                    <h4 class="footer-title">Docente Responsável</h4>
+                    <p class="footer-desc">
+                        <strong>Prof. Msc. Philipe Sampaio Lima</strong><br>
+                        Coordenador de Planejamento e Orçamento (UEMA)<br>
+                        Mestre em Eng. de Computação e Sistemas (PECS/UEMA)
+                    </p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <span>&copy; CEST - Todos os direitos reservados. Matemática Financeira.</span>
+                <span>Compatível com Projeção 16:9 e Passadores Físicos USB.</span>
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html>

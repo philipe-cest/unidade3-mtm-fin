@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aula 1 • Parte 7 — Construção Manual de uma Planilha Financeira | CEST</title>
+    <meta name="author" content="Prof. Msc. Philipe Sampaio Lima">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23002060'/><circle cx='50' cy='50' r='30' fill='%230080FF'/><text x='50' y='58' font-size='24' font-weight='bold' fill='white' text-anchor='middle'>7</text></svg>">
+    
+    <style>
+        :root {
+            --primary: #002060;
+            --primary-dark: #001138;
+            --primary-light: #003399;
+            --secondary: #0080FF;
+            --secondary-light: #E6F2FF;
+            --accent: #00A3FF;
+            --background: #F4F7FA;
+            --surface: #FFFFFF;
+            --text-primary: #0F172A;
+            --text-secondary: #475569;
+            --text-muted: #64748B;
+            --border: #CBD5E1;
+            --success: #059669;
+            --warning: #D97706;
+            --danger: #DC2626;
+            --radius-md: 12px;
+            --shadow-md: 0 8px 24px -4px rgba(0, 32, 96, 0.12);
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: #0b1329;
+            color: var(--text-primary);
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .stage {
+            width: 96vw;
+            height: 54vw;
+            max-width: 1600px;
+            max-height: 900px;
+            background-color: var(--background);
+            border-radius: var(--radius-md);
+            box-shadow: 0 15px 45px rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .slide-topbar {
+            height: 52px;
+            background-color: var(--primary);
+            color: #FFFFFF;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 1.5rem;
+            flex-shrink: 0;
+            border-bottom: 2px solid var(--secondary);
+        }
+        .topbar-left { display: flex; align-items: center; gap: 12px; font-weight: 700; font-size: 0.9rem; }
+        .topbar-badge {
+            background-color: rgba(255,255,255,0.15); padding: 3px 8px; border-radius: 4px; color: var(--secondary-light); font-size: 0.75rem;
+        }
+        .topbar-right { display: flex; align-items: center; gap: 15px; font-size: 0.85rem; color: rgba(255,255,255,0.85); }
+
+        .slide-viewport { flex-grow: 1; position: relative; overflow: hidden; }
+        .slide {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            padding: 2.2rem 3rem; display: flex; flex-direction: column; opacity: 0; visibility: hidden;
+            transform: translateX(30px); transition: all 0.28s ease-out; overflow-y: auto;
+        }
+        .slide.active { opacity: 1; visibility: visible; transform: translateX(0); z-index: 2; }
+
+        .slide-tag { color: var(--secondary); font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.35rem; }
+        .slide-title { font-size: 1.85rem; font-weight: 800; color: var(--primary); line-height: 1.25; margin-bottom: 1.25rem; }
+        .slide-content { font-size: 1.08rem; line-height: 1.6; color: var(--text-secondary); flex-grow: 1; display: flex; flex-direction: column; justify-content: center; }
+
+        .highlight-box {
+            background-color: var(--surface); border-left: 5px solid var(--secondary); padding: 1.25rem 1.75rem;
+            border-radius: 0 var(--radius-md) var(--radius-md) 0; box-shadow: var(--shadow-md); margin: 1rem 0;
+        }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+        .card-panel { background: var(--surface); padding: 1.4rem; border-radius: var(--radius-md); border: 1px solid var(--border); }
+
+        .table-responsive { width: 100%; overflow-x: auto; margin-top: 0.5rem; }
+        table.fin-table {
+            width: 100%; border-collapse: collapse; text-align: right; font-size: 0.88rem; background: #fff; border-radius: 6px; overflow: hidden;
+        }
+        table.fin-table th {
+            background-color: var(--primary); color: #fff; padding: 0.6rem 0.8rem; font-weight: 700; text-align: center;
+        }
+        table.fin-table td {
+            padding: 0.5rem 0.8rem; border-bottom: 1px solid var(--border); color: var(--text-primary);
+        }
+        table.fin-table tr:nth-child(even) { background-color: var(--background); }
+        table.fin-table tr.total-row { background-color: var(--secondary-light); font-weight: 800; color: var(--primary); }
+
+        .slide-footer {
+            height: 56px; background-color: var(--surface); border-top: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: space-between; padding: 0 1.5rem; flex-shrink: 0;
+        }
+        .nav-controls { display: flex; align-items: center; gap: 10px; }
+        .btn-nav {
+            background-color: var(--background); border: 1px solid var(--border); color: var(--primary);
+            padding: 6px 14px; border-radius: 6px; font-weight: 700; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; gap: 6px;
+        }
+        .btn-nav:hover { background-color: var(--secondary); color: #FFFFFF; }
+        .progress-indicator { font-weight: 700; font-size: 0.88rem; color: var(--text-muted); }
+    </style>
+</head>
+<body>
+
+    <div class="stage">
+        <div class="slide-topbar">
+            <div class="topbar-left">
+                <span>CEST • MATEMÁTICA FINANCEIRA</span>
+                <span class="topbar-badge">Aula 1 • Parte 7</span>
+            </div>
+            <div class="topbar-right">
+                <span>Prof. Msc. Philipe Sampaio Lima</span>
+                <button class="btn-nav" id="btnFullscreen" style="padding:4px 8px; font-size:0.75rem;">⛶ Ecrã Completo</button>
+            </div>
+        </div>
+
+        <div class="slide-viewport">
+            
+            <!-- SLIDE 1: ABERTURA -->
+            <div class="slide active">
+                <span class="slide-tag">Passo a Passo Manual</span>
+                <h1 class="slide-title" style="font-size:2.35rem;">Construção Manual de uma Planilha Financeira</h1>
+                <div class="slide-content">
+                    <div class="highlight-box">
+                        <h3 style="color:var(--primary); font-size:1.25rem; margin-bottom:0.5rem;">Roteiro da Aula Prática:</h3>
+                        <p>1. Resolução completa e manual de um financiamento de 4 meses sem recurso a calculadoras programáveis.</p>
+                        <p>2. Aplicação do algoritmo linha por linha: Juros &rarr; Amortização &rarr; Saldo Devedor Atual.</p>
+                        <p>3. Conferência de auditoria das somas totais e validação do saldo zero.</p>
+                        <p>4. Consolidação do raciocínio analítico para compreensão dos sistemas Price e SAC.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SLIDE 2: O ENUNCIADO E DADOS DO CASO -->
+            <div class="slide">
+                <span class="slide-tag">Caso Prático de Aplicação</span>
+                <h2 class="slide-title">Enunciado: Financiamento de R$ 20.000 em 4 Meses</h2>
+                <div class="slide-content">
+                    <p>Uma microempresa obtém um empréstimo bancário para reforma estrutural nas seguintes condições acordadas:</p>
+                    <div class="grid-2" style="margin-top:0.8rem;">
+                        <div class="card-panel">
+                            <h4 style="color:var(--primary); margin-bottom:0.4rem;">Dados do Contrato:</h4>
+                            <p>• <strong>Capital Financiado (PV):</strong> R$ 20.000,00</p>
+                            <p>• <strong>Prazo (n):</strong> 4 meses</p>
+                            <p>• <strong>Taxa de Juros (i):</strong> 2% ao mês (0,02 decimal)</p>
+                            <p>• <strong>Prestação Fixada (PMT):</strong> R$ 5.253,59 por mês</p>
+                        </div>
+                        <div class="card-panel" style="background:var(--secondary-light); border-color:var(--secondary);">
+                            <h4 style="color:var(--primary); margin-bottom:0.4rem;">O que Faremos Agora?</h4>
+                            <p style="font-size:0.95rem;">Vamos demonstrar os cálculos individuais para cada um dos 4 períodos, preenchendo a tabela financeira até que a dívida seja integralmente extinta.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SLIDE 3: MEMÓRIA DE CÁLCULO DOS PERÍODOS 1 E 2 -->
+            <div class="slide">
+                <span class="slide-tag">Desenvolvimento Passo a Passo</span>
+                <h2 class="slide-title">Cálculo dos Períodos 1 e 2</h2>
+                <div class="slide-content">
+                    <div class="grid-2">
+                        <div class="card-panel">
+                            <h4 style="color:var(--primary); margin-bottom:0.3rem;">Mês 1 (Saldo Anterior = R$ 20.000,00)</h4>
+                            <p>• Juros: 20.000,00 × 0,02 = <strong>R$ 400,00</strong></p>
+                            <p>• Amortização: 5.253,59 - 400,00 = <strong>R$ 4.853,59</strong></p>
+                            <p>• Novo Saldo: 20.000,00 - 4.853,59 = <strong style="color:var(--primary);">R$ 15.146,41</strong></p>
+                        </div>
+                        <div class="card-panel">
+                            <h4 style="color:var(--primary); margin-bottom:0.3rem;">Mês 2 (Saldo Anterior = R$ 15.146,41)</h4>
+                            <p>• Juros: 15.146,41 × 0,02 = <strong>R$ 302,93</strong></p>
+                            <p>• Amortização: 5.253,59 - 302,93 = <strong>R$ 4.950,66</strong></p>
+                            <p>• Novo Saldo: 15.146,41 - 4.950,66 = <strong style="color:var(--primary);">R$ 10.195,75</strong></p>
+                        </div>
+                    </div>
+                    <div class="highlight-box" style="margin-top:0.9rem;">
+                        <strong>Observe o Comportamento:</strong> Do mês 1 para o mês 2, os juros caíram de R$ 400,00 para R$ 302,93 porque a dívida viva diminuiu. Consequentemente, a amortização subiu de R$ 4.853,59 para R$ 4.950,66!
+                    </div>
+                </div>
+            </div>
+
+            <!-- SLIDE 4: MEMÓRIA DE CÁLCULO DOS PERÍODOS 3 E 4 -->
+            <div class="slide">
+                <span class="slide-tag">Desenvolvimento Passo a Passo</span>
+                <h2 class="slide-title">Cálculo dos Períodos 3 e 4 (Quitação)</h2>
+                <div class="slide-content">
+                    <div class="grid-2">
+                        <div class="card-panel">
+                            <h4 style="color:var(--primary); margin-bottom:0.3rem;">Mês 3 (Saldo Anterior = R$ 10.195,75)</h4>
+                            <p>• Juros: 10.195,75 × 0,02 = <strong>R$ 203,92</strong></p>
+                            <p>• Amortização: 5.253,59 - 203,92 = <strong>R$ 5.049,67</strong></p>
+                            <p>• Novo Saldo: 10.195,75 - 5.049,67 = <strong style="color:var(--primary);">R$ 5.146,08</strong></p>
+                        </div>
+                        <div class="card-panel" style="background:#F0FDF4; border-color:var(--success);">
+                            <h4 style="color:var(--success); margin-bottom:0.3rem;">Mês 4 (Saldo Anterior = R$ 5.146,08)</h4>
+                            <p>• Juros: 5.146,08 × 0,02 = <strong>R$ 102,92</strong></p>
+                            <p>• Amortização: 5.253,59 - 102,92 = <strong>R$ 5.150,67</strong> (ajuste centavos: R$ 5.146,08)</p>
+                            <p>• Saldo Final: 5.146,08 - 5.146,08 = <strong style="color:var(--success);">R$ 0,00 (Quitado!)</strong></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SLIDE 5: A PLANILHA FINAL COMPLETA -->
+            <div class="slide">
+                <span class="slide-tag">Resultado Consolidado</span>
+                <h2 class="slide-title">A Tabela de Amortização Final</h2>
+                <div class="slide-content">
+                    <div class="card-panel">
+                        <div class="table-responsive">
+                            <table class="fin-table">
+                                <thead>
+                                    <tr>
+                                        <th>Mês (n)</th>
+                                        <th>Prestação (R$)</th>
+                                        <th>Juros (R$)</th>
+                                        <th>Amortização (R$)</th>
+                                        <th>Saldo Devedor (R$)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td style="text-align:center;">0</td>
+                                        <td>-</td>
+                                        <td>-</td>
+                                        <td>-</td>
+                                        <td><strong>20.000,00</strong></td>
+                                    </tr>
+                                    <tr>
+                                        <td style="text-align:center;">1</td>
+                                        <td>5.253,59</td>
+                                        <td>400,00</td>
+                                        <td>4.853,59</td>
+                                        <td>15.146,41</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="text-align:center;">2</td>
+                                        <td>5.253,59</td>
+                                        <td>302,93</td>
+                                        <td>4.950,66</td>
+                                        <td>10.195,75</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="text-align:center;">3</td>
+                                        <td>5.253,59</td>
+                                        <td>203,92</td>
+                                        <td>5.049,67</td>
+                                        <td>5.146,08</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="text-align:center;">4</td>
+                                        <td>5.249,00</td>
+                                        <td>102,92</td>
+                                        <td>5.146,08</td>
+                                        <td style="color:var(--success); font-weight:700;">0,00</td>
+                                    </tr>
+                                    <tr class="total-row">
+                                        <td style="text-align:center;">Totais</td>
+                                        <td>21.009,77</td>
+                                        <td>1.009,77</td>
+                                        <td>20.000,00</td>
+                                        <td>-</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SLIDE 6: SÍNTESE E PRÓXIMA PARTE -->
+            <div class="slide">
+                <span class="slide-tag">Fechamento da Parte 7</span>
+                <h2 class="slide-title">Síntese da Construção Manual</h2>
+                <div class="slide-content">
+                    <div class="card-panel">
+                        <h3 style="color:var(--primary); margin-bottom:0.6rem;">Auditoria da Tabela Realizada:</h3>
+                        <p>✔ <strong>Soma das Amortizações:</strong> R$ 20.000,00 (exatamente igual ao capital financiado PV).</p>
+                        <p>✔ <strong>Soma dos Juros:</strong> R$ 1.009,77 pagos à instituição financeira pelo empréstimo.</p>
+                        <p>✔ <strong>Desembolso Total:</strong> 20.000,00 + 1.009,77 = R$ 21.009,77.</p>
+                    </div>
+                    <div class="highlight-box" style="margin-top:1.2rem; text-align:center;">
+                        <h4 style="color:var(--secondary); font-size:1.15rem;">Próxima Apresentação (8.html):</h4>
+                        <p style="margin-top:0.3rem;">Vamos explorar um <strong>Simulador Interativo Completo</strong> que desenha a decomposição de qualquer tabela de amortização em tempo real com gráficos em SVG.</p>
+                        <a href="8.html" class="btn-nav" style="display:inline-flex; margin-top:0.8rem; background:var(--secondary); color:#fff; border:none; padding:0.65rem 1.5rem;">
+                            Avançar para Aula 1 • Parte 8 (8.html) &rarr;
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="slide-footer">
+            <div class="nav-controls">
+                <button class="btn-nav" id="btnPrev">← Anterior (↑)</button>
+                <button class="btn-nav" id="btnNext">Próximo (↓) →</button>
+            </div>
+            <div class="progress-indicator" id="slideIndicator">Slide 01 de 06</div>
+            <div>
+                <a href="6.html" class="btn-nav" style="text-decoration:none;">⮌ Voltar à Parte 6</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const slides = document.querySelectorAll('.slide');
+        const totalSlides = slides.length;
+        let currentSlide = 0;
+        const slideIndicator = document.getElementById('slideIndicator');
+        const btnPrev = document.getElementById('btnPrev');
+        const btnNext = document.getElementById('btnNext');
+        const btnFullscreen = document.getElementById('btnFullscreen');
+
+        function updateSlide(index) {
+            slides.forEach((s, idx) => s.classList.toggle('active', idx === index));
+            slideIndicator.textContent = `Slide ${String(index + 1).padStart(2, '0')} de ${String(totalSlides).padStart(2, '0')}`;
+        }
+
+        function nextSlide() {
+            if (currentSlide < totalSlides - 1) {
+                currentSlide++;
+                updateSlide(currentSlide);
+            } else {
+                window.location.href = "8.html";
+            }
+        }
+
+        function prevSlide() {
+            if (currentSlide > 0) {
+                currentSlide--;
+                updateSlide(currentSlide);
+            } else {
+                window.location.href = "6.html";
+            }
+        }
+
+        btnNext.addEventListener('click', nextSlide);
+        btnPrev.addEventListener('click', prevSlide);
+
+        window.addEventListener('keydown', (e) => {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') return;
+            if (e.key === 'ArrowDown' || e.key === 'PageDown' || e.key === 'ArrowRight') {
+                e.preventDefault();
+                nextSlide();
+            } else if (e.key === 'ArrowUp' || e.key === 'PageUp' || e.key === 'ArrowLeft') {
+                e.preventDefault();
+                prevSlide();
+            } else if (e.key === 'f' || e.key === 'F') {
+                toggleFullscreen();
+            }
+        });
+
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(() => {});
+            } else {
+                if (document.exitFullscreen) document.exitFullscreen();
+            }
+        }
+        btnFullscreen.addEventListener('click', toggleFullscreen);
+    </script>
+</body>
+</html>

@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Atividade Prática 1 • Fundamentos dos Sistemas de Amortização | CEST</title>
+    <meta name="author" content="Prof. Msc. Philipe Sampaio Lima">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23002060'/><circle cx='50' cy='50' r='30' fill='%230080FF'/><text x='50' y='58' font-size='22' font-weight='bold' fill='white' text-anchor='middle'>AT1</text></svg>">
+    
+    <style>
+        :root {
+            --primary: #002060;
+            --primary-dark: #001138;
+            --primary-light: #003399;
+            --secondary: #0080FF;
+            --secondary-light: #E6F2FF;
+            --accent: #00A3FF;
+            --background: #F4F7FA;
+            --surface: #FFFFFF;
+            --text-primary: #0F172A;
+            --text-secondary: #475569;
+            --text-muted: #64748B;
+            --border: #CBD5E1;
+            --success: #059669;
+            --warning: #D97706;
+            --danger: #DC2626;
+            --radius-sm: 6px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --shadow-sm: 0 1px 3px rgba(0, 32, 96, 0.05);
+            --shadow-md: 0 4px 18px -2px rgba(0, 32, 96, 0.08);
+            --max-w: 1100px;
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        html { scroll-behavior: smooth; font-size: 16px; }
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--background);
+            color: var(--text-primary);
+            line-height: 1.55;
+            -webkit-font-smoothing: antialiased;
+            padding-bottom: 5rem;
+        }
+
+        .container { width: 100%; max-width: var(--max-w); margin: 0 auto; padding: 0 1.25rem; }
+
+        header {
+            background-color: var(--surface);
+            border-bottom: 2px solid var(--secondary);
+            padding: 1.25rem 0;
+            box-shadow: var(--shadow-sm);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .header-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        .brand-box { display: flex; align-items: center; gap: 12px; }
+        .brand-box svg { width: 38px; height: 38px; flex-shrink: 0; }
+        .brand-titles h1 { font-size: 1.15rem; font-weight: 800; color: var(--primary); line-height: 1.2; }
+        .brand-titles p { font-size: 0.8rem; color: var(--text-muted); font-weight: 600; }
+
+        .intro-card {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: #FFFFFF;
+            padding: 2rem;
+            border-radius: var(--radius-md);
+            margin: 2rem 0;
+            box-shadow: var(--shadow-md);
+        }
+        .intro-title { font-size: 1.6rem; font-weight: 800; margin-bottom: 0.5rem; color: #FFFFFF; }
+        .intro-desc { font-size: 0.95rem; color: rgba(255,255,255,0.85); line-height: 1.6; max-width: 900px; }
+
+        .student-box {
+            background: var(--surface);
+            border: 2px solid var(--secondary);
+            border-radius: var(--radius-md);
+            padding: 1.5rem;
+            margin-bottom: 2.5rem;
+            box-shadow: var(--shadow-md);
+            display: grid;
+            grid-template-columns: 1.5fr 1fr;
+            gap: 1.25rem;
+            align-items: center;
+        }
+        .student-field label {
+            display: block; font-size: 0.85rem; font-weight: 700; color: var(--primary); margin-bottom: 0.35rem; text-transform: uppercase; letter-spacing: 0.05em;
+        }
+        .student-field input {
+            width: 100%; padding: 0.85rem 1rem; border: 1.5px solid var(--border); border-radius: var(--radius-sm); font-size: 1.05rem; font-weight: 600; color: var(--text-primary); transition: 0.2s;
+        }
+        .student-field input:focus { border-color: var(--secondary); outline: none; background: #fff; box-shadow: 0 0 0 3px rgba(0,128,255,0.15); }
+        .student-meta {
+            font-size: 0.85rem; color: var(--text-secondary); background: var(--background); padding: 0.85rem; border-radius: var(--radius-sm); border: 1px solid var(--border);
+        }
+
+        .forms-callout {
+            background: linear-gradient(135deg, #107C41 0%, #0B532A 100%);
+            color: #fff;
+            padding: 1.5rem 2rem;
+            border-radius: var(--radius-md);
+            margin-bottom: 2.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+            box-shadow: 0 8px 24px -4px rgba(16, 124, 65, 0.25);
+        }
+        .forms-info h3 { font-size: 1.25rem; font-weight: 800; margin-bottom: 0.25rem; }
+        .forms-info p { font-size: 0.9rem; opacity: 0.9; }
+        .btn-forms {
+            display: inline-flex; align-items: center; gap: 8px; background-color: #FFFFFF; color: #0B532A; padding: 0.85rem 1.6rem; border-radius: 30px; font-weight: 800; font-size: 0.95rem; text-decoration: none; transition: 0.2s; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .btn-forms:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,0,0,0.25); background-color: #F0FDF4; }
+
+        .question-card {
+            background: var(--surface);
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border);
+            padding: 2rem;
+            margin-bottom: 2.5rem;
+            box-shadow: var(--shadow-sm);
+            transition: border-color 0.2s;
+        }
+        .question-card:hover { border-color: rgba(0, 32, 96, 0.3); }
+        .q-header {
+            display: flex; justify-content: space-between; align-items: center; border-bottom: 1.5px solid var(--background); padding-bottom: 0.85rem; margin-bottom: 1.25rem;
+        }
+        .q-badge {
+            background-color: var(--primary); color: #fff; font-size: 0.8rem; font-weight: 700; padding: 4px 12px; border-radius: 20px; text-transform: uppercase;
+        }
+        .q-theme { font-size: 0.85rem; font-weight: 700; color: var(--secondary); text-transform: uppercase; letter-spacing: 0.05em; }
+        
+        .q-statement {
+            font-size: 1.05rem; line-height: 1.65; color: var(--text-primary); margin-bottom: 1.25rem;
+        }
+        .q-highlight {
+            background-color: var(--secondary-light); padding: 0.85rem 1.25rem; border-radius: var(--radius-sm); border-left: 4px solid var(--secondary); margin: 0.85rem 0 1.25rem 0; font-size: 0.95rem; color: var(--primary); line-height: 1.6;
+        }
+
+        .q-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 1.75rem; align-items: start;
+        }
+        .answer-form {
+            display: flex; flex-direction: column; gap: 1rem;
+        }
+        .input-group label {
+            display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-secondary); margin-bottom: 0.3rem;
+        }
+        .input-group input {
+            width: 100%; padding: 0.75rem 0.9rem; border: 1.5px solid var(--border); border-radius: var(--radius-sm); font-size: 1rem; font-weight: 700; color: var(--text-primary);
+        }
+        .input-group input:focus { border-color: var(--secondary); outline: none; }
+        .input-hint { font-size: 0.75rem; color: var(--text-muted); margin-top: 3px; }
+
+        .btn-check-q {
+            background-color: var(--primary); color: #fff; border: none; padding: 0.75rem 1.25rem; border-radius: var(--radius-sm); font-weight: 700; font-size: 0.9rem; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px;
+        }
+        .btn-check-q:hover { background-color: var(--primary-light); }
+
+        .q-feedback {
+            margin-top: 1rem; padding: 0.85rem 1rem; border-radius: var(--radius-sm); font-size: 0.9rem; display: none; line-height: 1.5;
+        }
+        .q-feedback.correct {
+            display: block; background-color: #ECFDF5; border: 1px solid #A7F3D0; color: #065F46;
+        }
+        .q-feedback.incorrect {
+            display: block; background-color: #FEF2F2; border: 1px solid #FECACA; color: #991B1B;
+        }
+
+        .q-chart-panel {
+            background: #FFFFFF;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.02);
+            min-height: 220px;
+        }
+        .chart-header { font-size: 0.78rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.5rem; letter-spacing: 0.05em; text-align: center; }
+
+        .action-dock {
+            background: var(--surface);
+            border: 2px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 1.5rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+            box-shadow: var(--shadow-md);
+            margin-top: 3rem;
+        }
+        .action-dock-text h4 { font-size: 1.15rem; color: var(--primary); font-weight: 800; }
+        .action-dock-text p { font-size: 0.85rem; color: var(--text-secondary); }
+        .btn-export-pdf {
+            display: inline-flex; align-items: center; gap: 8px; background-color: var(--secondary); color: #fff; border: none; padding: 0.95rem 2rem; border-radius: var(--radius-sm); font-size: 1rem; font-weight: 800; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 12px rgba(0,128,255,0.3);
+        }
+        .btn-export-pdf:hover { background-color: var(--primary-light); transform: translateY(-2px); }
+
+        @media (max-width: 900px) {
+            .student-box { grid-template-columns: 1fr; }
+            .q-grid { grid-template-columns: 1fr; gap: 1.5rem; }
+            .forms-callout { flex-direction: column; align-items: flex-start; }
+            .action-dock { flex-direction: column; align-items: stretch; text-align: center; }
+            .btn-export-pdf { width: 100%; justify-content: center; }
+        }
+
+        @media print {
+            body { background: #fff !important; color: #000 !important; padding: 0; }
+            header, .forms-callout, .action-dock, .btn-check-q, .input-hint { display: none !important; }
+            .container { max-width: 100% !important; padding: 0 !important; }
+            .intro-card { background: #002060 !important; color: #fff !important; -webkit-print-color-adjust: exact; padding: 1.25rem !important; }
+            .student-box { border: 1.5px solid #002060 !important; padding: 1rem !important; margin-bottom: 1.5rem !important; }
+            .question-card { border: 1px solid #CBD5E1 !important; page-break-inside: avoid; margin-bottom: 1.5rem !important; box-shadow: none !important; }
+            .q-chart-panel { border: 1px solid #ccc !important; }
+            input { border: 1px solid #000 !important; color: #000 !important; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="container header-content">
+            <div class="brand-box">
+                <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="100" height="100" rx="16" fill="#002060"/>
+                    <path d="M20 75 V30 L50 30 L50 75" stroke="#FFFFFF" stroke-width="8" stroke-linejoin="round"/>
+                    <path d="M50 30 L80 30 L80 75" stroke="#FFFFFF" stroke-width="8" stroke-linejoin="round"/>
+                    <path d="M30 52 H70" stroke="#0080FF" stroke-width="8"/>
+                </svg>
+                <div class="brand-titles">
+                    <h1>CEST • Centro Universitário Santa Terezinha</h1>
+                    <p>Curso de Administração • Matemática Financeira • Prof. Msc. Philipe Sampaio Lima</p>
+                </div>
+            </div>
+            <div>
+                <a href="10.html" style="font-size:0.85rem; font-weight:700; color:var(--secondary); text-decoration:none; display:flex; align-items:center; gap:4px;">
+                    &larr; Voltar à Aula 1 • Parte 10
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        
+        <section class="intro-card">
+            <h2 class="intro-title">Atividade Avaliativa 1 • Fundamentos dos Sistemas de Amortização</h2>
+            <p class="intro-desc">
+                Esta atividade avalia a sua compreensão sobre a anatomia da prestação, decomposição em juros e amortização, apuração do saldo devedor e impacto de amortizações extraordinárias. 
+                Preencha o seu nome obrigatório, digite as respostas numéricas com o separador decimal brasileiro (vírgula) e confira os gráficos dinâmicos de cada questão antes de exportar a sua folha em PDF.
+            </p>
+        </section>
+
+        <section class="student-box" id="studentSection">
+            <div class="student-field">
+                <label for="studentName">Nome Completo do Aluno (Obrigatório):</label>
+                <input type="text" id="studentName" placeholder="Digite seu nome completo aqui..." oninput="salvarNome()">
+            </div>
+            <div class="student-meta">
+                <div><strong>Disciplina:</strong> Matemática Financeira (1798)</div>
+                <div><strong>Encontro:</strong> Aula 1 • Fundamentos de Amortização</div>
+                <div><strong>Data da Sessão:</strong> <span id="sessionDate">--/--/----</span></div>
+            </div>
+        </section>
+
+        <section class="forms-callout">
+            <div class="forms-info">
+                <h3>Envio da Produção Discente Efetiva (TDE - Aula 1)</h3>
+                <p>Após responder e exportar a sua folha em PDF, submeta o documento no formulário oficial da disciplina:</p>
+            </div>
+            <a href="https://forms.gle/CEST_MTMFIN_UNIDADE3_TDE1" target="_blank" rel="noopener noreferrer" class="btn-forms">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                Submeter no Google Forms
+            </a>
+        </section>
+
+        <!-- CONTAINER DAS QUESTÕES DINÂMICAS -->
+        <div id="questionsContainer"></div>
+
+        <div class="action-dock">
+            <div class="action-dock-text">
+                <h4>Finalizou o cálculo das 5 questões?</h4>
+                <p>O arquivo PDF será padronizado como: <code>Aula1_Fundamentos_Amortizacao_[Seu_Nome].pdf</code></p>
+            </div>
+            <button class="btn-export-pdf" onclick="exportarPDF()">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Exportar Folha de Resposta em PDF
+            </button>
+        </div>
+
+    </main>
+
+    <script>
+        const fmtBRL = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
+        const fmtNum = (val, dec = 2) => Number(val).toLocaleString('pt-BR', { minimumFractionDigits: dec, maximumFractionDigits: dec });
+
+        function getRandom(min, max, step) {
+            const steps = Math.floor((max - min) / step);
+            return min + (Math.floor(Math.random() * (steps + 1)) * step);
+        }
+
+        const questionData = [
+            {
+                id: 1,
+                empresa: "Transportes Litoral Maranhense",
+                pv: getRandom(40000, 70000, 5000),
+                taxa: getRandom(1.5, 2.5, 0.5),
+                pmt: 0,
+                descContexto: "Aquisição de furgão de carga financiado a ser pago em parcelas mensais. Calcule os juros devidos e a amortização efetiva logo na primeira prestação."
+            },
+            {
+                id: 2,
+                empresa: "Supermercado São Bento",
+                pv: getRandom(60000, 90000, 5000),
+                taxa: getRandom(2.0, 3.0, 0.5),
+                pmt: 0,
+                descContexto: "Modernização das gôndolas e caixas de autoatendimento. Determine a decomposição do encargo e o saldo remanescente após o primeiro mês."
+            },
+            {
+                id: 3,
+                empresa: "Clínica Diagnóstica Renascença",
+                pv: getRandom(80000, 120000, 10000),
+                taxa: getRandom(1.8, 2.6, 0.2),
+                extra: getRandom(20000, 40000, 5000),
+                descContexto: "Financiamento para aquisição de equipamento de ultrassom. A diretoria programa um aporte extraordinário voluntário no principal."
+            },
+            {
+                id: 4,
+                empresa: "Indústria de Pré-Moldados Guajajaras",
+                pv: getRandom(50000, 80000, 5000),
+                taxa: getRandom(2.0, 3.5, 0.5),
+                n: getRandom(3, 5, 1),
+                descContexto: "Contrato de capital de giro contratado sob prazo determinado. Calcule a amortização acumulada necessária para extinção integral da obrigação."
+            },
+            {
+                id: 5,
+                empresa: "Rede Farmacêutica Maranhão Saúde",
+                pv: getRandom(100000, 150000, 10000),
+                taxa: getRandom(1.5, 2.5, 0.5),
+                pago: getRandom(30000, 50000, 5000),
+                descContexto: "Auditoria contábil de contrato bancário em andamento. Separação entre amortizações efetivas do principal e juros operacionais."
+            }
+        ];
+
+        document.addEventListener("DOMContentLoaded", () => {
+            const d = new Date();
+            document.getElementById("sessionDate").textContent = `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
+            
+            const savedName = localStorage.getItem("aluno_mtmfin_nome");
+            if (savedName) document.getElementById("studentName").value = savedName;
+
+            renderQuestions();
+        });
+
+        function salvarNome() {
+            const n = document.getElementById("studentName").value;
+            localStorage.setItem("aluno_mtmfin_nome", n);
+        }
+
+        function renderQuestions() {
+            const container = document.getElementById("questionsContainer");
+            container.innerHTML = "";
+
+            questionData.forEach((q) => {
+                const i = q.taxa / 100;
+                let juros1 = 0;
+                let amort1 = 0;
+                let saldo1 = 0;
+                let pmtEstimada = 0;
+
+                if (q.id === 1 || q.id === 2) {
+                    pmtEstimada = q.pv * (i / (1 - Math.pow(1 + i, -12)));
+                    q.pmt = pmtEstimada;
+                    juros1 = q.pv * i;
+                    amort1 = q.pmt - juros1;
+                    saldo1 = q.pv - amort1;
+                    q.gabarito = { juros: juros1, amort: amort1, saldo: saldo1 };
+                } else if (q.id === 3) {
+                    const jurosSemExtra = q.pv * i;
+                    const novoSd = q.pv - q.extra;
+                    const jurosComExtra = novoSd * i;
+                    const economia = jurosSemExtra - jurosComExtra;
+                    q.gabarito = { novoSd: novoSd, economia: economia };
+                } else if (q.id === 4) {
+                    const amortConstante = q.pv / q.n;
+                    const jurosTotalEstimado = (q.pv * i * (q.n + 1)) / 2;
+                    q.gabarito = { amort: amortConstante, totalAmort: q.pv };
+                } else if (q.id === 5) {
+                    const jurosPagos = q.pago * 0.35;
+                    const amortReal = q.pago - jurosPagos;
+                    const saldoRestante = q.pv - amortReal;
+                    q.gabarito = { amortReal: amortReal, saldoRestante: saldoRestante };
+                }
+
+                const card = document.createElement("div");
+                card.className = "question-card";
+                card.id = `qCard_${q.id}`;
+
+                let formHtml = "";
+                if (q.id === 1 || q.id === 2) {
+                    formHtml = `
+                        <p class="q-statement">
+                            A empresa <strong>${q.empresa}</strong> contraiu um financiamento de <strong>${fmtBRL.format(q.pv)}</strong> à taxa de <strong>${q.taxa.toFixed(1).replace('.', ',')}% ao mês</strong>, com prestação mensal fixada em <strong>${fmtBRL.format(q.pmt)}</strong>.<br>
+                            ${q.descContexto}
+                        </p>
+                        <div class="q-highlight">
+                            Fórmulas: Juros = Saldo Devedor × Taxa | Amortização = Prestação - Juros | Novo Saldo = Saldo Anterior - Amortização
+                        </div>
+                        <div class="q-grid">
+                            <div class="answer-form">
+                                <div class="input-group">
+                                    <label for="ans_${q.id}_juros">1. Juros devidos no 1º mês (R$):</label>
+                                    <input type="text" id="ans_${q.id}_juros" placeholder="Ex: 1200,00" oninput="validarNumeroBR(this);">
+                                </div>
+                                <div class="input-group">
+                                    <label for="ans_${q.id}_amort">2. Amortização real no 1º mês (R$):</label>
+                                    <input type="text" id="ans_${q.id}_amort" placeholder="Ex: 3500,00" oninput="validarNumeroBR(this); atualizarGraficoQuestao(${q.id});">
+                                </div>
+                                <div class="input-group">
+                                    <label for="ans_${q.id}_saldo">3. Saldo devedor após o 1º pagamento (R$):</label>
+                                    <input type="text" id="ans_${q.id}_saldo" placeholder="Ex: 56500,00" oninput="validarNumeroBR(this);">
+                                </div>
+                                <button class="btn-check-q" onclick="verificarQuestao(${q.id})">Validar Resposta (Tolerância de 5%)</button>
+                                <div id="fb_${q.id}" class="q-feedback"></div>
+                            </div>
+                            <div class="q-chart-panel">
+                                <div class="chart-header">Decomposição da Parcela (Questão 0${q.id})</div>
+                                <svg id="svg_q_${q.id}" viewBox="0 0 340 160" style="width:100%; height:150px;"></svg>
+                            </div>
+                        </div>
+                    `;
+                } else if (q.id === 3) {
+                    formHtml = `
+                        <p class="q-statement">
+                            A <strong>${q.empresa}</strong> possui saldo devedor de <strong>${fmtBRL.format(q.pv)}</strong> a <strong>${q.taxa.toFixed(1).replace('.', ',')}% ao mês</strong>. A diretoria efetuou uma <strong>amortização extraordinária de ${fmtBRL.format(q.extra)}</strong> no principal.<br>
+                            ${q.descContexto}
+                        </p>
+                        <div class="q-highlight">
+                            Calcule o novo Saldo Devedor imediatamente após o aporte e a economia direta de juros gerada no mês subsequente.
+                        </div>
+                        <div class="q-grid">
+                            <div class="answer-form">
+                                <div class="input-group">
+                                    <label for="ans_${q.id}_novosd">1. Novo Saldo Devedor (R$):</label>
+                                    <input type="text" id="ans_${q.id}_novosd" placeholder="Ex: 70000,00" oninput="validarNumeroBR(this); atualizarGraficoQuestao(${q.id});">
+                                </div>
+                                <div class="input-group">
+                                    <label for="ans_${q.id}_economia">2. Economia mensal de juros gerada (R$):</label>
+                                    <input type="text" id="ans_${q.id}_economia" placeholder="Ex: 600,00" oninput="validarNumeroBR(this);">
+                                </div>
+                                <button class="btn-check-q" onclick="verificarQuestao(${q.id})">Validar Resposta (Tolerância de 5%)</button>
+                                <div id="fb_${q.id}" class="q-feedback"></div>
+                            </div>
+                            <div class="q-chart-panel">
+                                <div class="chart-header">Saldo Devedor Antes vs. Depois (Questão 0${q.id})</div>
+                                <svg id="svg_q_${q.id}" viewBox="0 0 340 160" style="width:100%; height:150px;"></svg>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    formHtml = `
+                        <p class="q-statement">
+                            A empresa <strong>${q.empresa}</strong> contraiu uma obrigação financeira de <strong>${fmtBRL.format(q.pv)}</strong>.<br>
+                            ${q.descContexto}
+                        </p>
+                        <div class="q-highlight">
+                            Princípio da Amortização: O total amortizado acumulado ao término do contrato deve ser rigorosamente igual ao Capital Financiado (PV).
+                        </div>
+                        <div class="q-grid">
+                            <div class="answer-form">
+                                <div class="input-group">
+                                    <label for="ans_${q.id}_totalamort">1. Total de amortização acumulada necessária para quitar a dívida (R$):</label>
+                                    <input type="text" id="ans_${q.id}_totalamort" placeholder="Ex: ${q.pv}" oninput="validarNumeroBR(this); atualizarGraficoQuestao(${q.id});">
+                                </div>
+                                <button class="btn-check-q" onclick="verificarQuestao(${q.id})">Validar Resposta (Tolerância de 5%)</button>
+                                <div id="fb_${q.id}" class="q-feedback"></div>
+                            </div>
+                            <div class="q-chart-panel">
+                                <div class="chart-header">Estrutura de Quitação (Questão 0${q.id})</div>
+                                <svg id="svg_q_${q.id}" viewBox="0 0 340 160" style="width:100%; height:150px;"></svg>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                card.innerHTML = `
+                    <div class="q-header">
+                        <span class="q-badge">Questão 0${q.id}</span>
+                        <span class="q-theme">${q.empresa} • Fundamentos</span>
+                    </div>
+                    ${formHtml}
+                `;
+                container.appendChild(card);
+                atualizarGraficoQuestao(q.id);
+            });
+        }
+
+        function validarNumeroBR(input) {
+            let val = input.value.replace(/[^0-9,]/g, "");
+            const parts = val.split(",");
+            if (parts.length > 2) {
+                val = parts[0] + "," + parts.slice(1).join("");
+            }
+            input.value = val;
+        }
+
+        function parseBRFloat(str) {
+            if (!str) return 0;
+            return parseFloat(str.replace(".", "").replace(",", ".")) || 0;
+        }
+
+        function atualizarGraficoQuestao(qid) {
+            const q = questionData.find(item => item.id === qid);
+            const svg = document.getElementById(`svg_q_${qid}`);
+            if (!svg) return;
+
+            if (qid === 1 || qid === 2) {
+                const userAmort = parseBRFloat(document.getElementById(`ans_${qid}_amort`) ? document.getElementById(`ans_${qid}_amort`).value : 0);
+                const refAmort = userAmort > 0 ? userAmort : q.gabarito.amort;
+                const refJuros = q.gabarito.juros;
+                const total = refAmort + refJuros;
+
+                const hAmort = (refAmort / total) * 90;
+                const hJuros = (refJuros / total) * 90;
+
+                svg.innerHTML = `
+                    <line x1="25" y1="125" x2="315" y2="125" stroke="#CBD5E1" stroke-width="2"/>
+                    <rect x="70" y="${125 - hAmort}" width="60" height="${hAmort}" fill="#059669" rx="3"/>
+                    <text x="100" y="${118 - hAmort}" font-size="9" font-weight="bold" fill="#059669" text-anchor="middle">${fmtBRL.format(refAmort)}</text>
+                    <text x="100" y="140" font-size="9" fill="#059669" font-weight="700" text-anchor="middle">Amortização</text>
+
+                    <rect x="180" y="${125 - hJuros}" width="60" height="${hJuros}" fill="#DC2626" rx="3"/>
+                    <text x="210" y="${118 - hJuros}" font-size="9" font-weight="bold" fill="#DC2626" text-anchor="middle">${fmtBRL.format(refJuros)}</text>
+                    <text x="210" y="140" font-size="9" fill="#DC2626" font-weight="700" text-anchor="middle">Juros</text>
+                `;
+            } else if (qid === 3) {
+                const userSd = parseBRFloat(document.getElementById(`ans_${qid}_novosd`) ? document.getElementById(`ans_${qid}_novosd`).value : 0);
+                const refSd = userSd > 0 ? userSd : q.gabarito.novoSd;
+                const maxVal = q.pv;
+
+                const h1 = 90;
+                const h2 = (refSd / maxVal) * 90;
+
+                svg.innerHTML = `
+                    <line x1="25" y1="125" x2="315" y2="125" stroke="#CBD5E1" stroke-width="2"/>
+                    <rect x="70" y="${125 - h1}" width="60" height="${h1}" fill="#64748B" rx="3"/>
+                    <text x="100" y="${118 - h1}" font-size="9" font-weight="bold" fill="#64748B" text-anchor="middle">${fmtBRL.format(q.pv)}</text>
+                    <text x="100" y="140" font-size="9" fill="#64748B" text-anchor="middle">Antes</text>
+
+                    <rect x="180" y="${125 - h2}" width="60" height="${h2}" fill="#002060" rx="3"/>
+                    <text x="210" y="${118 - h2}" font-size="9" font-weight="bold" fill="#002060" text-anchor="middle">${fmtBRL.format(refSd)}</text>
+                    <text x="210" y="140" font-size="9" fill="#002060" font-weight="700" text-anchor="middle">Depois</text>
+                `;
+            } else {
+                svg.innerHTML = `
+                    <line x1="25" y1="125" x2="315" y2="125" stroke="#CBD5E1" stroke-width="2"/>
+                    <rect x="110" y="35" width="100" height="90" fill="#002060" rx="4"/>
+                    <text x="160" y="25" font-size="10" font-weight="bold" fill="#002060" text-anchor="middle">PV = ${fmtBRL.format(q.pv)}</text>
+                    <text x="160" y="140" font-size="9" font-weight="700" fill="#002060" text-anchor="middle">100% Amortizado</text>
+                `;
+            }
+        }
+
+        function verificarQuestao(qid) {
+            const q = questionData.find(item => item.id === qid);
+            const fb = document.getElementById(`fb_${qid}`);
+
+            if (qid === 1 || qid === 2) {
+                const userJuros = parseBRFloat(document.getElementById(`ans_${qid}_juros`).value);
+                const userAmort = parseBRFloat(document.getElementById(`ans_${qid}_amort`).value);
+
+                if (userJuros <= 0 || userAmort <= 0) {
+                    fb.className = "q-feedback incorrect";
+                    fb.textContent = "Preencha os campos de Juros e Amortização para conferir.";
+                    return;
+                }
+
+                const diffJ = Math.abs(userJuros - q.gabarito.juros) / q.gabarito.juros;
+                const diffA = Math.abs(userAmort - q.gabarito.amort) / q.gabarito.amort;
+
+                if (diffJ <= 0.05 && diffA <= 0.05) {
+                    fb.className = "q-feedback correct";
+                    fb.innerHTML = `<strong>Correto! (Dentro da tolerância de 5%)</strong><br>Juros Exatos: ${fmtBRL.format(q.gabarito.juros)} | Amortização Exata: ${fmtBRL.format(q.gabarito.amort)} | Saldo Final: ${fmtBRL.format(q.gabarito.saldo)}`;
+                } else {
+                    fb.className = "q-feedback incorrect";
+                    fb.innerHTML = `<strong>Valores incorretos.</strong> Lembre-se: Juros = Saldo Devedor × Taxa, e Amortização = Prestação - Juros.`;
+                }
+            } else if (qid === 3) {
+                const userSd = parseBRFloat(document.getElementById(`ans_${qid}_novosd`).value);
+                const userEco = parseBRFloat(document.getElementById(`ans_${qid}_economia`).value);
+
+                if (userSd <= 0 || userEco <= 0) {
+                    fb.className = "q-feedback incorrect";
+                    fb.textContent = "Preencha o novo saldo e a economia mensal.";
+                    return;
+                }
+
+                const diffSd = Math.abs(userSd - q.gabarito.novoSd) / q.gabarito.novoSd;
+                const diffEco = Math.abs(userEco - q.gabarito.economia) / q.gabarito.economia;
+
+                if (diffSd <= 0.05 && diffEco <= 0.05) {
+                    fb.className = "q-feedback correct";
+                    fb.innerHTML = `<strong>Correto!</strong> Novo Saldo: ${fmtBRL.format(q.gabarito.novoSd)} | Economia Mensal de Juros: ${fmtBRL.format(q.gabarito.economia)}`;
+                } else {
+                    fb.className = "q-feedback incorrect";
+                    fb.innerHTML = `<strong>Valores incorretos.</strong> O aporte extra abate o saldo: ${fmtBRL.format(q.pv)} - ${fmtBRL.format(q.extra)}. A economia de juros é dada pelo valor aportado multiplicado pela taxa.`;
+                }
+            } else {
+                const userAmort = parseBRFloat(document.getElementById(`ans_${qid}_totalamort`).value);
+                if (userAmort <= 0) {
+                    fb.className = "q-feedback incorrect";
+                    fb.textContent = "Preencha o valor da amortização acumulada.";
+                    return;
+                }
+
+                const diff = Math.abs(userAmort - q.pv) / q.pv;
+                if (diff <= 0.05) {
+                    fb.className = "q-feedback correct";
+                    fb.innerHTML = `<strong>Perfeito!</strong> Para extinguir qualquer obrigação, a soma acumulada das amortizações tem de igualar rigorosamente o valor financiado: ${fmtBRL.format(q.pv)}.`;
+                } else {
+                    fb.className = "q-feedback incorrect";
+                    fb.innerHTML = `<strong>Atenção ao conceito!</strong> A soma das amortizações deve totalizar exatamente o capital financiado (PV).`;
+                }
+            }
+        }
+
+        function exportarPDF() {
+            const nomeAluno = document.getElementById("studentName").value.trim();
+            if (!nomeAluno) {
+                alert("ATENÇÃO: É obrigatório inserir o Nome Completo do Aluno no início da página antes de exportar o PDF!");
+                document.getElementById("studentName").focus();
+                document.getElementById("studentSection").scrollIntoView({ behavior: 'smooth' });
+                return;
+            }
+
+            const nomeFormatado = nomeAluno.replace(/[^a-zA-Z0-9À-ÿ\s]/g, "").trim().replace(/\s+/g, "_");
+            const tituloOriginal = document.title;
+            
+            document.title = `Aula1_Fundamentos_Amortizacao_${nomeFormatado}`;
+            window.print();
+
+            setTimeout(() => {
+                document.title = tituloOriginal;
+            }, 1000);
+        }
+    </script>
+</body>
+</html>

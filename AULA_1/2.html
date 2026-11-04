@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aula 1 • Parte 2 — A Anatomia da Prestação: Juros e Amortização | CEST</title>
+    <meta name="author" content="Prof. Msc. Philipe Sampaio Lima">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23002060'/><circle cx='50' cy='50' r='30' fill='%230080FF'/><text x='50' y='58' font-size='24' font-weight='bold' fill='white' text-anchor='middle'>2</text></svg>">
+
+    <style>
+        :root {
+            --primary: #002060;
+            --primary-dark: #001138;
+            --secondary: #0080FF;
+            --secondary-light: #E6F2FF;
+            --accent: #00A3FF;
+            --background: #F4F7FA;
+            --surface: #FFFFFF;
+            --text-primary: #0F172A;
+            --text-secondary: #475569;
+            --text-muted: #64748B;
+            --border: #CBD5E1;
+            --success: #059669;
+            --warning: #D97706;
+            --danger: #DC2626;
+            --radius-md: 12px;
+            --shadow-md: 0 8px 24px -4px rgba(0, 32, 96, 0.12);
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: #0b1329;
+            color: var(--text-primary);
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .stage {
+            width: 96vw;
+            height: 54vw;
+            max-width: 1600px;
+            max-height: 900px;
+            background-color: var(--background);
+            border-radius: var(--radius-md);
+            box-shadow: 0 15px 45px rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .slide-topbar {
+            height: 52px;
+            background-color: var(--primary);
+            color: #FFFFFF;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 1.5rem;
+            flex-shrink: 0;
+            border-bottom: 2px solid var(--secondary);
+        }
+        .topbar-left { display: flex; align-items: center; gap: 12px; font-weight: 700; font-size: 0.9rem; }
+        .topbar-badge {
+            background-color: rgba(255,255,255,0.15); padding: 3px 8px; border-radius: 4px; color: var(--secondary-light); font-size: 0.75rem;
+        }
+
+        .slide-viewport { flex-grow: 1; position: relative; overflow: hidden; }
+        .slide {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            padding: 2.2rem 3rem; display: flex; flex-direction: column; opacity: 0; visibility: hidden;
+            transform: translateX(30px); transition: all 0.28s ease-out; overflow-y: auto;
+        }
+        .slide.active { opacity: 1; visibility: visible; transform: translateX(0); z-index: 2; }
+
+        .slide-tag { color: var(--secondary); font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.35rem; }
+        .slide-title { font-size: 1.85rem; font-weight: 800; color: var(--primary); line-height: 1.25; margin-bottom: 1.25rem; }
+        .slide-content { font-size: 1.08rem; line-height: 1.6; color: var(--text-secondary); flex-grow: 1; display: flex; flex-direction: column; justify-content: center; }
+
+        .highlight-box {
+            background-color: var(--surface); border-left: 5px solid var(--secondary); padding: 1.25rem 1.75rem;
+            border-radius: 0 var(--radius-md) var(--radius-md) 0; box-shadow: var(--shadow-md); margin: 1rem 0;
+        }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+        .card-panel { background: var(--surface); padding: 1.4rem; border-radius: var(--radius-md); border: 1px solid var(--border); }
+
+        .sim-box {
+            display: grid; grid-template-columns: 1fr 1.05fr; gap: 1.5rem; background: var(--surface); padding: 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--border);
+        }
+        .form-row { display: flex; flex-direction: column; gap: 0.2rem; margin-bottom: 0.5rem; }
+        .form-row label { font-weight: 600; color: var(--primary); font-size: 0.82rem; }
+        .form-row input { padding: 0.45rem; border: 1px solid var(--border); border-radius: 6px; font-weight: 600; }
+        .btn-calc { background: var(--secondary); color: #fff; border: none; padding: 0.7rem; border-radius: 6px; font-weight: 700; cursor: pointer; transition: 0.2s; width: 100%; }
+        .btn-calc:hover { background: var(--primary); }
+
+        .chart-box {
+            background: #fff; border: 1px solid var(--border); border-radius: 6px; padding: 0.75rem; margin-top: 0.5rem;
+        }
+
+        .slide-footer {
+            height: 56px; background-color: var(--surface); border-top: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: space-between; padding: 0 1.5rem; flex-shrink: 0;
+        }
+        .nav-controls { display: flex; align-items: center; gap: 10px; }
+        .btn-nav {
+            background-color: var(--background); border: 1px solid var(--border); color: var(--primary);
+            padding: 6px 14px; border-radius: 6px; font-weight: 700; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; gap: 6px;
+        }
+        .btn-nav:hover { background-color: var(--secondary); color: #FFFFFF; }
+        .progress-indicator { font-weight: 700; font-size: 0.88rem; color: var(--text-muted); }
+    </style>
+</head>
+<body>
+
+    <div class="stage">
+        <div class="slide-topbar">
+            <div class="topbar-left">
+                <span>CEST • MATEMÁTICA FINANCEIRA</span>
+                <span class="topbar-badge">Aula 1 • Parte 2</span>
+            </div>
+            <div class="topbar-right">
+                <span>Prof. Msc. Philipe Sampaio Lima</span>
+                <button class="btn-nav" id="btnFullscreen" style="padding:4px 8px; font-size:0.75rem;">⛶ Tela Cheia</button>
+            </div>
+        </div>
+
+        <div class="slide-viewport">
+            
+            <!-- SLIDE 1: ABERTURA -->
+            <div class="slide active">
+                <span class="slide-tag">Estrutura Financeira da Parcela</span>
+                <h1 class="slide-title" style="font-size:2.35rem;">A Anatomia da Prestação: Juros e Amortização</h1>
+                <div class="slide-content">
+                    <div class="highlight-box">
+                        <h3 style="color:var(--primary); font-size:1.25rem; margin-bottom:0.5rem;">O que vamos dissecar nesta aula:</h3>
+                        <p>1. A fórmula fundamental que rege todas as tabelas de financiamento do mundo bancário.</p>
+                        <p>2. A diferença contábil e orçamentária entre juros (despesa) e amortização (redução de passivo).</p>
+                        <p>3. Como calcular a amortização a partir de uma prestação conhecida e da taxa de juros do contrato.</p>
+                        <p>4. Simulador interativo com visualização gráfica da participação percentual de cada componente.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SLIDE 2: A EQUAÇÃO FUNDAMENTAL -->
+            <div class="slide">
+                <span class="slide-tag">A Lei Universal dos Financiamentos</span>
+                <h2 class="slide-title">A Equação Fundamental da Prestação</h2>
+                <div class="slide-content">
+                    <p style="margin-bottom:1rem;">Em qualquer contrato financeiro legal, cada prestação periódica é a soma estrita de dois componentes obrigatórios:</p>
+                    <div class="card-panel" style="text-align:center; padding:1.25rem; background:linear-gradient(135deg, #001e5c 0%, #002b82 100%); color:#fff;">
+                        <span style="font-size:0.85rem; text-transform:uppercase; color:var(--secondary-light); font-weight:700;">A Relação Estrutural</span>
+                        <div style="font-size:1.7rem; font-weight:800; color:#60A5FA; margin-top:0.4rem;">
+                            Prestação = Amortização + Juros
+                        </div>
+                    </div>
+                    <div class="grid-2" style="margin-top:1rem;">
+                        <div class="card-panel">
+                            <h4 style="color:var(--primary);">Ou de Forma Inversa:</h4>
+                            <p style="font-size:1.1rem; font-weight:700; color:var(--primary); margin:0.3rem 0;">
+                                Amortização = Prestação - Juros
+                            </p>
+                            <p style="font-size:0.92rem;">A amortização é o que sobra da prestação depois que os juros do período são integralmente pagos.</p>
+                        </div>
+                        <div class="card-panel">
+                            <h4 style="color:var(--primary);">Cálculo dos Juros:</h4>
+                            <p style="font-size:1.1rem; font-weight:700; color:var(--primary); margin:0.3rem 0;">
+                                Juros = Saldo Devedor Anterior × Taxa
+                            </p>
+                            <p style="font-size:0.92rem;">Os juros nunca são inventados: são obtidos multiplicando o saldo devedor existente pela taxa acordada.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SLIDE 3: O IMPACTO NO CAIXA E NO BALANÇO -->
+            <div class="slide">
+                <span class="slide-tag">Visão do Administrador</span>
+                <h2 class="slide-title">Amortização vs. Juros: A Ótica Contábil e Financeira</h2>
+                <div class="slide-content">
+                    <p style="margin-bottom:0.8rem;">Por que o gestor de empresas precisa dominar essa separação nos mínimos detalhes?</p>
+                    <div class="grid-2">
+                        <div class="card-panel" style="border-top:4px solid var(--danger);">
+                            <h4 style="color:var(--danger); margin-bottom:0.4rem;">Parcela dos Juros</h4>
+                            <p style="font-size:0.92rem;">• <strong>Contabilidade:</strong> É lançada na Demonstração do Resultado do Exercício (DRE) como Despesa Financeira.<br>• <strong>Impacto Tributário:</strong> No Lucro Real, despesas financeiras diminuem a base de cálculo de IRPJ e CSLL.<br>• <strong>Efeito no Patrimônio:</strong> Representa perda líquida de recursos para o banco.</p>
+                        </div>
+                        <div class="card-panel" style="border-top:4px solid var(--success);">
+                            <h4 style="color:var(--success); margin-bottom:0.4rem;">Parcela da Amortização</h4>
+                            <p style="font-size:0.92rem;">• <strong>Contabilidade:</strong> Não afeta o resultado na DRE. É uma redução direta do Passivo Exigível no Balanço.<br>• <strong>Impacto no Patrimônio:</strong> Troca de um ativo líquido (dinheiro no caixa) pela eliminação de uma obrigação.<br>• <strong>Efeito Prático:</strong> Devolve a posse plena dos ativos da empresa.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SLIDE 4: CASO RESOLVIDO PASSO A PASSO -->
+            <div class="slide">
+                <span class="slide-tag">Exemplo Numérico Detalhado</span>
+                <h2 class="slide-title">Caso Resolvido: Decompondo a Parcela de R$ 50.000</h2>
+                <div class="slide-content">
+                    <p><strong>Situação:</strong> Uma distribuidora de medicamentos financia <strong>R$ 50.000,00</strong> para capital de giro a <strong>2% ao mês</strong>. O contrato fixou a prestação mensal em <strong>R$ 4.700,00</strong>. Qual é a anatomia exata do 1º pagamento?</p>
+                    <div class="card-panel" style="margin-top:0.8rem;">
+                        <h4 style="color:var(--primary); margin-bottom:0.4rem;">Desenvolvimento dos Cálculos:</h4>
+                        <p>1. Dados: Saldo Devedor = R$ 50.000,00 | Prestação = R$ 4.700,00 | Taxa = 2% a.m. (0,02)</p>
+                        <p style="margin-top:0.3rem;">2. Juros devidos no mês 1:</p>
+                        <p style="padding-left:1rem; font-weight:700; color:var(--danger);">Juros = 50.000 × 0,02 = R$ 1.000,00</p>
+                        <p style="margin-top:0.3rem;">3. Amortização efetiva da dívida:</p>
+                        <p style="padding-left:1rem; font-weight:700; color:var(--success);">Amortização = 4.700 - 1.000 = R$ 3.700,00</p>
+                        <p style="margin-top:0.3rem;">4. Saldo remanescente após o pagamento:</p>
+                        <p style="padding-left:1rem; font-weight:700; color:var(--primary);">Novo Saldo = 50.000 - 3.700 = R$ 46.300,00</p>
+                    </div>
+                    <p style="font-size:0.88rem; color:var(--text-muted); margin-top:0.4rem;">
+                        Dos R$ 4.700 pagos pela empresa, 21,28% foram para remunerar o banco e 78,72% abateram dívida real.
+                    </p>
+                </div>
+            </div>
+
+            <!-- SLIDE 5: SIMULADOR 2 COM GRÁFICO DINÂMICO -->
+            <div class="slide">
+                <span class="slide-tag">Simulador Interativo com Gráfico SVG</span>
+                <h2 class="slide-title">Simulador: Decomponha Qualquer Parcela</h2>
+                <div class="slide-content">
+                    <div class="sim-box">
+                        <div>
+                            <div class="form-row">
+                                <label>Saldo Devedor Atual (R$):</label>
+                                <input type="number" id="s2_sd" value="50000" step="2000">
+                            </div>
+                            <div class="form-row">
+                                <label>Valor da Prestação Paga (R$):</label>
+                                <input type="number" id="s2_pmt" value="4700" step="100">
+                            </div>
+                            <div class="form-row">
+                                <label>Taxa de Juros do Período (% ao mês):</label>
+                                <input type="number" id="s2_i" value="2.0" step="0.1">
+                            </div>
+                            <button class="btn-calc" onclick="calcularSimulador2()">Decompor Parcela e Atualizar Gráfico</button>
+                        </div>
+                        <div style="background:var(--background); padding:1rem; border-radius:8px; display:flex; flex-direction:column; justify-content:space-between; border:1px solid var(--border);">
+                            <div>
+                                <span style="font-size:0.8rem; color:var(--text-muted); font-weight:600;">Resultado da Decomposição:</span>
+                                <div id="s2_res_amort" style="font-size:1.35rem; font-weight:800; color:var(--success);">Amortização: R$ 3.700,00</div>
+                                <div id="s2_res_juros" style="font-size:1.05rem; font-weight:700; color:var(--danger); margin-top:2px;">
+                                    Juros: R$ 1.000,00
+                                </div>
+                                <div id="s2_res_novo_sd" style="font-size:0.85rem; color:var(--primary); font-weight:600; margin-top:2px;">
+                                    Novo Saldo Devedor: R$ 46.300,00
+                                </div>
+                            </div>
+
+                            <div class="chart-box">
+                                <span style="font-size:0.75rem; font-weight:700; color:var(--text-muted); margin-bottom:4px;">PROPORÇÃO NA PRESTAÇÃO (%):</span>
+                                <svg id="s2_svg_chart" viewBox="0 0 320 70" style="width:100%; height:65px;">
+                                    <!-- Dinâmico via JS -->
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SLIDE 6: ENCARGOS CONTRATUAIS ACESSÓRIOS -->
+            <div class="slide">
+                <span class="slide-tag">Alerta de Gestão de Riscos</span>
+                <h2 class="slide-title">Atenção aos Encargos Acessórios dos Bancos</h2>
+                <div class="slide-content">
+                    <p style="margin-bottom:0.8rem;">Na prática bancária, a prestação cobrada muitas vezes é maior que a soma de Juros e Amortização:</p>
+                    <div class="grid-2">
+                        <div class="card-panel" style="border-left:4px solid var(--warning);">
+                            <h4 style="color:var(--warning); margin-bottom:0.3rem;">1. Taxas de Abertura e Cadastro (TAC)</h4>
+                            <p style="font-size:0.92rem;">Tarifas de estruturação do crédito que o banco dilui nas parcelas, elevando a prestação sem gerar amortização.</p>
+                        </div>
+                        <div class="card-panel" style="border-left:4px solid var(--warning);">
+                            <h4 style="color:var(--warning); margin-bottom:0.3rem;">2. Seguros Obrigatórios (MIP e DFI)</h4>
+                            <p style="font-size:0.92rem;">Empréstimos imobiliários e de frotas exigem seguros de morte/invalidez e danos físicos agregados à parcela.</p>
+                        </div>
+                        <div class="card-panel" style="border-left:4px solid var(--danger);">
+                            <h4 style="color:var(--danger); margin-bottom:0.3rem;">3. Imposto sobre Operações Financeiras (IOF)</h4>
+                            <p style="font-size:0.92rem;">Tributo federal incidente no ato da contratação que, quando financiado, aumenta o saldo devedor inicial.</p>
+                        </div>
+                        <div class="card-panel" style="border-left:4px solid var(--primary);">
+                            <h4 style="color:var(--primary); margin-bottom:0.3rem;">4. Custo Efetivo Total (CET)</h4>
+                            <p style="font-size:0.92rem;">É a taxa real que o administrador deve comparar. O CET inclui juros, taxas, seguros e tributos de uma só vez.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SLIDE 7: SÍNTESE E PONTE PARA PARTE 3 -->
+            <div class="slide">
+                <span class="slide-tag">Fechamento da Parte 2</span>
+                <h2 class="slide-title">Síntese e Próxima Apresentação</h2>
+                <div class="slide-content">
+                    <div class="highlight-box">
+                        <h3 style="color:var(--primary); margin-bottom:0.5rem;">O que consolidamos nesta etapa:</h3>
+                        <p>✔ Toda prestação decompõe-se em Amortização (redução do principal) e Juros (custo do capital no período).</p>
+                        <p>✔ Os juros são calculados multiplicando a taxa pelo saldo devedor que existia antes do pagamento.</p>
+                        <p>✔ A amortização é o valor restante da prestação: Amortização = Prestação - Juros.</p>
+                    </div>
+                    <div class="card-panel" style="margin-top:1.2rem; background:var(--secondary-light); border-color:var(--secondary);">
+                        <h4 style="color:var(--primary);">O Desafio da Próxima Apresentação (3.html):</h4>
+                        <p style="font-size:0.95rem; margin-top:0.3rem;">
+                            Como se comporta o <strong>Saldo Devedor</strong> ao longo de vários períodos consecutivos? Por que o saldo não cai na mesma velocidade em que pagamos as contas?
+                        </p>
+                        <a href="3.html" class="btn-nav" style="display:inline-flex; margin-top:0.8rem; background:var(--secondary); color:#fff; border:none; padding:0.65rem 1.5rem;">
+                            Iniciar Aula 1 • Parte 3 (3.html) &rarr;
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="slide-footer">
+            <div class="nav-controls">
+                <button class="btn-nav" id="btnPrev">← Anterior (↑)</button>
+                <button class="btn-nav" id="btnNext">Próximo (↓) →</button>
+            </div>
+            <div class="progress-indicator" id="slideIndicator">Slide 01 de 07</div>
+            <div>
+                <a href="1.html" class="btn-nav" style="text-decoration:none;">⮌ Voltar à Parte 1</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const slides = document.querySelectorAll('.slide');
+        const totalSlides = slides.length;
+        let currentSlide = 0;
+        const slideIndicator = document.getElementById('slideIndicator');
+        const btnPrev = document.getElementById('btnPrev');
+        const btnNext = document.getElementById('btnNext');
+        const btnFullscreen = document.getElementById('btnFullscreen');
+
+        function updateSlide(index) {
+            slides.forEach((s, idx) => s.classList.toggle('active', idx === index));
+            slideIndicator.textContent = `Slide ${String(index + 1).padStart(2, '0')} de ${String(totalSlides).padStart(2, '0')}`;
+        }
+
+        function nextSlide() {
+            if (currentSlide < totalSlides - 1) {
+                currentSlide++;
+                updateSlide(currentSlide);
+            } else {
+                window.location.href = "3.html";
+            }
+        }
+
+        function prevSlide() {
+            if (currentSlide > 0) {
+                currentSlide--;
+                updateSlide(currentSlide);
+            } else {
+                window.location.href = "1.html";
+            }
+        }
+
+        btnNext.addEventListener('click', nextSlide);
+        btnPrev.addEventListener('click', prevSlide);
+
+        window.addEventListener('keydown', (e) => {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') return;
+            if (e.key === 'ArrowDown' || e.key === 'PageDown' || e.key === 'ArrowRight') {
+                e.preventDefault();
+                nextSlide();
+            } else if (e.key === 'ArrowUp' || e.key === 'PageUp' || e.key === 'ArrowLeft') {
+                e.preventDefault();
+                prevSlide();
+            } else if (e.key === 'f' || e.key === 'F') {
+                toggleFullscreen();
+            }
+        });
+
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(() => {});
+            } else {
+                if (document.exitFullscreen) document.exitFullscreen();
+            }
+        }
+        btnFullscreen.addEventListener('click', toggleFullscreen);
+
+        const fmtBRL = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
+
+        function calcularSimulador2() {
+            const sd = parseFloat(document.getElementById('s2_sd').value) || 0;
+            const pmt = parseFloat(document.getElementById('s2_pmt').value) || 0;
+            const taxa = (parseFloat(document.getElementById('s2_i').value) || 0) / 100;
+
+            const juros = sd * taxa;
+            const amort = pmt - juros;
+            const novoSd = sd - amort;
+
+            document.getElementById('s2_res_amort').textContent = `Amortização: ${fmtBRL.format(amort)}`;
+            document.getElementById('s2_res_juros').textContent = `Juros do Mês: ${fmtBRL.format(juros)}`;
+            document.getElementById('s2_res_novo_sd').textContent = `Novo Saldo Devedor: ${fmtBRL.format(Math.max(0, novoSd))}`;
+
+            desenharGraficoS2(amort, juros, pmt);
+        }
+
+        function desenharGraficoS2(amort, juros, pmt) {
+            const svg = document.getElementById('s2_svg_chart');
+            if (pmt <= 0) {
+                svg.innerHTML = '';
+                return;
+            }
+
+            const pAmort = Math.max(0, Math.min(100, (amort / pmt) * 100));
+            const pJuros = Math.max(0, Math.min(100, (juros / pmt) * 100));
+
+            const wAmort = (pAmort / 100) * 280;
+            const wJuros = (pJuros / 100) * 280;
+
+            svg.innerHTML = `
+                <!-- Barra de Amortização -->
+                <rect x="20" y="20" width="${wAmort}" height="24" fill="#059669" rx="3"/>
+                <!-- Barra de Juros -->
+                <rect x="${20 + wAmort}" y="20" width="${wJuros}" height="24" fill="#DC2626" rx="3"/>
+                
+                <text x="20" y="58" font-size="9" font-weight="bold" fill="#059669">Amortização: ${pAmort.toFixed(1)}%</text>
+                <text x="300" y="58" font-size="9" font-weight="bold" fill="#DC2626" text-anchor="end">Juros: ${pJuros.toFixed(1)}%</text>
+            `;
+        }
+
+        calcularSimulador2();
+    </script>
+</body>
+</html>
