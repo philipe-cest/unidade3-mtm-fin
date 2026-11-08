@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aula 2 • Parte 3 — Cálculo da Prestação no Sistema Price | CEST</title>
+    <meta name="author" content="Prof. Msc. Philipe Sampaio Lima">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23002060'/><circle cx='50' cy='50' r='30' fill='%230080FF'/><text x='50' y='58' font-size='24' font-weight='bold' fill='white' text-anchor='middle'>3</text></svg>">
+    
+    <style>
+        :root {
+            --primary: #002060;
+            --primary-dark: #001138;
+            --primary-light: #003399;
+            --secondary: #0080FF;
+            --secondary-light: #E6F2FF;
+            --accent: #00A3FF;
+            --background: #F4F7FA;
+            --surface: #FFFFFF;
+            --text-primary: #0F172A;
+            --text-secondary: #475569;
+            --text-muted: #64748B;
+            --border: #CBD5E1;
+            --success: #059669;
+            --warning: #D97706;
+            --danger: #DC2626;
+            --radius-md: 12px;
+            --shadow-md: 0 8px 24px -4px rgba(0, 32, 96, 0.12);
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: #0b1329;
+            color: var(--text-primary);
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .stage {
+            width: 96vw;
+            height: 54vw;
+            max-width: 1600px;
+            max-height: 900px;
+            background-color: var(--background);
+            border-radius: var(--radius-md);
+            box-shadow: 0 15px 45px rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .slide-topbar {
+            height: 52px;
+            background-color: var(--primary);
+            color: #FFFFFF;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 1.5rem;
+            flex-shrink: 0;
+            border-bottom: 2px solid var(--secondary);
+        }
+        .topbar-left { display: flex; align-items: center; gap: 12px; font-weight: 700; font-size: 0.9rem; }
+        .topbar-badge {
+            background-color: rgba(255,255,255,0.15); padding: 3px 8px; border-radius: 4px; color: var(--secondary-light); font-size: 0.75rem;
+        }
+        .topbar-right { display: flex; align-items: center; gap: 15px; font-size: 0.85rem; color: rgba(255,255,255,0.85); }
+
+        .slide-viewport { flex-grow: 1; position: relative; overflow: hidden; }
+        .slide {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            padding: 2.2rem 3rem; display: flex; flex-direction: column; opacity: 0; visibility: hidden;
+            transform: translateX(30px); transition: all 0.28s ease-out; overflow-y: auto;
+        }
+        .slide.active { opacity: 1; visibility: visible; transform: translateX(0); z-index: 2; }
+
+        .slide-tag { color: var(--secondary); font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.35rem; }
+        .slide-title { font-size: 1.85rem; font-weight: 800; color: var(--primary); line-height: 1.25; margin-bottom: 1.25rem; }
+        .slide-content { font-size: 1.08rem; line-height: 1.6; color: var(--text-secondary); flex-grow: 1; display: flex; flex-direction: column; justify-content: center; }
+
+        .highlight-box {
+            background-color: var(--surface); border-left: 5px solid var(--secondary); padding: 1.25rem 1.75rem;
+            border-radius: 0 var(--radius-md) var(--radius-md) 0; box-shadow: var(--shadow-md); margin: 1rem 0;
+        }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.2rem; }
+        .card-panel { background: var(--surface); padding: 1.4rem; border-radius: var(--radius-md); border: 1px solid var(--border); }
+
+        .formula-card {
+            background: linear-gradient(135deg, #001e5c 0%, #002b82 100%);
+            color: #fff; padding: 1.4rem; border-radius: var(--radius-md); text-align: center; margin: 0.8rem 0;
+        }
+        .formula-main { font-size: 1.8rem; font-weight: 800; color: #60A5FA; letter-spacing: 0.02em; }
+
+        .sim-container {
+            display: grid; grid-template-columns: 0.95fr 1.05fr; gap: 1.5rem; background: var(--surface); padding: 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--border);
+        }
+        .form-row { display: flex; flex-direction: column; gap: 0.2rem; margin-bottom: 0.5rem; }
+        .form-row label { font-weight: 600; color: var(--primary); font-size: 0.82rem; }
+        .form-row input { padding: 0.45rem 0.65rem; border: 1px solid var(--border); border-radius: 6px; font-weight: 600; }
+        .btn-calc { background: var(--secondary); color: #fff; border: none; padding: 0.65rem; border-radius: 6px; font-weight: 700; cursor: pointer; transition: 0.2s; width: 100%; }
+        .btn-calc:hover { background: var(--primary); }
+
+        .step-list { display: flex; flex-direction: column; gap: 0.5rem; margin-top: 0.5rem; }
+        .step-item { background: var(--background); padding: 0.7rem 1rem; border-radius: 6px; border-left: 3px solid var(--secondary); font-size: 0.9rem; }
+
+        .slide-footer {
+            height: 56px; background-color: var(--surface); border-top: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: space-between; padding: 0 1.5rem; flex-shrink: 0;
+        }
+        .nav-controls { display: flex; align-items: center; gap: 10px; }
+        .btn-nav {
+            background-color: var(--background); border: 1px solid var(--border); color: var(--primary);
+            padding: 6px 14px; border-radius: 6px; font-weight: 700; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; gap: 6px;
+        }
+        .btn-nav:hover { background-color: var(--secondary); color: #FFFFFF; }
+        .progress-indicator { font-weight: 700; font-size: 0.88rem; color: var(--text-muted); }
+    </style>
+</head>
+<body>
+
+    <div class="stage">
+        <div class="slide-topbar">
+            <div class="topbar-left">
+                <span>CEST • MATEMÁTICA FINANCEIRA</span>
+                <span class="topbar-badge">Aula 2 • Parte 3</span>
+            </div>
+            <div class="topbar-right">
+                <span>Prof. Msc. Philipe Sampaio Lima</span>
+                <button class="btn-nav" id="btnFullscreen" style="padding:4px 8px; font-size:0.75rem;">⛶ Tela Cheia</button>
+            </div>
+        </div>
+
+        <div class="slide-viewport">
+            
+            <!-- SLIDE 1: ABERTURA -->
+            <div class="slide active">
+                <span class="slide-tag">Dedução e Aplicação Analítica</span>
+                <h1 class="slide-title" style="font-size:2.35rem;">Cálculo da Prestação no Sistema Price</h1>
+                <div class="slide-content">
+                    <div class="highlight-box">
+                        <h3 style="color:var(--primary); font-size:1.25rem; margin-bottom:0.5rem;">Objetivos da Aula:</h3>
+                        <p>1. Dominar a fórmula matemática do <strong>Fator de Recuperação de Capital (FRC)</strong> utilizada no Sistema Francês.</p>
+                        <p>2. Compreender a interpretação econômica de cada variável: Capital (PV), Taxa Decimal (i) e Prazo (n).</p>
+                        <p>3. Executar o cálculo analítico passo a passo em 4 etapas lógicas sem risco de erros de arredondamento intermediário.</p>
+                        <p>4. Manipular um simulador com decomposição em tempo real dos termos do cálculo.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SLIDE 2: A FÓRMULA OFICIAL -->
+            <div class="slide">
+                <span class="slide-tag">Rigor Matemático</span>
+                <h2 class="slide-title">A Equação Fundamental da Prestação Price</h2>
+                <div class="slide-content">
+                    <p style="margin-bottom:0.8rem;">O valor da prestação constante (PMT) que liquida um empréstimo de valor presente (PV) sob juros periódicos (i) em n períodos é:</p>
+                    <div class="formula-card">
+                        <span style="font-size:0.85rem; text-transform:uppercase; color:var(--secondary-light); font-weight:700;">Fórmula da Prestação Constante (Price)</span>
+                        <div class="formula-main" style="margin:0.5rem 0;">
+                            PMT = PV × [ i / (1 - (1 + i)⁻ⁿ) ]
+                        </div>
+                        <span style="font-size:0.88rem; color:rgba(255,255,255,0.8);">Ou de forma equivalente: PMT = PV × [ (i × (1 + i)ⁿ) / ((1 + i)ⁿ - 1) ]</span>
+                    </div>
+                    <div class="grid-3" style="margin-top:1rem;">
+                        <div class="card-panel">
+                            <h4 style="color:var(--primary); margin-bottom:0.3rem;">PV (Valor Presente)</h4>
+                            <p style="font-size:0.88rem;">Capital financiado ou saldo líquido creditado na conta na data zero.</p>
+                        </div>
+                        <div class="card-panel">
+                            <h4 style="color:var(--primary); margin-bottom:0.3rem;">i (Taxa Periódica)</h4>
+                            <p style="font-size:0.88rem;">Taxa por período em formato <strong>decimal</strong> (ex.: 2% a.m. = 0,02).</p>
+                        </div>
+                        <div class="card-panel">
+                            <h4 style="color:var(--primary); margin-bottom:0.3rem;">n (Prazo Total)</h4>
+                            <p style="font-size:0.88rem;">Quantidade total de prestações a serem pagas.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SLIDE 3: O FATOR DE RECUPERAÇÃO DE CAPITAL -->
+            <div class="slide">
+                <span class="slide-tag">Mecânica Matemática</span>
+                <h2 class="slide-title">O que é o Fator de Recuperação de Capital (FRC)?</h2>
+                <div class="slide-content">
+                    <p style="margin-bottom:0.8rem;">O termo entre colchetes é conhecido na literatura financeira como <strong>FRC</strong> (<em>Capital Recovery Factor</em>):</p>
+                    <div class="card-panel" style="text-align:center; padding:1.2rem; border-left:5px solid var(--secondary);">
+                        <div style="font-size:1.35rem; font-weight:800; color:var(--primary);">
+                            FRC(i, n) = i / [ 1 - (1 + i)⁻ⁿ ]
+                        </div>
+                        <p style="font-size:0.92rem; color:var(--text-secondary); margin-top:0.4rem;">
+                            Indica quantos reais de prestação periódica são necessários para amortizar e remunerar <strong>R$ 1,00</strong> de dívida.
+                        </p>
+                    </div>
+                    <div class="grid-2" style="margin-top:1rem;">
+                        <div class="card-panel">
+                            <h4 style="color:var(--primary); margin-bottom:0.3rem;">Comportamento com a Taxa</h4>
+                            <p style="font-size:0.88rem;">Quanto maior a taxa de juros (i), maior o FRC e, consequentemente, mais cara a prestação mensal.</p>
+                        </div>
+                        <div class="card-panel">
+                            <h4 style="color:var(--primary); margin-bottom:0.3rem;">Comportamento com o Prazo</h4>
+                            <p style="font-size:0.88rem;">Quanto maior o prazo (n), menor o FRC, gerando parcelas menores, mas prolongando a incidência de juros.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SLIDE 4: PASSO A PASSO ANALÍTICO RESOLVIDO -->
+            <div class="slide">
+                <span class="slide-tag">Exemplo Resolvido Passo a Passo</span>
+                <h2 class="slide-title">Exemplo Numérico Detalhado: R$ 50.000 em 5 Meses</h2>
+                <div class="slide-content">
+                    <p>Financiamento de <strong>R$ 50.000,00</strong> a <strong>2% ao mês</strong> em <strong>5 meses</strong>:</p>
+                    <div class="step-list">
+                        <div class="step-item">
+                            <strong>Passo 1: Identificar Dados</strong><br>
+                            PV = 50.000,00$ | i = 0,02$ | $n = 5$
+                        </div>
+                        <div class="step-item">
+                            <strong>Passo 2: Calcular o Fator de Atualização com Potência Negativa</strong><br>
+                            (1 + i)⁻ⁿ = (1 + 0,02)⁻⁵ = (1,02)⁻⁵ = 0,90573081$
+                        </div>
+                        <div class="step-item">
+                            <strong>Passo 3: Calcular o Denominador e o FRC</strong><br>
+                            Denominador = 1 - 0,90573081 = 0,09426919$<br>
+                            FRC = 0,02 / 0,09426919 = 0,21215839$
+                        </div>
+                        <div class="step-item" style="background:#ECFDF5; border-color:var(--success);">
+                            <strong>Passo 4: Multiplicar pelo Capital Financiado (PV)</strong><br>
+                            PMT = 50.000,00 \times 0,21215839 = \mathbf{R\$\ 10.607,92}$ por mês!
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SLIDE 5: SIMULADOR DA FÓRMULA -->
+            <div class="slide">
+                <span class="slide-tag">Laboratório de Cálculo</span>
+                <h2 class="slide-title">Calculadora Analítica da Prestação Price</h2>
+                <div class="slide-content">
+                    <div class="sim-container">
+                        <div>
+                            <div class="form-row">
+                                <label>Capital Financiado (PV):</label>
+                                <input type="number" id="s3_pv" value="50000" step="5000">
+                            </div>
+                            <div class="form-row">
+                                <label>Prazo de Amortização (Meses):</label>
+                                <input type="number" id="s3_n" value="5" min="1" max="120" step="1">
+                            </div>
+                            <div class="form-row">
+                                <label>Taxa de Juros Mensal (% a.m.):</label>
+                                <input type="number" id="s3_i" value="2.0" step="0.1">
+                            </div>
+                            <button class="btn-calc" onclick="calcularSimulador3()">Calcular Memória Analítica</button>
+                        </div>
+                        <div style="background:var(--background); padding:1rem; border-radius:8px; display:flex; flex-direction:column; justify-content:space-between; border:1px solid var(--border);">
+                            <div>
+                                <span style="font-size:0.8rem; color:var(--text-muted); font-weight:600;">Resultado Oficial:</span>
+                                <div id="s3_res_pmt" style="font-size:1.45rem; font-weight:800; color:var(--primary);">PMT = R$ 10.607,92</div>
+                                <div id="s3_memoria" style="font-size:0.82rem; color:var(--text-secondary); margin-top:0.4rem; line-height:1.5;">
+                                    <!-- Preenchido via JS -->
+                                </div>
+                            </div>
+                            <div style="border-top:1px solid var(--border); padding-top:0.5rem; margin-top:0.5rem;">
+                                <div id="s3_res_totais" style="font-size:0.85rem; font-weight:700; color:var(--danger);">
+                                    Total Pago: R$ 53.039,60 | Total Juros: R$ 3.039,60
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SLIDE 6: EQUIVALÊNCIA FINANCEIRA DO FLUXO -->
+            <div class="slide">
+                <span class="slide-tag">Fundamentação Econômica</span>
+                <h2 class="slide-title">O Princípio da Equivalência Financeira</h2>
+                <div class="slide-content">
+                    <p style="margin-bottom:0.8rem;">Por que a fórmula funciona com precisão absoluta? Porque ela traz todas as prestações futuras a valor presente:</p>
+                    <div class="card-panel" style="text-align:center; padding:1.2rem; background:var(--secondary-light); border-color:var(--secondary);">
+                        <div style="font-size:1.25rem; font-weight:800; color:var(--primary);">
+                            PV = PMT / (1 + i)¹ + PMT / (1 + i)² + ... + PMT / (1 + i)ⁿ
+                        </div>
+                        <p style="font-size:0.92rem; color:var(--primary); margin-top:0.4rem;">
+                            A soma dos valores presentes de todas as parcelas é rigorosamente igual ao capital financiado no instante zero!
+                        </p>
+                    </div>
+                    <div class="highlight-box" style="margin-top:1rem;">
+                        <strong>Significado Gerencial:</strong> O banco não está cobrando nada além do custo do dinheiro no tempo. Se trouxermos cada prestação ao dia de hoje descontada pela taxa de 2%, a dívida fecha exatamente em R$ 50.000,00.
+                    </div>
+                </div>
+            </div>
+
+            <!-- SLIDE 7: QUIZ DE FIXAÇÃO -->
+            <div class="slide">
+                <span class="slide-tag">Verificação Formativa</span>
+                <h2 class="slide-title">Desafio em Sala: Estrutura da Fórmula</h2>
+                <div class="slide-content">
+                    <p style="font-size:1.15rem; margin-bottom:1rem;">
+                        Na fórmula PMT = PV \times [i / (1 - (1 + i)^{-n})]$, o que acontece matematicamente com o valor da prestação se a taxa de juros (i) for reduzida a zero?
+                    </p>
+                    <div style="display:flex; flex-direction:column; gap:0.6rem; margin:1rem 0;">
+                        <button class="btn-nav" onclick="checkQuiz3(1, this)" style="justify-content:flex-start; padding:0.75rem 1rem;">
+                            A) A prestação torna-se nula (zero reais).
+                        </button>
+                        <button class="btn-nav" onclick="checkQuiz3(2, this)" style="justify-content:flex-start; padding:0.75rem 1rem;">
+                            B) A fórmula resulta no limite matemático PMT = PV / n (divisão simples sem acréscimo de juros).
+                        </button>
+                        <button class="btn-nav" onclick="checkQuiz3(3, this)" style="justify-content:flex-start; padding:0.75rem 1rem;">
+                            C) A prestação passa a crescer exponencialmente.
+                        </button>
+                    </div>
+                    <div id="quiz-fb-3" class="highlight-box" style="display:none; margin-top:0.4rem;"></div>
+                </div>
+            </div>
+
+            <!-- SLIDE 8: SÍNTESE E PRÓXIMA PARTE -->
+            <div class="slide">
+                <span class="slide-tag">Fechamento da Parte 3</span>
+                <h2 class="slide-title">Síntese do Cálculo da Prestação</h2>
+                <div class="slide-content">
+                    <div class="card-panel">
+                        <h3 style="color:var(--primary); margin-bottom:0.6rem;">Resumo dos Conceitos:</h3>
+                        <p>✔ A fórmula da prestação decorre da série uniforme de pagamentos postecipados.</p>
+                        <p>✔ A taxa i deve ser rigorosamente informada em formato decimal.</p>
+                        <p>✔ A prestação calculada engloba tanto a amortização gradual do capital quanto os juros periódicos sobre o saldo devedor.</p>
+                    </div>
+                    <div class="highlight-box" style="margin-top:1.2rem; text-align:center;">
+                        <h4 style="color:var(--secondary); font-size:1.15rem;">Próxima Apresentação (4.html):</h4>
+                        <p style="margin-top:0.3rem;">Vamos aprofundar o <strong>Cálculo dos Juros Periódicos</strong> e compreender como eles regem a decomposição de cada mês.</p>
+                        <a href="4.html" class="btn-nav" style="display:inline-flex; margin-top:0.8rem; background:var(--secondary); color:#fff; border:none; padding:0.65rem 1.5rem;">
+                            Avançar para Aula 2 • Parte 4 (4.html) &rarr;
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="slide-footer">
+            <div class="nav-controls">
+                <button class="btn-nav" id="btnPrev">← Anterior (↑)</button>
+                <button class="btn-nav" id="btnNext">Próximo (↓) →</button>
+            </div>
+            <div class="progress-indicator" id="slideIndicator">Slide 01 de 08</div>
+            <div>
+                <a href="2.html" class="btn-nav" style="text-decoration:none;">⮌ Voltar à Parte 2</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const slides = document.querySelectorAll('.slide');
+        const totalSlides = slides.length;
+        let currentSlide = 0;
+        const slideIndicator = document.getElementById('slideIndicator');
+        const btnPrev = document.getElementById('btnPrev');
+        const btnNext = document.getElementById('btnNext');
+        const btnFullscreen = document.getElementById('btnFullscreen');
+
+        function updateSlide(index) {
+            slides.forEach((s, idx) => s.classList.toggle('active', idx === index));
+            slideIndicator.textContent = `Slide ${String(index + 1).padStart(2, '0')} de ${String(totalSlides).padStart(2, '0')}`;
+        }
+
+        function nextSlide() {
+            if (currentSlide < totalSlides - 1) {
+                currentSlide++;
+                updateSlide(currentSlide);
+            } else {
+                window.location.href = "4.html";
+            }
+        }
+
+        function prevSlide() {
+            if (currentSlide > 0) {
+                currentSlide--;
+                updateSlide(currentSlide);
+            } else {
+                window.location.href = "2.html";
+            }
+        }
+
+        btnNext.addEventListener('click', nextSlide);
+        btnPrev.addEventListener('click', prevSlide);
+
+        window.addEventListener('keydown', (e) => {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') return;
+            if (e.key === 'ArrowDown' || e.key === 'PageDown' || e.key === 'ArrowRight') {
+                e.preventDefault();
+                nextSlide();
+            } else if (e.key === 'ArrowUp' || e.key === 'PageUp' || e.key === 'ArrowLeft') {
+                e.preventDefault();
+                prevSlide();
+            } else if (e.key === 'f' || e.key === 'F') {
+                toggleFullscreen();
+            }
+        });
+
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(() => {});
+            } else {
+                if (document.exitFullscreen) document.exitFullscreen();
+            }
+        }
+        btnFullscreen.addEventListener('click', toggleFullscreen);
+
+        const fmtBRL = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
+
+        function calcularSimulador3() {
+            const pv = parseFloat(document.getElementById('s3_pv').value) || 0;
+            const n = parseInt(document.getElementById('s3_n').value) || 1;
+            const i = (parseFloat(document.getElementById('s3_i').value) || 0) / 100;
+
+            let pmt = 0;
+            let fatorPot = 0;
+            let frc = 0;
+
+            if (i > 0) {
+                fatorPot = Math.pow(1 + i, -n);
+                frc = i / (1 - fatorPot);
+                pmt = pv * frc;
+            } else {
+                pmt = pv / n;
+                frc = 1 / n;
+            }
+
+            const totalPago = pmt * n;
+            const totalJuros = totalPago - pv;
+
+            document.getElementById('s3_res_pmt').textContent = `PMT = ${fmtBRL.format(pmt)}`;
+            document.getElementById('s3_memoria').innerHTML = `
+                • (1 + i)⁻ⁿ = (1 + ${i.toFixed(4)})⁻${n} = <strong>${fatorPot.toFixed(6)}</strong><br>
+                • 1 - (1 + i)⁻ⁿ = <strong>${(1 - fatorPot).toFixed(6)}</strong><br>
+                • FRC = ${i.toFixed(4)} / ${(1 - fatorPot).toFixed(6)} = <strong>${frc.toFixed(8)}</strong>
+            `;
+            document.getElementById('s3_res_totais').textContent = `Total Pago (${n}x): ${fmtBRL.format(totalPago)} | Total Juros: ${fmtBRL.format(totalJuros)}`;
+        }
+
+        calcularSimulador3();
+
+        function checkQuiz3(op, btn) {
+            const fb = document.getElementById('quiz-fb-3');
+            fb.style.display = 'block';
+            if (op === 2) {
+                fb.style.borderLeftColor = 'var(--success)';
+                fb.innerHTML = `<h4 style="color:var(--success);">Correto! (Alternativa B)</h4>
+                <p>Aplicando a regra de L'Hôpital para o limite quando i \\to 0$, a expressão reduz-se exatamente a PMT = PV / n$, correspondendo a uma divisão sem qualquer custo financeiro.</p>`;
+            } else {
+                fb.style.borderLeftColor = 'var(--danger)';
+                fb.innerHTML = `<h4 style="color:var(--danger);">Atenção!</h4>
+                <p>Sem juros (i = 0$), a dívida é simplesmente repartida pelo número de períodos (PV / n$).</p>`;
+            }
+        }
+    </script>
+</body>
+</html>

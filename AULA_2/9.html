@@ -1,0 +1,402 @@
+html
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aula 2 • Parte 9 — Impacto no Fluxo de Caixa no Sistema Price | CEST</title>
+    <meta name="author" content="Prof. Msc. Philipe Sampaio Lima">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23002060'/><circle cx='50' cy='50' r='30' fill='%230080FF'/><text x='50' y='58' font-size='24' font-weight='bold' fill='white' text-anchor='middle'>9</text></svg>">
+    
+    <style>
+        :root {
+            --primary: #002060;
+            --primary-dark: #001138;
+            --primary-light: #003399;
+            --secondary: #0080FF;
+            --secondary-light: #E6F2FF;
+            --accent: #00A3FF;
+            --background: #F4F7FA;
+            --surface: #FFFFFF;
+            --text-primary: #0F172A;
+            --text-secondary: #475569;
+            --text-muted: #64748B;
+            --border: #CBD5E1;
+            --success: #059669;
+            --warning: #D97706;
+            --danger: #DC2626;
+            --radius-md: 12px;
+            --shadow-md: 0 8px 24px -4px rgba(0, 32, 96, 0.12);
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: #0b1329;
+            color: var(--text-primary);
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .stage {
+            width: 96vw;
+            height: 54vw;
+            max-width: 1600px;
+            max-height: 900px;
+            background-color: var(--background);
+            border-radius: var(--radius-md);
+            box-shadow: 0 15px 45px rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .slide-topbar {
+            height: 52px;
+            background-color: var(--primary);
+            color: #FFFFFF;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 1.5rem;
+            flex-shrink: 0;
+            border-bottom: 2px solid var(--secondary);
+        }
+        .topbar-left { display: flex; align-items: center; gap: 12px; font-weight: 700; font-size: 0.9rem; }
+        .topbar-badge {
+            background-color: rgba(255,255,255,0.15); padding: 3px 8px; border-radius: 4px; color: var(--secondary-light); font-size: 0.75rem;
+        }
+        .topbar-right { display: flex; align-items: center; gap: 15px; font-size: 0.85rem; color: rgba(255,255,255,0.85); }
+
+        .slide-viewport { flex-grow: 1; position: relative; overflow: hidden; }
+        .slide {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            padding: 2.2rem 3rem; display: flex; flex-direction: column; opacity: 0; visibility: hidden;
+            transform: translateX(30px); transition: all 0.28s ease-out; overflow-y: auto;
+        }
+        .slide.active { opacity: 1; visibility: visible; transform: translateX(0); z-index: 2; }
+
+        .slide-tag { color: var(--secondary); font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.35rem; }
+        .slide-title { font-size: 1.85rem; font-weight: 800; color: var(--primary); line-height: 1.25; margin-bottom: 1.25rem; }
+        .slide-content { font-size: 1.05rem; line-height: 1.6; color: var(--text-secondary); flex-grow: 1; display: flex; flex-direction: column; justify-content: center; }
+
+        .highlight-box {
+            background-color: var(--surface); border-left: 5px solid var(--secondary); padding: 1.25rem 1.75rem;
+            border-radius: 0 var(--radius-md) var(--radius-md) 0; box-shadow: var(--shadow-md); margin: 0.8rem 0;
+        }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.2rem; }
+        .card-panel { background: var(--surface); padding: 1.3rem; border-radius: var(--radius-md); border: 1px solid var(--border); }
+
+        .table-responsive { width: 100%; overflow-x: auto; margin-top: 0.4rem; }
+        table.fin-table {
+            width: 100%; border-collapse: collapse; text-align: right; font-size: 0.82rem; background: #fff; border-radius: 6px; overflow: hidden;
+        }
+        table.fin-table th {
+            background-color: var(--primary); color: #fff; padding: 0.45rem 0.65rem; font-weight: 700; text-align: center;
+        }
+        table.fin-table td {
+            padding: 0.4rem 0.65rem; border-bottom: 1px solid var(--border); color: var(--text-primary);
+        }
+        table.fin-table tr:nth-child(even) { background-color: var(--background); }
+        table.fin-table tr.total-row { background-color: var(--secondary-light); font-weight: 800; color: var(--primary); }
+
+        .sim-container {
+            display: grid; grid-template-columns: 0.9fr 1.1fr; gap: 1.4rem; background: var(--surface); padding: 1.2rem; border-radius: var(--radius-md); border: 1px solid var(--border);
+        }
+        .form-row { display: flex; flex-direction: column; gap: 0.2rem; margin-bottom: 0.4rem; }
+        .form-row label { font-weight: 600; color: var(--primary); font-size: 0.82rem; }
+        .form-row input, .form-row select { padding: 0.45rem 0.65rem; border: 1px solid var(--border); border-radius: 6px; font-weight: 600; }
+        .btn-calc { background: var(--secondary); color: #fff; border: none; padding: 0.65rem; border-radius: 6px; font-weight: 700; cursor: pointer; transition: 0.2s; width: 100%; }
+        .btn-calc:hover { background: var(--primary); }
+
+        .chart-box {
+            background: #fff; border: 1px solid var(--border); border-radius: 6px; padding: 0.5rem; display: flex; flex-direction: column; align-items: center; justify-content: center; margin-top: 0.4rem;
+        }
+
+        .slide-footer {
+            height: 56px; background-color: var(--surface); border-top: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: space-between; padding: 0 1.5rem; flex-shrink: 0;
+        }
+        .nav-controls { display: flex; align-items: center; gap: 10px; }
+        .btn-nav {
+            background-color: var(--background); border: 1px solid var(--border); color: var(--primary);
+            padding: 6px 14px; border-radius: 6px; font-weight: 700; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; gap: 6px;
+        }
+        .btn-nav:hover { background-color: var(--secondary); color: #FFFFFF; }
+        .progress-indicator { font-weight: 700; font-size: 0.88rem; color: var(--text-muted); }
+    </style>
+</head>
+<body>
+
+    <div class="stage">
+        <div class="slide-topbar">
+            <div class="topbar-left">
+                <span>CEST • MATEMÁTICA FINANCEIRA</span>
+                <span class="topbar-badge">Aula 2 • Parte 9</span>
+            </div>
+            <div class="topbar-right">
+                <span>Prof. Msc. Philipe Sampaio Lima</span>
+                <button class="btn-nav" id="btnFullscreen" style="padding:4px 8px; font-size:0.75rem;">⛶ Tela Cheia</button>
+            </div>
+        </div>
+
+        <div class="slide-viewport">
+            
+            <!-- SLIDE 1: ABERTURA -->
+            <div class="slide active">
+                <span class="slide-tag">Gestão de Tesouraria</span>
+                <h1 class="slide-title" style="font-size:2.35rem;">Impacto do Sistema Price no Fluxo de Caixa</h1>
+                <div class="slide-content">
+                    <div class="highlight-box">
+                        <h3 style="color:var(--primary); font-size:1.25rem; margin-bottom:0.5rem;">Foco Desta Apresentação:</h3>
+                        <p>1. Avaliar a estabilidade e a previsibilidade que prestações uniformes oferecem ao fluxo de saídas operacionais.</p>
+                        <p>2. Analisar o trade-off de liquidez: a parcela fixa inicial mais amigável versus o custo financeiro acumulado total.</p>
+                        <p>3. Comparar o impacto mensal no caixa em horizontes de <strong>6 meses versus 12 meses</strong>.</p>
+                        <p>4. Manipular o simulador interativo de impacto no caixa empresarial com gráfico comparativo.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SLIDE 2: PREVISIBILIDADE VS CUSTO FINANCEIRO -->
+            <div class="slide">
+                <span class="slide-tag">Análise Estratégica</span>
+                <h2 class="slide-title">Previsibilidade de Saídas vs. Custo Acumulado</h2>
+                <div class="slide-content">
+                    <p style="margin-bottom:0.8rem;">A escolha da Tabela Price impacta diretamente a rotina financeira da tesouraria corporativa:</p>
+                    <div class="grid-2">
+                        <div class="card-panel" style="border-top:4px solid var(--success);">
+                            <h4 style="color:var(--success); margin-bottom:0.3rem;">Vantagem: Parcela Linear no Caixa</h4>
+                            <p style="font-size:0.92rem;">• O setor financeiro provisiona exatamente o mesmo valor em todos os meses do exercício.<br>• Não há necessidade de recalcular desembolsos mês a mês.<br>• Facilita o casamento com receitas recorrentes de contratos de prestação de serviços ou assinaturas.</p>
+                        </div>
+                        <div class="card-panel" style="border-top:4px solid var(--danger);">
+                            <h4 style="color:var(--danger); margin-bottom:0.3rem;">Desvantagem: Retenção Prolongada da Dívida</h4>
+                            <p style="font-size:0.92rem;">• A amortização inicial tímida mantém o saldo devedor elevado durante longos períodos.<br>• O total de juros pagos ao credor é expressivamente maior do que em sistemas com amortização acelerada.<br>• Maior custo de oportunidade do capital corporativo.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SLIDE 3: COMPARAÇÃO DE IMPACTO NO CAIXA: 6 VS 12 MESES -->
+            <div class="slide">
+                <span class="slide-tag">Estudo Prático de Caixa</span>
+                <h2 class="slide-title">Pressão Mensal no Caixa: Financiamento de R$ 50.000 (2,5% a.m.)</h2>
+                <div class="slide-content">
+                    <p>Veja como o horizonte temporal altera a drenagem mensal e o desembolso total da tesouraria:</p>
+                    <div class="card-panel" style="padding:0.7rem;">
+                        <div class="table-responsive">
+                            <table class="fin-table">
+                                <thead>
+                                    <tr>
+                                        <th>Horizonte</th>
+                                        <th>Desembolso Mensal (PMT)</th>
+                                        <th>Impacto Mensal no Caixa</th>
+                                        <th>Juros Totais Pagos</th>
+                                        <th>Desembolso Global Acumulado</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td style="text-align:center; font-weight:700;">6 Meses</td>
+                                        <td style="font-weight:700; color:var(--primary);">R$ 9.076,82</td>
+                                        <td style="color:var(--danger);">Pressão mais intensa (R$ 9.076/mês)</td>
+                                        <td style="color:var(--success); font-weight:700;">R$ 4.460,92</td>
+                                        <td>R$ 54.460,92</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="text-align:center; font-weight:700;">12 Meses</td>
+                                        <td style="font-weight:700; color:var(--primary);">R$ 4.875,54</td>
+                                        <td style="color:var(--success);">Alívio de 46,3% na saída mensal</td>
+                                        <td style="color:var(--danger); font-weight:700;">R$ 8.506,48</td>
+                                        <td>R$ 58.506,48</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="highlight-box" style="margin-top:0.9rem;">
+                        <strong>Decisão do Administrador:</strong> Dobrar o prazo de 6 para 12 meses reduz a parcela mensal de R$ 9.076 para R$ 4.875 (liberando R$ 4.201 por mês no caixa operacional), porém custa <strong>R$ 4.045,56 adicionais de juros</strong> drenados da empresa.
+                    </div>
+                </div>
+            </div>
+
+            <!-- SLIDE 4: SIMULADOR DE IMPACTO NO FLUXO DE CAIXA -->
+            <div class="slide">
+                <span class="slide-tag">Laboratório de Tesouraria</span>
+                <h2 class="slide-title">Simulador: Capacidade de Pagamento e Liquidez</h2>
+                <div class="slide-content">
+                    <div class="sim-container">
+                        <div>
+                            <div class="form-row">
+                                <label>Necessidade de Financiamento (R$):</label>
+                                <input type="number" id="s9_pv" value="50000" step="5000">
+                            </div>
+                            <div class="form-row">
+                                <label>Geração Mensal Livre de Caixa (R$):</label>
+                                <input type="number" id="s9_caixa" value="8000" step="500">
+                            </div>
+                            <div class="form-row">
+                                <label>Taxa de Juros Mensal (% a.m.):</label>
+                                <input type="number" id="s9_i" value="2.5" step="0.1">
+                            </div>
+                            <button class="btn-calc" onclick="calcularSimulador9()">Avaliar Viabilidade de Caixa</button>
+                        </div>
+                        <div style="background:var(--background); padding:0.9rem; border-radius:8px; display:flex; flex-direction:column; justify-content:space-between; border:1px solid var(--border);">
+                            <div id="s9_res_analise" style="font-size:0.82rem; line-height:1.5;"></div>
+                            <div class="chart-box">
+                                <span style="font-size:0.72rem; font-weight:700; color:var(--text-muted); margin-bottom:4px;">PARCELA vs. GERAÇÃO LIVRE DE CAIXA</span>
+                                <svg id="s9_svg_chart" viewBox="0 0 320 75" style="width:100%; height:70px;"></svg>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SLIDE 5: SÍNTESE E PRÓXIMA PARTE -->
+            <div class="slide">
+                <span class="slide-tag">Fechamento da Parte 9</span>
+                <h2 class="slide-title">Síntese da Gestão de Caixa</h2>
+                <div class="slide-content">
+                    <div class="card-panel">
+                        <h3 style="color:var(--primary); margin-bottom:0.6rem;">Diretrizes para o Gestor Financeiro:</h3>
+                        <p>✔ A Tabela Price é excelente para empresas que precisam de estabilidade e parcelas que caibam no orçamento operacional imediato.</p>
+                        <p>✔ No entanto, o gestor não deve alongar o prazo desnecessariamente: prazos mais longos custam juros substancialmente maiores.</p>
+                        <p>✔ Havendo excedentes temporários de caixa, a realização de amortizações extraordinárias diminui o saldo e reduz os juros futuros.</p>
+                    </div>
+                    <div class="highlight-box" style="margin-top:1.2rem; text-align:center;">
+                        <h4 style="color:var(--secondary); font-size:1.15rem;">Próxima Apresentação (10.html):</h4>
+                        <p style="margin-top:0.3rem;">Vamos concluir a Aula 2 com o <strong>Estudo de Caso Integrador: Decisões no Sistema Price</strong> antes da Atividade Prática 2.</p>
+                        <a href="10.html" class="btn-nav" style="display:inline-flex; margin-top:0.8rem; background:var(--secondary); color:#fff; border:none; padding:0.65rem 1.5rem;">
+                            Avançar para Aula 2 • Parte 10 (10.html) &rarr;
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="slide-footer">
+            <div class="nav-controls">
+                <button class="btn-nav" id="btnPrev">← Anterior (↑)</button>
+                <button class="btn-nav" id="btnNext">Próximo (↓) →</button>
+            </div>
+            <div class="progress-indicator" id="slideIndicator">Slide 01 de 05</div>
+            <div>
+                <a href="8.html" class="btn-nav" style="text-decoration:none;">⮌ Voltar à Parte 8</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const slides = document.querySelectorAll('.slide');
+        const totalSlides = slides.length;
+        let currentSlide = 0;
+        const slideIndicator = document.getElementById('slideIndicator');
+        const btnPrev = document.getElementById('btnPrev');
+        const btnNext = document.getElementById('btnNext');
+        const btnFullscreen = document.getElementById('btnFullscreen');
+
+        function updateSlide(index) {
+            slides.forEach((s, idx) => s.classList.toggle('active', idx === index));
+            slideIndicator.textContent = `Slide ${String(index + 1).padStart(2, '0')} de ${String(totalSlides).padStart(2, '0')}`;
+        }
+
+        function nextSlide() {
+            if (currentSlide < totalSlides - 1) {
+                currentSlide++;
+                updateSlide(currentSlide);
+            } else {
+                window.location.href = "10.html";
+            }
+        }
+
+        function prevSlide() {
+            if (currentSlide > 0) {
+                currentSlide--;
+                updateSlide(currentSlide);
+            } else {
+                window.location.href = "8.html";
+            }
+        }
+
+        btnNext.addEventListener('click', nextSlide);
+        btnPrev.addEventListener('click', prevSlide);
+
+        window.addEventListener('keydown', (e) => {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') return;
+            if (e.key === 'ArrowDown' || e.key === 'PageDown' || e.key === 'ArrowRight') {
+                e.preventDefault();
+                nextSlide();
+            } else if (e.key === 'ArrowUp' || e.key === 'PageUp' || e.key === 'ArrowLeft') {
+                e.preventDefault();
+                prevSlide();
+            } else if (e.key === 'f' || e.key === 'F') {
+                toggleFullscreen();
+            }
+        });
+
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(() => {});
+            } else {
+                if (document.exitFullscreen) document.exitFullscreen();
+            }
+        }
+        btnFullscreen.addEventListener('click', toggleFullscreen);
+
+        const fmtBRL = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
+
+        function calcularSimulador9() {
+            const pv = parseFloat(document.getElementById('s9_pv').value) || 0;
+            const caixa = parseFloat(document.getElementById('s9_caixa').value) || 0;
+            const taxa = (parseFloat(document.getElementById('s9_i').value) || 0) / 100;
+
+            const pmt6 = taxa > 0 ? pv * (taxa / (1 - Math.pow(1 + taxa, -6))) : pv / 6;
+            const pmt12 = taxa > 0 ? pv * (taxa / (1 - Math.pow(1 + taxa, -12))) : pv / 12;
+
+            const viavel6 = caixa >= pmt6;
+            const viavel12 = caixa >= pmt12;
+
+            document.getElementById('s9_res_analise').innerHTML = `
+                <div><strong>Geração Livre de Caixa:</strong> ${fmtBRL.format(caixa)}/mês</div>
+                <div style="margin-top:3px;">• Cenário 6 meses: Parcela = <strong>${fmtBRL.format(pmt6)}</strong> &rarr; <span style="font-weight:700; color:${viavel6 ? 'var(--success)' : 'var(--danger)'};">${viavel6 ? 'COMPATÍVEL COM O CAIXA' : 'RISCO DE INSUFICIÊNCIA DE CAIXA'}</span></div>
+                <div style="margin-top:3px;">• Cenário 12 meses: Parcela = <strong>${fmtBRL.format(pmt12)}</strong> &rarr; <span style="font-weight:700; color:${viavel12 ? 'var(--success)' : 'var(--danger)'};">${viavel12 ? 'TOTALMENTE VIÁVEL E SEGURO' : 'INCOMPATÍVEL'}</span></div>
+            `;
+
+            desenharGraficoS9(caixa, pmt6, pmt12);
+        }
+
+        function desenharGraficoS9(caixa, p6, p12) {
+            const svg = document.getElementById('s9_svg_chart');
+            const maxVal = Math.max(caixa, p6, p12, 1);
+
+            const hCaixa = Math.max(8, (caixa / maxVal) * 50);
+            const h6 = Math.max(8, (p6 / maxVal) * 50);
+            const h12 = Math.max(8, (p12 / maxVal) * 50);
+
+            svg.innerHTML = `
+                <line x1="15" y1="65" x2="310" y2="65" stroke="#CBD5E1" stroke-width="1.5"/>
+                
+                <rect x="40" y="${65 - hCaixa}" width="50" height="${hCaixa}" rx="2" fill="#059669"/>
+                <text x="65" y="${60 - hCaixa}" font-size="7.5" font-weight="bold" fill="#059669" text-anchor="middle">${fmtBRL.format(caixa)}</text>
+                <text x="65" y="74" font-size="7.5" fill="#64748B" text-anchor="middle">Caixa Livre</text>
+
+                <rect x="135" y="${65 - h6}" width="50" height="${h6}" rx="2" fill="#DC2626"/>
+                <text x="160" y="${60 - h6}" font-size="7.5" font-weight="bold" fill="#DC2626" text-anchor="middle">${fmtBRL.format(p6)}</text>
+                <text x="160" y="74" font-size="7.5" fill="#DC2626" font-weight="bold" text-anchor="middle">Parcela 6M</text>
+
+                <rect x="230" y="${65 - h12}" width="50" height="${h12}" rx="2" fill="#002060"/>
+                <text x="255" y="${60 - h12}" font-size="7.5" font-weight="bold" fill="#002060" text-anchor="middle">${fmtBRL.format(p12)}</text>
+                <text x="255" y="74" font-size="7.5" fill="#002060" font-weight="bold" text-anchor="middle">Parcela 12M</text>
+            `;
+        }
+
+        calcularSimulador9();
+    </script>
+</body>
+</html>

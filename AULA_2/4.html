@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aula 2 • Parte 4 — Cálculo dos Juros Periódicos no Sistema Price | CEST</title>
+    <meta name="author" content="Prof. Msc. Philipe Sampaio Lima">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23002060'/><circle cx='50' cy='50' r='30' fill='%230080FF'/><text x='50' y='58' font-size='24' font-weight='bold' fill='white' text-anchor='middle'>4</text></svg>">
+    
+    <style>
+        :root {
+            --primary: #002060;
+            --primary-dark: #001138;
+            --primary-light: #003399;
+            --secondary: #0080FF;
+            --secondary-light: #E6F2FF;
+            --accent: #00A3FF;
+            --background: #F4F7FA;
+            --surface: #FFFFFF;
+            --text-primary: #0F172A;
+            --text-secondary: #475569;
+            --text-muted: #64748B;
+            --border: #CBD5E1;
+            --success: #059669;
+            --warning: #D97706;
+            --danger: #DC2626;
+            --radius-md: 12px;
+            --shadow-md: 0 8px 24px -4px rgba(0, 32, 96, 0.12);
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: #0b1329;
+            color: var(--text-primary);
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .stage {
+            width: 96vw;
+            height: 54vw;
+            max-width: 1600px;
+            max-height: 900px;
+            background-color: var(--background);
+            border-radius: var(--radius-md);
+            box-shadow: 0 15px 45px rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .slide-topbar {
+            height: 52px;
+            background-color: var(--primary);
+            color: #FFFFFF;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 1.5rem;
+            flex-shrink: 0;
+            border-bottom: 2px solid var(--secondary);
+        }
+        .topbar-left { display: flex; align-items: center; gap: 12px; font-weight: 700; font-size: 0.9rem; }
+        .topbar-badge {
+            background-color: rgba(255,255,255,0.15); padding: 3px 8px; border-radius: 4px; color: var(--secondary-light); font-size: 0.75rem;
+        }
+        .topbar-right { display: flex; align-items: center; gap: 15px; font-size: 0.85rem; color: rgba(255,255,255,0.85); }
+
+        .slide-viewport { flex-grow: 1; position: relative; overflow: hidden; }
+        .slide {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            padding: 2.2rem 3rem; display: flex; flex-direction: column; opacity: 0; visibility: hidden;
+            transform: translateX(30px); transition: all 0.28s ease-out; overflow-y: auto;
+        }
+        .slide.active { opacity: 1; visibility: visible; transform: translateX(0); z-index: 2; }
+
+        .slide-tag { color: var(--secondary); font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.35rem; }
+        .slide-title { font-size: 1.85rem; font-weight: 800; color: var(--primary); line-height: 1.25; margin-bottom: 1.25rem; }
+        .slide-content { font-size: 1.08rem; line-height: 1.6; color: var(--text-secondary); flex-grow: 1; display: flex; flex-direction: column; justify-content: center; }
+
+        .highlight-box {
+            background-color: var(--surface); border-left: 5px solid var(--secondary); padding: 1.25rem 1.75rem;
+            border-radius: 0 var(--radius-md) var(--radius-md) 0; box-shadow: var(--shadow-md); margin: 1rem 0;
+        }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+        .card-panel { background: var(--surface); padding: 1.4rem; border-radius: var(--radius-md); border: 1px solid var(--border); }
+
+        .sim-container {
+            display: grid; grid-template-columns: 0.95fr 1.05fr; gap: 1.5rem; background: var(--surface); padding: 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--border);
+        }
+        .form-row { display: flex; flex-direction: column; gap: 0.2rem; margin-bottom: 0.5rem; }
+        .form-row label { font-weight: 600; color: var(--primary); font-size: 0.82rem; }
+        .form-row input { padding: 0.45rem 0.65rem; border: 1px solid var(--border); border-radius: 6px; font-weight: 600; }
+        .btn-calc { background: var(--secondary); color: #fff; border: none; padding: 0.65rem; border-radius: 6px; font-weight: 700; cursor: pointer; transition: 0.2s; width: 100%; }
+        .btn-calc:hover { background: var(--primary); }
+
+        .chart-box {
+            background: #fff; border: 1px solid var(--border); border-radius: 6px; padding: 0.75rem; display: flex; flex-direction: column; align-items: center; justify-content: center; margin-top: 0.5rem;
+        }
+
+        .slide-footer {
+            height: 56px; background-color: var(--surface); border-top: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: space-between; padding: 0 1.5rem; flex-shrink: 0;
+        }
+        .nav-controls { display: flex; align-items: center; gap: 10px; }
+        .btn-nav {
+            background-color: var(--background); border: 1px solid var(--border); color: var(--primary);
+            padding: 6px 14px; border-radius: 6px; font-weight: 700; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; gap: 6px;
+        }
+        .btn-nav:hover { background-color: var(--secondary); color: #FFFFFF; }
+        .progress-indicator { font-weight: 700; font-size: 0.88rem; color: var(--text-muted); }
+    </style>
+</head>
+<body>
+
+    <div class="stage">
+        <div class="slide-topbar">
+            <div class="topbar-left">
+                <span>CEST • MATEMÁTICA FINANCEIRA</span>
+                <span class="topbar-badge">Aula 2 • Parte 4</span>
+            </div>
+            <div class="topbar-right">
+                <span>Prof. Msc. Philipe Sampaio Lima</span>
+                <button class="btn-nav" id="btnFullscreen" style="padding:4px 8px; font-size:0.75rem;">⛶ Tela Cheia</button>
+            </div>
+        </div>
+
+        <div class="slide-viewport">
+            
+            <!-- SLIDE 1: ABERTURA -->
+            <div class="slide active">
+                <span class="slide-tag">O Custo Financeiro Periódico</span>
+                <h1 class="slide-title" style="font-size:2.35rem;">Cálculo dos Juros Periódicos no Sistema Price</h1>
+                <div class="slide-content">
+                    <div class="highlight-box">
+                        <h3 style="color:var(--primary); font-size:1.25rem; margin-bottom:0.5rem;">Foco Desta Apresentação:</h3>
+                        <p>1. Fixar a equação universal de apuração dos juros: <code>Juros(n) = Saldo Devedor Anterior × i</code>.</p>
+                        <p>2. Compreender a natureza estritamente decrescente da despesa de juros ao longo do tempo.</p>
+                        <p>3. Demonstrar o impacto da taxa periódica sobre o custo financeiro absorvido pela empresa tomadora.</p>
+                        <p>4. Manipular um simulador com gráfico de linha em SVG exibindo a curva descendente dos juros periódicos.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SLIDE 2: A MECÂNICA DE APURAÇÃO -->
+            <div class="slide">
+                <span class="slide-tag">A Lei dos Juros Bancários</span>
+                <h2 class="slide-title">A Regra Inegociável da Incidência dos Juros</h2>
+                <div class="slide-content">
+                    <p style="margin-bottom:0.8rem;">No Sistema Francês, assim como em qualquer sistema legal de amortização, os juros nunca incidem sobre o valor original financiado quando já houve amortização:</p>
+                    <div class="card-panel" style="text-align:center; padding:1.25rem; background:linear-gradient(135deg, #001e5c 0%, #002b82 100%); color:#fff;">
+                        <span style="font-size:0.85rem; text-transform:uppercase; color:var(--secondary-light); font-weight:700;">Fórmula dos Juros Periódicos</span>
+                        <div style="font-size:1.7rem; font-weight:800; color:#60A5FA; margin-top:0.3rem;">
+                            J(t) = SD(t-1) × i
+                        </div>
+                    </div>
+                    <div class="grid-2" style="margin-top:1rem;">
+                        <div class="card-panel">
+                            <h4 style="color:var(--primary);">O que é SD(t-1)?</h4>
+                            <p style="font-size:0.92rem;">É o Saldo Devedor imediatamente anterior ao pagamento atual. É o dinheiro que a empresa efetivamente reteve em mãos no decorrer daquele período.</p>
+                        </div>
+                        <div class="card-panel">
+                            <h4 style="color:var(--primary);">O que é a Taxa (i)?</h4>
+                            <p style="font-size:0.92rem;">A taxa periódica contratada expressa em forma decimal. Se a taxa contratada for 2,5% ao mês, opera-se estritamente com o fator 0,025.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SLIDE 3: POR QUE OS JUROS CAEM SEMPRE? -->
+            <div class="slide">
+                <span class="slide-tag">Dinâmica Matemática</span>
+                <h2 class="slide-title">Por que os Juros São Estritamente Decrescentes?</h2>
+                <div class="slide-content">
+                    <p style="margin-bottom:0.8rem;">A queda dos juros é uma consequência direta e inevitável da amortização do capital principal:</p>
+                    <div class="grid-2">
+                        <div class="card-panel" style="border-left:5px solid var(--danger);">
+                            <h4 style="color:var(--danger); margin-bottom:0.4rem;">Trajetória do Saldo Devedor</h4>
+                            <p style="font-size:0.92rem;">A cada prestação paga, uma fatia amortiza o principal ($SD_t = SD_{t-1} - A_t$). Portanto, a base sobre a qual os juros são calculados é menor a cada novo mês:</p>
+                            <div style="background:var(--background); padding:0.5rem; border-radius:6px; font-weight:700; margin-top:0.4rem; color:var(--primary);">
+                                SD₀ > SD₁ > SD₂ > SD₃ > ... > SDₙ = 0
+                            </div>
+                        </div>
+                        <div class="card-panel" style="border-left:5px solid var(--danger);">
+                            <h4 style="color:var(--danger); margin-bottom:0.4rem;">Trajetória dos Juros</h4>
+                            <p style="font-size:0.92rem;">Multiplicando uma base decrescente por uma taxa fixa (i), o produto obrigatoriamente segue uma escada descendente:</p>
+                            <div style="background:var(--background); padding:0.5rem; border-radius:6px; font-weight:700; margin-top:0.4rem; color:var(--danger);">
+                                J₁ > J₂ > J₃ > J₄ > ... > Jₙ > 0
+                            </div>
+                        </div>
+                    </div>
+                    <div class="highlight-box" style="margin-top:1rem;">
+                        <strong>Visão Contábil:</strong> Essa redução contínua dos juros alivia gradualmente o lançamento de despesas financeiras na Demonstração do Resultado (DRE) da empresa.
+                    </div>
+                </div>
+            </div>
+
+            <!-- SLIDE 4: CASO RESOLVIDO: EVOLUÇÃO DOS JUROS -->
+            <div class="slide">
+                <span class="slide-tag">Exemplo Resolvido</span>
+                <h2 class="slide-title">Caso Resolvido: Apuração dos Juros em 3 Meses</h2>
+                <div class="slide-content">
+                    <p>Financiamento de <strong>R$ 24.000,00</strong> a <strong>2% ao mês</strong> em 3 parcelas fixas de <strong>R$ 8.322,11</strong>:</p>
+                    <div class="card-panel" style="margin-top:0.6rem; font-size:0.92rem;">
+                        <p>• <strong>Mês 1:</strong> Juros = 24.000,00 × 0,02 = <strong style="color:var(--danger);">R$ 480,00</strong><br>
+                        Amortização = 8.322,11 - 480,00 = R$ 7.842,11 &rarr; Saldo = 24.000 - 7.842,11 = <strong>R$ 16.157,89</strong></p>
+                        
+                        <p style="margin-top:0.4rem;">• <strong>Mês 2:</strong> Juros = 16.157,89 × 0,02 = <strong style="color:var(--danger);">R$ 323,16</strong> (Queda de R$ 156,84 nos juros)<br>
+                        Amortização = 8.322,11 - 323,16 = R$ 7.998,95 &rarr; Saldo = 16.157,89 - 7.998,95 = <strong>R$ 8.158,94</strong></p>
+
+                        <p style="margin-top:0.4rem;">• <strong>Mês 3:</strong> Juros = 8.158,94 × 0,02 = <strong style="color:var(--danger);">R$ 163,18</strong> (Queda adicional)<br>
+                        Amortização = 8.322,11 - 163,18 = R$ 8.158,93 &rarr; Saldo Final = <strong>R$ 0,00 (Quitado!)</strong></p>
+                    </div>
+                    <div class="highlight-box" style="margin-top:0.8rem;">
+                        <strong>Soma Total de Juros:</strong> R$ 480,00 + R$ 323,16 + R$ 163,18 = <strong>R$ 966,34</strong> pagos ao banco pelo crédito.
+                    </div>
+                </div>
+            </div>
+
+            <!-- SLIDE 5: SIMULADOR DA CURVA DE JUROS -->
+            <div class="slide">
+                <span class="slide-tag">Laboratório Interativo</span>
+                <h2 class="slide-title">Simulador: Trajetória da Curva de Juros</h2>
+                <div class="slide-content">
+                    <div class="sim-container">
+                        <div>
+                            <div class="form-row">
+                                <label>Capital Financiado (PV):</label>
+                                <input type="number" id="s4_pv" value="24000" step="2000">
+                            </div>
+                            <div class="form-row">
+                                <label>Prazo de Vigência (Meses):</label>
+                                <input type="number" id="s4_n" value="6" min="2" max="12" step="1">
+                            </div>
+                            <div class="form-row">
+                                <label>Taxa de Juros Mensal (% a.m.):</label>
+                                <input type="number" id="s4_i" value="2.0" step="0.1">
+                            </div>
+                            <button class="btn-calc" onclick="calcularSimulador4()">Gerar Curva de Juros Periódicos</button>
+                        </div>
+                        <div style="background:var(--background); padding:1rem; border-radius:8px; display:flex; flex-direction:column; justify-content:space-between; border:1px solid var(--border);">
+                            <div id="s4_tabela_juros" style="font-size:0.82rem; line-height:1.5;">
+                                <!-- Preenchido dinamicamente via JS -->
+                            </div>
+                            <div class="chart-box">
+                                <span style="font-size:0.75rem; font-weight:700; color:var(--text-muted); margin-bottom:4px;">CURVA DESCENDENTE DE JUROS (R$ POR MÊS)</span>
+                                <svg id="s4_svg_chart" viewBox="0 0 320 75" style="width:100%; height:70px;"></svg>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SLIDE 6: O CUIDADO COM RENEGOCIAÇÕES -->
+            <div class="slide">
+                <span class="slide-tag">Gestão de Passivos Bancários</span>
+                <h2 class="slide-title">O Perigo das Renegociações Prematuras</h2>
+                <div class="slide-content">
+                    <p style="margin-bottom:0.8rem;">O que acontece se a empresa renegociar o contrato logo nos primeiros períodos?</p>
+                    <div class="grid-2">
+                        <div class="card-panel" style="border-left:5px solid var(--danger);">
+                            <h4 style="color:var(--danger); margin-bottom:0.3rem;">Renegociar no Início</h4>
+                            <p style="font-size:0.92rem;">Como as primeiras parcelas foram quase inteiramente juros, a dívida praticamente não diminuiu. Ao refinanciar, o saldo devedor ainda é quase igual ao valor original, recomeçando a pirâmide de juros.</p>
+                        </div>
+                        <div class="card-panel" style="border-left:5px solid var(--success);">
+                            <h4 style="color:var(--success); margin-bottom:0.3rem;">Renegociar na Metade Final</h4>
+                            <p style="font-size:0.92rem;">O saldo devedor já sofreu amortizações aceleradas. A despesa com juros é reduzida, e a empresa desfruta de maior patrimônio líquido livre da dívida.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SLIDE 7: QUIZ FORMATIVO -->
+            <div class="slide">
+                <span class="slide-tag">Verificação Rápida</span>
+                <h2 class="slide-title">Desafio em Sala: Apuração de Juros</h2>
+                <div class="slide-content">
+                    <p style="font-size:1.15rem; margin-bottom:1rem;">
+                        Uma empresa financiou um caminhão. No mês anterior, o saldo devedor restante fechou em <strong>R$ 80.000,00</strong>. Sabendo que a taxa de juros é de <strong>2,5% ao mês</strong>, qual será o valor exato dos juros cobrados na prestação deste mês?
+                    </p>
+                    <div style="display:flex; flex-direction:column; gap:0.6rem; margin:1rem 0;">
+                        <button class="btn-nav" onclick="checkQuiz4(1, this)" style="justify-content:flex-start; padding:0.75rem 1rem;">
+                            A) R$ 2.000,00 (80.000 × 0,025).
+                        </button>
+                        <button class="btn-nav" onclick="checkQuiz4(2, this)" style="justify-content:flex-start; padding:0.75rem 1rem;">
+                            B) R$ 800,00, pois os juros incidem apenas sobre o valor financiado no ano anterior.
+                        </button>
+                        <button class="btn-nav" onclick="checkQuiz4(3, this)" style="justify-content:flex-start; padding:0.75rem 1rem;">
+                            C) R$ 2.500,00, por conta das taxas bancárias adicionais.
+                        </button>
+                    </div>
+                    <div id="quiz-fb-4" class="highlight-box" style="display:none; margin-top:0.4rem;"></div>
+                </div>
+            </div>
+
+            <!-- SLIDE 8: SÍNTESE E PRÓXIMA PARTE -->
+            <div class="slide">
+                <span class="slide-tag">Fechamento da Parte 4</span>
+                <h2 class="slide-title">Síntese e Encaminhamento</h2>
+                <div class="slide-content">
+                    <div class="card-panel">
+                        <h3 style="color:var(--primary); margin-bottom:0.6rem;">Pontos Consolidados:</h3>
+                        <p>✔ Os juros decorrem estritamente da relação $J(t) = SD(t-1) \times i$.</p>
+                        <p>✔ Em virtude da amortização contínua do saldo, a curva de juros no Sistema Price é estritamente decrescente.</p>
+                        <p>✔ A queda dos juros é o mecanismo que libera espaço para o crescimento da amortização da prestação.</p>
+                    </div>
+                    <div class="highlight-box" style="margin-top:1.2rem; text-align:center;">
+                        <h4 style="color:var(--secondary); font-size:1.15rem;">Próxima Apresentação (5.html):</h4>
+                        <p style="margin-top:0.3rem;">Vamos investigar a <strong>Amortização Crescente</strong> e entender a progressão geométrica que governa o abatimento da dívida.</p>
+                        <a href="5.html" class="btn-nav" style="display:inline-flex; margin-top:0.8rem; background:var(--secondary); color:#fff; border:none; padding:0.65rem 1.5rem;">
+                            Avançar para Aula 2 • Parte 5 (5.html) &rarr;
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="slide-footer">
+            <div class="nav-controls">
+                <button class="btn-nav" id="btnPrev">← Anterior (↑)</button>
+                <button class="btn-nav" id="btnNext">Próximo (↓) →</button>
+            </div>
+            <div class="progress-indicator" id="slideIndicator">Slide 01 de 08</div>
+            <div>
+                <a href="3.html" class="btn-nav" style="text-decoration:none;">⮌ Voltar à Parte 3</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const slides = document.querySelectorAll('.slide');
+        const totalSlides = slides.length;
+        let currentSlide = 0;
+        const slideIndicator = document.getElementById('slideIndicator');
+        const btnPrev = document.getElementById('btnPrev');
+        const btnNext = document.getElementById('btnNext');
+        const btnFullscreen = document.getElementById('btnFullscreen');
+
+        function updateSlide(index) {
+            slides.forEach((s, idx) => s.classList.toggle('active', idx === index));
+            slideIndicator.textContent = `Slide ${String(index + 1).padStart(2, '0')} de ${String(totalSlides).padStart(2, '0')}`;
+        }
+
+        function nextSlide() {
+            if (currentSlide < totalSlides - 1) {
+                currentSlide++;
+                updateSlide(currentSlide);
+            } else {
+                window.location.href = "5.html";
+            }
+        }
+
+        function prevSlide() {
+            if (currentSlide > 0) {
+                currentSlide--;
+                updateSlide(currentSlide);
+            } else {
+                window.location.href = "3.html";
+            }
+        }
+
+        btnNext.addEventListener('click', nextSlide);
+        btnPrev.addEventListener('click', prevSlide);
+
+        window.addEventListener('keydown', (e) => {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') return;
+            if (e.key === 'ArrowDown' || e.key === 'PageDown' || e.key === 'ArrowRight') {
+                e.preventDefault();
+                nextSlide();
+            } else if (e.key === 'ArrowUp' || e.key === 'PageUp' || e.key === 'ArrowLeft') {
+                e.preventDefault();
+                prevSlide();
+            } else if (e.key === 'f' || e.key === 'F') {
+                toggleFullscreen();
+            }
+        });
+
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(() => {});
+            } else {
+                if (document.exitFullscreen) document.exitFullscreen();
+            }
+        }
+        btnFullscreen.addEventListener('click', toggleFullscreen);
+
+        const fmtBRL = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
+
+        function calcularSimulador4() {
+            const pv = parseFloat(document.getElementById('s4_pv').value) || 0;
+            const n = Math.min(12, Math.max(2, parseInt(document.getElementById('s4_n').value) || 6));
+            const i = (parseFloat(document.getElementById('s4_i').value) || 0) / 100;
+
+            const pmt = i > 0 ? pv * (i / (1 - Math.pow(1 + i, -n))) : pv / n;
+            let sd = pv;
+            const listaJuros = [];
+
+            let html = `<div><strong>Prestação Fixa:</strong> ${fmtBRL.format(pmt)}</div>`;
+            for (let m = 1; m <= n; m++) {
+                const juros = sd * i;
+                let amort = pmt - juros;
+                if (m === n) amort = sd;
+                sd = Math.max(0, sd - amort);
+                listaJuros.push({ mes: m, juros });
+                html += `<div><strong>Mês ${m}:</strong> Juros = <span style="color:var(--danger); font-weight:700;">${fmtBRL.format(juros)}</span> (Saldo = ${fmtBRL.format(sd)})</div>`;
+            }
+
+            document.getElementById('s4_tabela_juros').innerHTML = html;
+            desenharGraficoS4(listaJuros);
+        }
+
+        function desenharGraficoS4(dados) {
+            const svg = document.getElementById('s4_svg_chart');
+            const maxJ = Math.max(...dados.map(d => d.juros), 1);
+            const total = dados.length;
+            const stepX = 260 / (total - 1 || 1);
+            const startX = 30;
+
+            let points = "";
+            let dots = "";
+
+            dados.forEach((d, idx) => {
+                const x = startX + idx * stepX;
+                const y = 65 - (d.juros / maxJ) * 50;
+                points += `${x},${y} `;
+                dots += `
+                    <circle cx="${x}" cy="${y}" r="3.5" fill="#DC2626"/>
+                    <text x="${x}" y="73" font-size="7.5" fill="#64748B" text-anchor="middle">M${d.mes}</text>
+                `;
+            });
+
+            svg.innerHTML = `
+                <line x1="20" y1="65" x2="310" y2="65" stroke="#CBD5E1" stroke-width="1.5"/>
+                <polyline points="${points.trim()}" fill="none" stroke="#DC2626" stroke-width="2.5"/>
+                ${dots}
+            `;
+        }
+
+        calcularSimulador4();
+
+        function checkQuiz4(op, btn) {
+            const fb = document.getElementById('quiz-fb-4');
+            fb.style.display = 'block';
+            if (op === 1) {
+                fb.style.borderLeftColor = 'var(--success)';
+                fb.innerHTML = `<h4 style="color:var(--success);">Correto! (Alternativa A)</h4>
+                <p>O juro do período incide diretamente sobre o saldo remanescente: $80.000,00 \times 0,025 = \mathbf{R\$\ 2.000,00}$.</p>`;
+            } else {
+                fb.style.borderLeftColor = 'var(--danger)';
+                fb.innerHTML = `<h4 style="color:var(--danger);">Atenção!</h4>
+                <p>Multiplique o saldo devedor existente pela taxa mensal (80.000 × 0,025 = R$ 2.000,00).</p>`;
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aula 2 • Parte 2 — Característica da Parcela Fixa | CEST</title>
+    <meta name="author" content="Prof. Msc. Philipe Sampaio Lima">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23002060'/><circle cx='50' cy='50' r='30' fill='%230080FF'/><text x='50' y='58' font-size='24' font-weight='bold' fill='white' text-anchor='middle'>2</text></svg>">
+    
+    <style>
+        :root {
+            --primary: #002060;
+            --primary-dark: #001138;
+            --primary-light: #003399;
+            --secondary: #0080FF;
+            --secondary-light: #E6F2FF;
+            --accent: #00A3FF;
+            --background: #F4F7FA;
+            --surface: #FFFFFF;
+            --text-primary: #0F172A;
+            --text-secondary: #475569;
+            --text-muted: #64748B;
+            --border: #CBD5E1;
+            --success: #059669;
+            --warning: #D97706;
+            --danger: #DC2626;
+            --radius-md: 12px;
+            --shadow-md: 0 8px 24px -4px rgba(0, 32, 96, 0.12);
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: #0b1329;
+            color: var(--text-primary);
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .stage {
+            width: 96vw;
+            height: 54vw;
+            max-width: 1600px;
+            max-height: 900px;
+            background-color: var(--background);
+            border-radius: var(--radius-md);
+            box-shadow: 0 15px 45px rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .slide-topbar {
+            height: 52px;
+            background-color: var(--primary);
+            color: #FFFFFF;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 1.5rem;
+            flex-shrink: 0;
+            border-bottom: 2px solid var(--secondary);
+        }
+        .topbar-left { display: flex; align-items: center; gap: 12px; font-weight: 700; font-size: 0.9rem; }
+        .topbar-badge {
+            background-color: rgba(255,255,255,0.15); padding: 3px 8px; border-radius: 4px; color: var(--secondary-light); font-size: 0.75rem;
+        }
+        .topbar-right { display: flex; align-items: center; gap: 15px; font-size: 0.85rem; color: rgba(255,255,255,0.85); }
+
+        .slide-viewport { flex-grow: 1; position: relative; overflow: hidden; }
+        .slide {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            padding: 2.2rem 3rem; display: flex; flex-direction: column; opacity: 0; visibility: hidden;
+            transform: translateX(30px); transition: all 0.28s ease-out; overflow-y: auto;
+        }
+        .slide.active { opacity: 1; visibility: visible; transform: translateX(0); z-index: 2; }
+
+        .slide-tag { color: var(--secondary); font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.35rem; }
+        .slide-title { font-size: 1.85rem; font-weight: 800; color: var(--primary); line-height: 1.25; margin-bottom: 1.25rem; }
+        .slide-content { font-size: 1.08rem; line-height: 1.6; color: var(--text-secondary); flex-grow: 1; display: flex; flex-direction: column; justify-content: center; }
+
+        .highlight-box {
+            background-color: var(--surface); border-left: 5px solid var(--secondary); padding: 1.25rem 1.75rem;
+            border-radius: 0 var(--radius-md) var(--radius-md) 0; box-shadow: var(--shadow-md); margin: 1rem 0;
+        }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.2rem; }
+        .card-panel { background: var(--surface); padding: 1.4rem; border-radius: var(--radius-md); border: 1px solid var(--border); }
+
+        .sim-container {
+            display: grid; grid-template-columns: 0.95fr 1.05fr; gap: 1.5rem; background: var(--surface); padding: 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--border);
+        }
+        .form-row { display: flex; flex-direction: column; gap: 0.2rem; margin-bottom: 0.5rem; }
+        .form-row label { font-weight: 600; color: var(--primary); font-size: 0.82rem; }
+        .form-row input { padding: 0.45rem 0.65rem; border: 1px solid var(--border); border-radius: 6px; font-weight: 600; }
+        .btn-calc { background: var(--secondary); color: #fff; border: none; padding: 0.65rem; border-radius: 6px; font-weight: 700; cursor: pointer; transition: 0.2s; width: 100%; }
+        .btn-calc:hover { background: var(--primary); }
+
+        .chart-box {
+            background: #fff; border: 1px solid var(--border); border-radius: 6px; padding: 0.75rem; display: flex; flex-direction: column; align-items: center; justify-content: center; margin-top: 0.5rem;
+        }
+
+        .slide-footer {
+            height: 56px; background-color: var(--surface); border-top: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: space-between; padding: 0 1.5rem; flex-shrink: 0;
+        }
+        .nav-controls { display: flex; align-items: center; gap: 10px; }
+        .btn-nav {
+            background-color: var(--background); border: 1px solid var(--border); color: var(--primary);
+            padding: 6px 14px; border-radius: 6px; font-weight: 700; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; gap: 6px;
+        }
+        .btn-nav:hover { background-color: var(--secondary); color: #FFFFFF; }
+        .progress-indicator { font-weight: 700; font-size: 0.88rem; color: var(--text-muted); }
+    </style>
+</head>
+<body>
+
+    <div class="stage">
+        <div class="slide-topbar">
+            <div class="topbar-left">
+                <span>CEST • MATEMÁTICA FINANCEIRA</span>
+                <span class="topbar-badge">Aula 2 • Parte 2</span>
+            </div>
+            <div class="topbar-right">
+                <span>Prof. Msc. Philipe Sampaio Lima</span>
+                <button class="btn-nav" id="btnFullscreen" style="padding:4px 8px; font-size:0.75rem;">⛶ Tela Cheia</button>
+            </div>
+        </div>
+
+        <div class="slide-viewport">
+            
+            <!-- SLIDE 1: ABERTURA -->
+            <div class="slide active">
+                <span class="slide-tag">Arquitetura da Parcela</span>
+                <h1 class="slide-title" style="font-size:2.35rem;">A Característica da Parcela Fixa</h1>
+                <div class="slide-content">
+                    <div class="highlight-box">
+                        <h3 style="color:var(--primary); font-size:1.25rem; margin-bottom:0.5rem;">Conteúdo Desta Sessão:</h3>
+                        <p>1. O princípio da previsibilidade financeira e suas vantagens no planejamento orçamentário empresarial.</p>
+                        <p>2. A decomposição analítica: a ilusão de constância exterior versus mutação estrutural interior.</p>
+                        <p>3. A taxa de substituição entre juros decrescentes e amortização acelerada.</p>
+                        <p>4. Simulador interativo com gráfico SVG comparando a proporção de cada parcela em contrato de 4 meses.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SLIDE 2: PREVISIBILIDADE ORÇAMENTÁRIA -->
+            <div class="slide">
+                <span class="slide-tag">Planejamento Empresarial</span>
+                <h2 class="slide-title">Previsibilidade: A Grande Vantagem da Parcela Fixa</h2>
+                <div class="slide-content">
+                    <p style="margin-bottom:1rem;">Para o gestor financeiro, contrair uma dívida com parcelas rigorosamente iguais remove a incerteza no fluxo de saídas:</p>
+                    <div class="grid-2">
+                        <div class="card-panel" style="border-top:4px solid var(--success);">
+                            <h4 style="color:var(--success); margin-bottom:0.4rem;">Facilidade no Orçamento de Caixa</h4>
+                            <p style="font-size:0.92rem;">• O desembolso mensal é previamente cravado na planilha de tesouraria.<br>• Reduz o risco de surpresas no capital de giro em meses de baixa sazonalidade.<br>• Facilita a definição de preços de venda com margem de contribuição estável.</p>
+                        </div>
+                        <div class="card-panel" style="border-top:4px solid var(--secondary);">
+                            <h4 style="color:var(--secondary); margin-bottom:0.4rem;">Atratividade Comercial</h4>
+                            <p style="font-size:0.92rem;">• O cliente corporativo ou consumidor final compreende imediatamente o compromisso assumido.<br>• Facilita o enquadramento na capacidade de pagamento comprovada (ex.: comprometer no máximo 20% do faturamento).</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SLIDE 3: O PARADOXO DA PARCELA FIXA -->
+            <div class="slide">
+                <span class="slide-tag">Análise Estrutural</span>
+                <h2 class="slide-title">O Paradoxo da Parcela Fixa: Estável por Fora, Mutável por Dentro</h2>
+                <div class="slide-content">
+                    <p style="margin-bottom:0.8rem;">Embora o valor transferido ao banco seja idêntico, a sua função contábil e econômica muda radicalmente a cada mês:</p>
+                    <div class="card-panel" style="text-align:center; padding:1.25rem; border:2px solid var(--secondary);">
+                        <div style="font-size:1.6rem; font-weight:800; color:var(--primary);">
+                            PMT = Amortização(t) [↑ Crescente] + Juros(t) [↓ Decrescente]
+                        </div>
+                    </div>
+                    <div class="grid-2" style="margin-top:1rem;">
+                        <div class="card-panel">
+                            <h4 style="color:var(--danger); margin-bottom:0.3rem;">Nas Primeiras Parcelas:</h4>
+                            <p style="font-size:0.92rem;">A fatia de juros é gigantesca porque o saldo devedor ainda está no seu ápice. A quase totalidade da parcela remunera o credor, amortizando uma fração ínfima do principal.</p>
+                        </div>
+                        <div class="card-panel">
+                            <h4 style="color:var(--success); margin-bottom:0.3rem;">Nas Últimas Parcelas:</h4>
+                            <p style="font-size:0.92rem;">O saldo devedor já encolheu sensivelmente. Os juros tornam-se residuais e a maior parte da parcela é canalizada diretamente para a amortização final da dívida.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SLIDE 4: CASO NUMÉRICO DE 4 MESES -->
+            <div class="slide">
+                <span class="slide-tag">Exemplo Numérico Resolvido</span>
+                <h2 class="slide-title">Demonstração: Financiamento de R$ 40.000 em 4 Meses</h2>
+                <div class="slide-content">
+                    <p>Financiamento tomado por uma rede hoteleira a <strong>2% ao mês</strong>, com 4 parcelas fixas de <strong>R$ 10.507,17</strong>:</p>
+                    <div class="card-panel" style="font-size:0.92rem; margin-top:0.6rem;">
+                        <p>• <strong>Mês 1:</strong> Juros = 40.000 × 0,02 = R$ 800,00 | Amortização = 10.507,17 - 800 = <strong style="color:var(--success);">R$ 9.707,17</strong> (Saldo = R$ 30.292,83)</p>
+                        <p style="margin-top:0.3rem;">• <strong>Mês 2:</strong> Juros = 30.292,83 × 0,02 = R$ 605,86 | Amortização = 10.507,17 - 605,86 = <strong style="color:var(--success);">R$ 9.901,31</strong> (Saldo = R$ 20.391,52)</p>
+                        <p style="margin-top:0.3rem;">• <strong>Mês 3:</strong> Juros = 20.391,52 × 0,02 = R$ 407,83 | Amortização = 10.507,17 - 407,83 = <strong style="color:var(--success);">R$ 10.099,34</strong> (Saldo = R$ 10.292,18)</p>
+                        <p style="margin-top:0.3rem;">• <strong>Mês 4:</strong> Juros = 10.292,18 × 0,02 = R$ 205,84 | Amortização = 10.507,17 - 205,84 = <strong style="color:var(--success);">R$ 10.301,33</strong> (Saldo = R$ 0,00)</p>
+                    </div>
+                    <div class="highlight-box" style="margin-top:0.8rem;">
+                        <strong>Conferência Matemática:</strong> A amortização cresceu de R$ 9.707,17 para R$ 10.301,33, exatamente pela taxa de juros: $9.707,17 \times (1 + 0,02) = 9.901,31$!
+                    </div>
+                </div>
+            </div>
+
+            <!-- SLIDE 5: SIMULADOR DE PROPORÇÃO DA PARCELA -->
+            <div class="slide">
+                <span class="slide-tag">Laboratório de Visualização</span>
+                <h2 class="slide-title">Simulador: Proporção Interna da Prestação Fixa</h2>
+                <div class="slide-content">
+                    <div class="sim-container">
+                        <div>
+                            <div class="form-row">
+                                <label>Capital Financiado (R$):</label>
+                                <input type="number" id="s2_pv" value="40000" step="5000">
+                            </div>
+                            <div class="form-row">
+                                <label>Prazo de Pagamento (Meses):</label>
+                                <input type="number" id="s2_n" value="4" min="2" max="12" step="1">
+                            </div>
+                            <div class="form-row">
+                                <label>Taxa de Juros (% ao mês):</label>
+                                <input type="number" id="s2_i" value="2.0" step="0.1">
+                            </div>
+                            <button class="btn-calc" onclick="calcularSimulador2()">Atualizar Composição da Prestação</button>
+                            <div style="margin-top:0.6rem; font-size:0.85rem; color:var(--primary); font-weight:700;" id="s2_lbl_info">
+                                Prestação Fixa: R$ 10.507,17 / mês
+                            </div>
+                        </div>
+                        <div style="background:var(--background); padding:1rem; border-radius:8px; display:flex; flex-direction:column; justify-content:space-between; border:1px solid var(--border);">
+                            <div id="s2_tabela_res" style="font-size:0.82rem; line-height:1.5;">
+                                <!-- Preenchido dinamicamente via JS -->
+                            </div>
+                            <div class="chart-box">
+                                <span style="font-size:0.75rem; font-weight:700; color:var(--text-muted); margin-bottom:4px;">EVOLUÇÃO DA COMPOSIÇÃO: AMORTIZAÇÃO (VERDE) vs. JUROS (VERMELHO)</span>
+                                <svg id="s2_svg_chart" viewBox="0 0 320 75" style="width:100%; height:70px;"></svg>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SLIDE 6: A VISÃO DO BANCO VS O CLIENTE -->
+            <div class="slide">
+                <span class="slide-tag">Estratégia e Tomada de Decisão</span>
+                <h2 class="slide-title">Visão do Gestor vs. Visão do Banco na Parcela Fixa</h2>
+                <div class="slide-content">
+                    <div class="grid-2">
+                        <div class="card-panel" style="border-left:5px solid var(--primary);">
+                            <h4 style="color:var(--primary); margin-bottom:0.4rem;">Ponto de Vista da Empresa</h4>
+                            <p style="font-size:0.92rem;">
+                                • Pagamento previsível que facilita orçamentos futuros.<br>
+                                • Nos primeiros meses, amortiza-se muito pouco principal.<br>
+                                • Em caso de cancelamento precoce do contrato, a sensação é de que "quase nada da dívida foi abatido".
+                            </p>
+                        </div>
+                        <div class="card-panel" style="border-left:5px solid var(--success);">
+                            <h4 style="color:var(--success); margin-bottom:0.4rem;">Ponto de Vista do Credor Bancário</h4>
+                            <p style="font-size:0.92rem;">
+                                • Maximização da receita de juros no início da operação.<br>
+                                • Maior margem de segurança contra risco de crédito antes que a amortização se acelere.<br>
+                                • Facilidade de empacotamento do recebível no mercado de capitais.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SLIDE 7: QUIZ FORMATIVO -->
+            <div class="slide">
+                <span class="slide-tag">Verificação Rápida</span>
+                <h2 class="slide-title">Desafio em Sala: Razão de Crescimento da Amortização</h2>
+                <div class="slide-content">
+                    <p style="font-size:1.15rem; margin-bottom:1rem;">
+                        Em um contrato sob a Tabela Price com taxa de juros de <strong>2% ao mês</strong>, a amortização contida na prestação do mês 1 é de R$ 9.707,17. Qual é o valor matemático da amortização contida na prestação do mês 2?
+                    </p>
+                    <div style="display:flex; flex-direction:column; gap:0.6rem; margin:1rem 0;">
+                        <button class="btn-nav" onclick="checkQuiz2(1, this)" style="justify-content:flex-start; padding:0.75rem 1rem;">
+                            A) R$ 9.707,17, pois no Sistema Price todas as grandezas permanecem inalteradas.
+                        </button>
+                        <button class="btn-nav" onclick="checkQuiz2(2, this)" style="justify-content:flex-start; padding:0.75rem 1rem;">
+                            B) R$ 9.901,31, pois a amortização cresce em progressão geométrica à razão de (1 + i).
+                        </button>
+                        <button class="btn-nav" onclick="checkQuiz2(3, this)" style="justify-content:flex-start; padding:0.75rem 1rem;">
+                            C) R$ 9.500,00, pois a amortização decresce para compensar a inflação.
+                        </button>
+                    </div>
+                    <div id="quiz-fb-2" class="highlight-box" style="display:none; margin-top:0.4rem;"></div>
+                </div>
+            </div>
+
+            <!-- SLIDE 8: SÍNTESE E PRÓXIMA PARTE -->
+            <div class="slide">
+                <span class="slide-tag">Fechamento da Parte 2</span>
+                <h2 class="slide-title">Síntese e Encaminhamento</h2>
+                <div class="slide-content">
+                    <div class="card-panel">
+                        <h3 style="color:var(--primary); margin-bottom:0.6rem;">Diretrizes Estratégicas:</h3>
+                        <p>✔ A parcela fixa confere estabilidade ao fluxo de caixa, mas disfarça uma dinâmica interna altamente assimétrica.</p>
+                        <p>✔ Os juros decrescem porque incidem sobre um saldo devedor que encolhe.</p>
+                        <p>✔ A amortização cresce mês a mês exatamente na proporção (1 + i).</p>
+                    </div>
+                    <div class="highlight-box" style="margin-top:1.2rem; text-align:center;">
+                        <h4 style="color:var(--secondary); font-size:1.15rem;">Próxima Apresentação (3.html):</h4>
+                        <p style="margin-top:0.3rem;">Vamos deduzir analiticamente e aplicar a <strong>Fórmula da Prestação no Sistema Price</strong> passo a passo.</p>
+                        <a href="3.html" class="btn-nav" style="display:inline-flex; margin-top:0.8rem; background:var(--secondary); color:#fff; border:none; padding:0.65rem 1.5rem;">
+                            Avançar para Aula 2 • Parte 3 (3.html) &rarr;
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="slide-footer">
+            <div class="nav-controls">
+                <button class="btn-nav" id="btnPrev">← Anterior (↑)</button>
+                <button class="btn-nav" id="btnNext">Próximo (↓) →</button>
+            </div>
+            <div class="progress-indicator" id="slideIndicator">Slide 01 de 08</div>
+            <div>
+                <a href="1.html" class="btn-nav" style="text-decoration:none;">⮌ Voltar à Parte 1</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const slides = document.querySelectorAll('.slide');
+        const totalSlides = slides.length;
+        let currentSlide = 0;
+        const slideIndicator = document.getElementById('slideIndicator');
+        const btnPrev = document.getElementById('btnPrev');
+        const btnNext = document.getElementById('btnNext');
+        const btnFullscreen = document.getElementById('btnFullscreen');
+
+        function updateSlide(index) {
+            slides.forEach((s, idx) => s.classList.toggle('active', idx === index));
+            slideIndicator.textContent = `Slide ${String(index + 1).padStart(2, '0')} de ${String(totalSlides).padStart(2, '0')}`;
+        }
+
+        function nextSlide() {
+            if (currentSlide < totalSlides - 1) {
+                currentSlide++;
+                updateSlide(currentSlide);
+            } else {
+                window.location.href = "3.html";
+            }
+        }
+
+        function prevSlide() {
+            if (currentSlide > 0) {
+                currentSlide--;
+                updateSlide(currentSlide);
+            } else {
+                window.location.href = "1.html";
+            }
+        }
+
+        btnNext.addEventListener('click', nextSlide);
+        btnPrev.addEventListener('click', prevSlide);
+
+        window.addEventListener('keydown', (e) => {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') return;
+            if (e.key === 'ArrowDown' || e.key === 'PageDown' || e.key === 'ArrowRight') {
+                e.preventDefault();
+                nextSlide();
+            } else if (e.key === 'ArrowUp' || e.key === 'PageUp' || e.key === 'ArrowLeft') {
+                e.preventDefault();
+                prevSlide();
+            } else if (e.key === 'f' || e.key === 'F') {
+                toggleFullscreen();
+            }
+        });
+
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(() => {});
+            } else {
+                if (document.exitFullscreen) document.exitFullscreen();
+            }
+        }
+        btnFullscreen.addEventListener('click', toggleFullscreen);
+
+        const fmtBRL = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
+
+        function calcularSimulador2() {
+            const pv = parseFloat(document.getElementById('s2_pv').value) || 0;
+            const n = Math.min(12, Math.max(2, parseInt(document.getElementById('s2_n').value) || 4));
+            const i = (parseFloat(document.getElementById('s2_i').value) || 0) / 100;
+
+            const pmt = i > 0 ? pv * (i / (1 - Math.pow(1 + i, -n))) : pv / n;
+            let sd = pv;
+            const dados = [];
+
+            let html = `<div><strong>Prestação Fixa:</strong> ${fmtBRL.format(pmt)}</div>`;
+            for (let m = 1; m <= n; m++) {
+                const juros = sd * i;
+                let amort = pmt - juros;
+                if (m === n) amort = sd;
+                sd = Math.max(0, sd - amort);
+                dados.push({ mes: m, juros, amort, pmt: juros + amort });
+                html += `<div><strong>Mês ${m}:</strong> J = ${fmtBRL.format(juros)} | A = ${fmtBRL.format(amort)}</div>`;
+            }
+
+            document.getElementById('s2_lbl_info').textContent = `Prestação Fixa: ${fmtBRL.format(pmt)} / mês`;
+            document.getElementById('s2_tabela_res').innerHTML = html;
+
+            desenharGraficoS2(dados);
+        }
+
+        function desenharGraficoS2(dados) {
+            const svg = document.getElementById('s2_svg_chart');
+            const totalBars = dados.length;
+            const barW = Math.max(16, 260 / totalBars - 6);
+            const gap = 6;
+            const startX = 20;
+
+            let html = `<line x1="15" y1="65" x2="310" y2="65" stroke="#CBD5E1" stroke-width="1.5"/>`;
+
+            dados.forEach((d, idx) => {
+                const x = startX + idx * (barW + gap);
+                const hTotal = 50;
+                const hAmort = (d.amort / d.pmt) * hTotal;
+                const hJuros = (d.juros / d.pmt) * hTotal;
+
+                const yAmort = 65 - hAmort;
+                const yJuros = yAmort - hJuros;
+
+                html += `
+                    <rect x="${x}" y="${yAmort}" width="${barW}" height="${hAmort}" fill="#059669" rx="2"/>
+                    <rect x="${x}" y="${yJuros}" width="${barW}" height="${hJuros}" fill="#DC2626" rx="2"/>
+                    <text x="${x + barW/2}" y="74" font-size="7.5" fill="#64748B" text-anchor="middle">M${d.mes}</text>
+                `;
+            });
+
+            svg.innerHTML = html;
+        }
+
+        calcularSimulador2();
+
+        function checkQuiz2(op, btn) {
+            const fb = document.getElementById('quiz-fb-2');
+            fb.style.display = 'block';
+            if (op === 2) {
+                fb.style.borderLeftColor = 'var(--success)';
+                fb.innerHTML = `<h4 style="color:var(--success);">Exato! (Alternativa B)</h4>
+                <p>No Sistema Price, as amortizações formam uma Progressão Geométrica de razão (1 + i). Logo, $A_2 = A_1 \times (1 + i) = 9.707,17 \times 1,02 = \\text{R\\$ } 9.901,31$.</p>`;
+            } else {
+                fb.style.borderLeftColor = 'var(--danger)';
+                fb.innerHTML = `<h4 style="color:var(--danger);">Atenção!</h4>
+                <p>A amortização cresce a cada mês multiplicada pelo fator (1 + i).</p>`;
+            }
+        }
+    </script>
+</body>
+</html>

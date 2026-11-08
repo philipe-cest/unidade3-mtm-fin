@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aula 2 • Parte 6 — A Dinâmica da Inversão no Sistema Price | CEST</title>
+    <meta name="author" content="Prof. Msc. Philipe Sampaio Lima">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23002060'/><circle cx='50' cy='50' r='30' fill='%230080FF'/><text x='50' y='58' font-size='24' font-weight='bold' fill='white' text-anchor='middle'>6</text></svg>">
+    
+    <style>
+        :root {
+            --primary: #002060;
+            --primary-dark: #001138;
+            --primary-light: #003399;
+            --secondary: #0080FF;
+            --secondary-light: #E6F2FF;
+            --accent: #00A3FF;
+            --background: #F4F7FA;
+            --surface: #FFFFFF;
+            --text-primary: #0F172A;
+            --text-secondary: #475569;
+            --text-muted: #64748B;
+            --border: #CBD5E1;
+            --success: #059669;
+            --warning: #D97706;
+            --danger: #DC2626;
+            --radius-md: 12px;
+            --shadow-md: 0 8px 24px -4px rgba(0, 32, 96, 0.12);
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: #0b1329;
+            color: var(--text-primary);
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .stage {
+            width: 96vw;
+            height: 54vw;
+            max-width: 1600px;
+            max-height: 900px;
+            background-color: var(--background);
+            border-radius: var(--radius-md);
+            box-shadow: 0 15px 45px rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .slide-topbar {
+            height: 52px;
+            background-color: var(--primary);
+            color: #FFFFFF;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 1.5rem;
+            flex-shrink: 0;
+            border-bottom: 2px solid var(--secondary);
+        }
+        .topbar-left { display: flex; align-items: center; gap: 12px; font-weight: 700; font-size: 0.9rem; }
+        .topbar-badge {
+            background-color: rgba(255,255,255,0.15); padding: 3px 8px; border-radius: 4px; color: var(--secondary-light); font-size: 0.75rem;
+        }
+        .topbar-right { display: flex; align-items: center; gap: 15px; font-size: 0.85rem; color: rgba(255,255,255,0.85); }
+
+        .slide-viewport { flex-grow: 1; position: relative; overflow: hidden; }
+        .slide {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            padding: 2.2rem 3rem; display: flex; flex-direction: column; opacity: 0; visibility: hidden;
+            transform: translateX(30px); transition: all 0.28s ease-out; overflow-y: auto;
+        }
+        .slide.active { opacity: 1; visibility: visible; transform: translateX(0); z-index: 2; }
+
+        .slide-tag { color: var(--secondary); font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.35rem; }
+        .slide-title { font-size: 1.85rem; font-weight: 800; color: var(--primary); line-height: 1.25; margin-bottom: 1.25rem; }
+        .slide-content { font-size: 1.05rem; line-height: 1.6; color: var(--text-secondary); flex-grow: 1; display: flex; flex-direction: column; justify-content: center; }
+
+        .highlight-box {
+            background-color: var(--surface); border-left: 5px solid var(--secondary); padding: 1.25rem 1.75rem;
+            border-radius: 0 var(--radius-md) var(--radius-md) 0; box-shadow: var(--shadow-md); margin: 0.8rem 0;
+        }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.2rem; }
+        .card-panel { background: var(--surface); padding: 1.3rem; border-radius: var(--radius-md); border: 1px solid var(--border); }
+
+        .table-responsive { width: 100%; overflow-x: auto; margin-top: 0.4rem; }
+        table.fin-table {
+            width: 100%; border-collapse: collapse; text-align: right; font-size: 0.82rem; background: #fff; border-radius: 6px; overflow: hidden;
+        }
+        table.fin-table th {
+            background-color: var(--primary); color: #fff; padding: 0.45rem 0.65rem; font-weight: 700; text-align: center;
+        }
+        table.fin-table td {
+            padding: 0.38rem 0.65rem; border-bottom: 1px solid var(--border); color: var(--text-primary);
+        }
+        table.fin-table tr:nth-child(even) { background-color: var(--background); }
+        table.fin-table tr.virada-row { 
+            background-color: #FEF3C7 !important; 
+            font-weight: 800; 
+            color: #92400E; 
+            border: 2px solid #F59E0B;
+        }
+
+        .badge-status {
+            padding: 3px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase;
+        }
+        .badge-danger { background-color: #FEE2E2; color: #991B1B; }
+        .badge-virada { background-color: #FEF3C7; color: #92400E; border: 1px solid #F59E0B; }
+        .badge-success { background-color: #DCFCE7; color: #166534; }
+
+        .sim-container {
+            display: grid; grid-template-columns: 0.95fr 1.05fr; gap: 1.4rem; background: var(--surface); padding: 1.2rem; border-radius: var(--radius-md); border: 1px solid var(--border);
+        }
+        .form-row { display: flex; flex-direction: column; gap: 0.2rem; margin-bottom: 0.4rem; }
+        .form-row label { font-weight: 600; color: var(--primary); font-size: 0.82rem; }
+        .form-row input, .form-row select { padding: 0.45rem 0.65rem; border: 1px solid var(--border); border-radius: 6px; font-weight: 600; }
+        .btn-calc { background: var(--secondary); color: #fff; border: none; padding: 0.65rem; border-radius: 6px; font-weight: 700; cursor: pointer; transition: 0.2s; width: 100%; margin-top: 0.3rem; }
+        .btn-calc:hover { background: var(--primary); }
+
+        .chart-box {
+            background: #fff; border: 1px solid var(--border); border-radius: 6px; padding: 0.5rem; display: flex; flex-direction: column; align-items: center; justify-content: center; margin-top: 0.4rem;
+        }
+
+        .slide-footer {
+            height: 56px; background-color: var(--surface); border-top: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: space-between; padding: 0 1.5rem; flex-shrink: 0;
+        }
+        .nav-controls { display: flex; align-items: center; gap: 10px; }
+        .btn-nav {
+            background-color: var(--background); border: 1px solid var(--border); color: var(--primary);
+            padding: 6px 14px; border-radius: 6px; font-weight: 700; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; gap: 6px;
+        }
+        .btn-nav:hover { background-color: var(--secondary); color: #FFFFFF; }
+        .progress-indicator { font-weight: 700; font-size: 0.88rem; color: var(--text-muted); }
+    </style>
+</head>
+<body>
+
+    <div class="stage">
+        <div class="slide-topbar">
+            <div class="topbar-left">
+                <span>CEST • MATEMÁTICA FINANCEIRA</span>
+                <span class="topbar-badge">Aula 2 • Parte 6</span>
+            </div>
+            <div class="topbar-right">
+                <span>Prof. Msc. Philipe Sampaio Lima</span>
+                <button class="btn-nav" id="btnFullscreen" style="padding:4px 8px; font-size:0.75rem;">⛶ Tela Cheia</button>
+            </div>
+        </div>
+
+        <div class="slide-viewport">
+            
+            <!-- SLIDE 1: ABERTURA -->
+            <div class="slide active">
+                <span class="slide-tag">O Ponto de Inflexão Financeiro</span>
+                <h1 class="slide-title" style="font-size:2.35rem;">A Dinâmica da Inversão no Sistema Price</h1>
+                <div class="slide-content">
+                    <div class="highlight-box">
+                        <h3 style="color:var(--primary); font-size:1.25rem; margin-bottom:0.5rem;">Foco Desta Apresentação:</h3>
+                        <p>1. Definir o <strong>Ponto de Inflexão (Cruzamento)</strong>: o momento em que o contrato sai do domínio dos juros e passa ao domínio da amortização.</p>
+                        <p>2. Compreender a condição matemática exata: o ponto ocorre quando a <strong>Amortização ultrapassa os Juros</strong>, atingindo mais de 50% do valor da parcela fixa.</p>
+                        <p>3. Demonstrar em uma planilha completa e auditada a trajetória: <strong>Fase Inicial (Juros > Amortização) &rarr; Mês da Virada &rarr; Fase Final (Amortização > Juros)</strong>.</p>
+                        <p>4. Manipular um simulador com gráfico interativo que traça as duas curvas se cruzando no tempo.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SLIDE 2: O CONCEITO DO PONTO DE INFLEXÃO -->
+            <div class="slide">
+                <span class="slide-tag">Conceito Operacional</span>
+                <h2 class="slide-title">O que Representa a Inflexão na Prestação Price?</h2>
+                <div class="slide-content">
+                    <p style="margin-bottom:0.8rem;">Em operações de crédito comercial, a estrutura de cada parcela fixa passa por duas fases bem distintas:</p>
+                    <div class="card-panel" style="text-align:center; padding:1.25rem; background:linear-gradient(135deg, #001e5c 0%, #002b82 100%); color:#fff;">
+                        <span style="font-size:0.85rem; text-transform:uppercase; color:var(--secondary-light); font-weight:700;">Condição Matemática do Ponto de Inflexão</span>
+                        <div style="font-size:1.6rem; font-weight:800; color:#60A5FA; margin-top:0.3rem;">
+                            Amortização do Período &ge; Juros do Período
+                        </div>
+                        <div style="font-size:1.05rem; color:#A7F3D0; margin-top:0.3rem;">
+                            Equivale a: Amortização &ge; 50% do valor da Prestação Fixa
+                        </div>
+                    </div>
+                    <div class="grid-2" style="margin-top:1rem;">
+                        <div class="card-panel" style="border-left:5px solid var(--danger);">
+                            <h4 style="color:var(--danger); margin-bottom:0.3rem;">Fase 1: Domínio dos Juros (Antes da Inflexão)</h4>
+                            <p style="font-size:0.92rem;">Os juros representam mais de 50% da parcela. O devedor paga a prestação pontualmente, mas abate pouco do saldo principal, remunerando majoritariamente o banco credor.</p>
+                        </div>
+                        <div class="card-panel" style="border-left:5px solid var(--success);">
+                            <h4 style="color:var(--success); margin-bottom:0.3rem;">Fase 2: Domínio da Amortização (Após a Inflexão)</h4>
+                            <p style="font-size:0.92rem;">A amortização assume mais de 50% da parcela. O saldo devedor despenca rapidamente e a maior parte do recurso pago transforma-se em patrimônio líquido quitado.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SLIDE 3: TABELA DETALHADA COM O PONTO DE INFLEXÃO NÍTIDO -->
+            <div class="slide">
+                <span class="slide-tag">Demonstração Passo a Passo</span>
+                <h2 class="slide-title">Visualizando a Inflexão: R$ 40.000 em 24 Meses a 3,5% a.m.</h2>
+                <div class="slide-content">
+                    <p>Prestação fixa mensal: <strong>R$ 2.490,91</strong>. Veja a transição real: juros começam maiores, a virada acontece no <strong>Mês 5</strong> e a amortização assume o controle total:</p>
+                    <div class="card-panel" style="padding:0.6rem;">
+                        <div class="table-responsive" style="max-height:270px; overflow-y:auto;">
+                            <table class="fin-table">
+                                <thead>
+                                    <tr>
+                                        <th>Mês</th>
+                                        <th>Prestação Fixa</th>
+                                        <th>Juros (3,5% a.m.)</th>
+                                        <th>Amortização</th>
+                                        <th>% Amortização</th>
+                                        <th>Saldo Devedor</th>
+                                        <th style="text-align:center;">Diagnóstico da Parcela</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td style="text-align:center;">1</td>
+                                        <td>R$ 2.490,91</td>
+                                        <td style="color:var(--danger); font-weight:700;">R$ 1.400,00</td>
+                                        <td style="color:var(--text-secondary);">R$ 1.090,91</td>
+                                        <td>43,8%</td>
+                                        <td>R$ 38.909,09</td>
+                                        <td style="text-align:center;"><span class="badge-status badge-danger">Juros > Amortização</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td style="text-align:center;">2</td>
+                                        <td>R$ 2.490,91</td>
+                                        <td style="color:var(--danger); font-weight:700;">R$ 1.361,82</td>
+                                        <td style="color:var(--text-secondary);">R$ 1.129,09</td>
+                                        <td>45,3%</td>
+                                        <td>R$ 37.780,00</td>
+                                        <td style="text-align:center;"><span class="badge-status badge-danger">Juros > Amortização</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td style="text-align:center;">3</td>
+                                        <td>R$ 2.490,91</td>
+                                        <td style="color:var(--danger); font-weight:700;">R$ 1.322,30</td>
+                                        <td style="color:var(--text-secondary);">R$ 1.168,61</td>
+                                        <td>46,9%</td>
+                                        <td>R$ 36.611,39</td>
+                                        <td style="text-align:center;"><span class="badge-status badge-danger">Juros > Amortização</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td style="text-align:center;">4</td>
+                                        <td>R$ 2.490,91</td>
+                                        <td style="color:var(--danger); font-weight:700;">R$ 1.281,40</td>
+                                        <td style="color:var(--text-secondary);">R$ 1.209,51</td>
+                                        <td>48,6%</td>
+                                        <td>R$ 35.401,88</td>
+                                        <td style="text-align:center;"><span class="badge-status badge-danger">Juros > Amortização</span></td>
+                                    </tr>
+                                    <tr class="virada-row">
+                                        <td style="text-align:center;">5</td>
+                                        <td>R$ 2.490,91</td>
+                                        <td style="color:#B45309;">R$ 1.239,07</td>
+                                        <td style="color:#15803D;">R$ 1.251,84</td>
+                                        <td>50,3%</td>
+                                        <td>R$ 34.150,04</td>
+                                        <td style="text-align:center;"><span class="badge-status badge-virada">★ PONTO DE INFLEXÃO (A > J)</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td style="text-align:center;">6</td>
+                                        <td>R$ 2.490,91</td>
+                                        <td style="color:var(--text-muted);">R$ 1.195,25</td>
+                                        <td style="color:var(--success); font-weight:700;">R$ 1.295,66</td>
+                                        <td>52,0%</td>
+                                        <td>R$ 32.854,38</td>
+                                        <td style="text-align:center;"><span class="badge-status badge-success">Amortização > Juros</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td style="text-align:center;">8</td>
+                                        <td>R$ 2.490,91</td>
+                                        <td style="color:var(--text-muted);">R$ 1.102,97</td>
+                                        <td style="color:var(--success); font-weight:700;">R$ 1.387,94</td>
+                                        <td>55,7%</td>
+                                        <td>R$ 30.125,43</td>
+                                        <td style="text-align:center;"><span class="badge-status badge-success">Amortização > Juros</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td style="text-align:center;">12</td>
+                                        <td>R$ 2.490,91</td>
+                                        <td style="color:var(--text-muted);">R$ 896,87</td>
+                                        <td style="color:var(--success); font-weight:700;">R$ 1.594,04</td>
+                                        <td>64,0%</td>
+                                        <td>R$ 24.030,86</td>
+                                        <td style="text-align:center;"><span class="badge-status badge-success">Amortização > Juros</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td style="text-align:center;">18</td>
+                                        <td>R$ 2.490,91</td>
+                                        <td style="color:var(--text-muted);">R$ 524,48</td>
+                                        <td style="color:var(--success); font-weight:700;">R$ 1.966,43</td>
+                                        <td>78,9%</td>
+                                        <td>R$ 13.018,63</td>
+                                        <td style="text-align:center;"><span class="badge-status badge-success">Amortização > Juros</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td style="text-align:center;">24</td>
+                                        <td>R$ 2.490,91</td>
+                                        <td style="color:var(--text-muted);">R$ 84,23</td>
+                                        <td style="color:var(--success); font-weight:700;">R$ 2.406,68</td>
+                                        <td>96,6%</td>
+                                        <td style="color:var(--success); font-weight:700;">R$ 0,00</td>
+                                        <td style="text-align:center;"><span class="badge-status badge-success">Quitação Integral</span></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SLIDE 4: QUANDO A VIRADA OCORRE EM DIFERENTES PRAZOS -->
+            <div class="slide">
+                <span class="slide-tag">Critério Matemático de Existência</span>
+                <h2 class="slide-title">Quando Ocorre o Ponto de Inflexão?</h2>
+                <div class="slide-content">
+                    <p style="margin-bottom:0.8rem;">Para que os juros comecem maiores que a amortização (existindo um ponto de virada futuro), a condição matemática é:</p>
+                    <div class="card-panel" style="border-left:5px solid var(--secondary); padding:1.1rem;">
+                        <h4 style="color:var(--primary); margin-bottom:0.3rem;">Regra de Existência da Inflexão Interna:</h4>
+                        <p style="font-size:1.1rem; font-weight:700; color:var(--primary);">
+                            (1 + taxa)^prazo > 2
+                        </p>
+                        <p style="font-size:0.88rem; color:var(--text-secondary); margin-top:0.3rem;">
+                            Se o fator composto acumulado no prazo for maior que 2, o primeiro mês obrigatoriamente terá mais juros do que amortização, gerando a virada no decorrer do plano.
+                        </p>
+                    </div>
+                    <div class="grid-3" style="margin-top:0.9rem;">
+                        <div class="card-panel">
+                            <h4 style="color:var(--success); margin-bottom:0.3rem;">Prazos Curtos (ex.: 6 meses a 2%)</h4>
+                            <p style="font-size:0.85rem;">O fator (1,02)⁶ = 1,126 (menor que 2). A amortização já nasce maior que os juros desde a primeira parcela.</p>
+                        </div>
+                        <div class="card-panel">
+                            <h4 style="color:var(--warning); margin-bottom:0.3rem;">Prazos Médios (ex.: 24 meses a 3,5%)</h4>
+                            <p style="font-size:0.85rem;">O fator (1,035)²⁴ = 2,283 (maior que 2). O contrato começa dominado por juros e a virada ocorre no <strong>Mês 5</strong>.</p>
+                        </div>
+                        <div class="card-panel">
+                            <h4 style="color:var(--danger); margin-bottom:0.3rem;">Prazos Longos (ex.: 36 meses a 3%)</h4>
+                            <p style="font-size:0.85rem;">O fator (1,03)³⁶ = 2,898 (muito maior que 2). A virada só acontece tarde, por volta do <strong>Mês 13</strong>.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SLIDE 5: SIMULADOR DE CRUZAMENTO COM SVG -->
+            <div class="slide">
+                <span class="slide-tag">Laboratório Interativo</span>
+                <h2 class="slide-title">Simulador: Gráfico de Cruzamento das Curvas</h2>
+                <div class="slide-content">
+                    <div class="sim-container">
+                        <div>
+                            <div class="form-row">
+                                <label>Capital Financiado (R$):</label>
+                                <input type="number" id="s6_pv" value="40000" step="5000">
+                            </div>
+                            <div class="form-row">
+                                <label>Prazo do Contrato:</label>
+                                <select id="s6_n">
+                                    <option value="12">12 Meses</option>
+                                    <option value="24" selected>24 Meses (Virada Nítida)</option>
+                                    <option value="36">36 Meses (Virada Tardia)</option>
+                                </select>
+                            </div>
+                            <div class="form-row">
+                                <label>Taxa de Juros Mensal (% ao mês):</label>
+                                <input type="number" id="s6_i" value="3.5" step="0.1">
+                            </div>
+                            <button class="btn-calc" onclick="calcularSimulador6()">Localizar Ponto de Inflexão</button>
+                        </div>
+                        <div style="background:var(--background); padding:0.9rem; border-radius:8px; display:flex; flex-direction:column; justify-content:space-between; border:1px solid var(--border);">
+                            <div id="s6_res_detalhes" style="font-size:0.82rem; line-height:1.5;"></div>
+                            <div class="chart-box">
+                                <span style="font-size:0.72rem; font-weight:700; color:var(--text-muted); margin-bottom:4px;">CRUZAMENTO REAL: JUROS (VERMELHO) vs. AMORTIZAÇÃO (VERDE)</span>
+                                <svg id="s6_svg_chart" viewBox="0 0 320 75" style="width:100%; height:70px;"></svg>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SLIDE 6: ESTRATÉGIAS PARA ANTECIPAR A INFLEXÃO -->
+            <div class="slide">
+                <span class="slide-tag">Decisão Gerencial</span>
+                <h2 class="slide-title">Como o Gestor Pode Antecipar a Virada?</h2>
+                <div class="slide-content">
+                    <div class="grid-2">
+                        <div class="card-panel" style="border-left:5px solid var(--success);">
+                            <h4 style="color:var(--success); margin-bottom:0.3rem;">1. Aportes Extraordinários no Início</h4>
+                            <p style="font-size:0.92rem;">
+                                Ao injetar recursos excedentes de caixa nas primeiras parcelas, o saldo devedor sofre um corte imediato. Isso derruba a cota de juros do mês seguinte e faz a amortização ultrapassar os juros muito antes do prazo natural.
+                            </p>
+                        </div>
+                        <div class="card-panel" style="border-left:5px solid var(--secondary);">
+                            <h4 style="color:var(--secondary); margin-bottom:0.3rem;">2. Encurtamento de Prazo na Contratação</h4>
+                            <p style="font-size:0.92rem;">
+                                Optar por prazos menores (como 12 ou 18 meses em vez de 36) eleva moderadamente a prestação, mas garante que o contrato já inicie com amortização robusta, evitando que a empresa passe anos apenas remunerando o banco.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="highlight-box" style="margin-top:1rem;">
+                        <strong>Regra de Ouro:</strong> Para quitação antecipada com máximo desconto de juros futuros, o melhor momento é exatamente <strong>antes ou durante o Ponto de Inflexão</strong>.
+                    </div>
+                </div>
+            </div>
+
+            <!-- SLIDE 7: QUIZ FORMATIVO -->
+            <div class="slide">
+                <span class="slide-tag">Verificação Formativa</span>
+                <h2 class="slide-title">Desafio em Sala: O Ponto de Inflexão</h2>
+                <div class="slide-content">
+                    <p style="font-size:1.15rem; margin-bottom:1rem;">
+                        Em uma operação sob a Tabela Price com prestação fixa de <strong>R$ 2.490,91</strong>, no momento exato da inflexão (onde a amortização passa a ser maior ou igual aos juros), qual é a cota mínima de amortização atingida?
+                    </p>
+                    <div style="display:flex; flex-direction:column; gap:0.6rem; margin:1rem 0;">
+                        <button class="btn-nav" onclick="checkQuiz6(1, this)" style="justify-content:flex-start; padding:0.75rem 1rem;">
+                            A) Pelo menos R$ 1.245,46 (exatamente 50% do valor da prestação).
+                        </button>
+                        <button class="btn-nav" onclick="checkQuiz6(2, this)" style="justify-content:flex-start; padding:0.75rem 1rem;">
+                            B) R$ 2.490,91 (100% da prestação).
+                        </button>
+                        <button class="btn-nav" onclick="checkQuiz6(3, this)" style="justify-content:flex-start; padding:0.75rem 1rem;">
+                            C) R$ 500,00, pois os juros são fixos.
+                        </button>
+                    </div>
+                    <div id="quiz-fb-6" class="highlight-box" style="display:none; margin-top:0.4rem;"></div>
+                </div>
+            </div>
+
+            <!-- SLIDE 8: SÍNTESE E PRÓXIMA PARTE -->
+            <div class="slide">
+                <span class="slide-tag">Fechamento da Parte 6</span>
+                <h2 class="slide-title">Síntese e Encaminhamento</h2>
+                <div class="slide-content">
+                    <div class="card-panel">
+                        <h3 style="color:var(--primary); margin-bottom:0.6rem;">Pontos Consolidados:</h3>
+                        <p>✔ O Ponto de Inflexão marca a transição onde a amortização supera 50% da parcela fixa e torna-se maior que os juros.</p>
+                        <p>✔ Em contratos com prazos mais longos ou taxas maiores, o início é dominado por juros elevados, ocorrendo a virada mais adiante.</p>
+                        <p>✔ Compreender essa dinâmica permite ao administrador planejar quitações antecipadas e renegociações com eficiência máxima.</p>
+                    </div>
+                    <div class="highlight-box" style="margin-top:1.2rem; text-align:center;">
+                        <h4 style="color:var(--secondary); font-size:1.15rem;">Próxima Apresentação (7.html):</h4>
+                        <p style="margin-top:0.3rem;">Vamos montar a <strong>Construção Passo a Passo da Tabela Price</strong>, consolidando as planilhas completas de 6 e 12 meses.</p>
+                        <a href="7.html" class="btn-nav" style="display:inline-flex; margin-top:0.8rem; background:var(--secondary); color:#fff; border:none; padding:0.65rem 1.5rem;">
+                            Avançar para Aula 2 • Parte 7 (7.html) &rarr;
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="slide-footer">
+            <div class="nav-controls">
+                <button class="btn-nav" id="btnPrev">← Anterior (↑)</button>
+                <button class="btn-nav" id="btnNext">Próximo (↓) →</button>
+            </div>
+            <div class="progress-indicator" id="slideIndicator">Slide 01 de 08</div>
+            <div>
+                <a href="5.html" class="btn-nav" style="text-decoration:none;">⮌ Voltar à Parte 5</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const slides = document.querySelectorAll('.slide');
+        const totalSlides = slides.length;
+        let currentSlide = 0;
+        const slideIndicator = document.getElementById('slideIndicator');
+        const btnPrev = document.getElementById('btnPrev');
+        const btnNext = document.getElementById('btnNext');
+        const btnFullscreen = document.getElementById('btnFullscreen');
+
+        function updateSlide(index) {
+            slides.forEach((s, idx) => s.classList.toggle('active', idx === index));
+            slideIndicator.textContent = `Slide ${String(index + 1).padStart(2, '0')} de ${String(totalSlides).padStart(2, '0')}`;
+        }
+
+        function nextSlide() {
+            if (currentSlide < totalSlides - 1) {
+                currentSlide++;
+                updateSlide(currentSlide);
+            } else {
+                window.location.href = "7.html";
+            }
+        }
+
+        function prevSlide() {
+            if (currentSlide > 0) {
+                currentSlide--;
+                updateSlide(currentSlide);
+            } else {
+                window.location.href = "5.html";
+            }
+        }
+
+        btnNext.addEventListener('click', nextSlide);
+        btnPrev.addEventListener('click', prevSlide);
+
+        window.addEventListener('keydown', (e) => {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') return;
+            if (e.key === 'ArrowDown' || e.key === 'PageDown' || e.key === 'ArrowRight') {
+                e.preventDefault();
+                nextSlide();
+            } else if (e.key === 'ArrowUp' || e.key === 'PageUp' || e.key === 'ArrowLeft') {
+                e.preventDefault();
+                prevSlide();
+            } else if (e.key === 'f' || e.key === 'F') {
+                toggleFullscreen();
+            }
+        });
+
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(() => {});
+            } else {
+                if (document.exitFullscreen) document.exitFullscreen();
+            }
+        }
+        btnFullscreen.addEventListener('click', toggleFullscreen);
+
+        const fmtBRL = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
+
+        function calcularSimulador6() {
+            const pv = parseFloat(document.getElementById('s6_pv').value) || 0;
+            const n = parseInt(document.getElementById('s6_n').value) || 24;
+            const taxa = (parseFloat(document.getElementById('s6_i').value) || 0) / 100;
+
+            const pmt = taxa > 0 ? pv * (taxa / (1 - Math.pow(1 + taxa, -n))) : pv / n;
+            let sd = pv;
+            let mesInflexao = 0;
+            const dados = [];
+
+            for (let m = 1; m <= n; m++) {
+                const juros = sd * taxa;
+                let amort = pmt - juros;
+                if (m === n) amort = sd;
+                sd = Math.max(0, sd - amort);
+
+                if (amort >= juros && mesInflexao === 0) {
+                    mesInflexao = m;
+                }
+                dados.push({ mes: m, juros, amort });
+            }
+
+            let msgInflexao = "";
+            if (mesInflexao === 1) {
+                msgInflexao = `<span style="color:var(--success); font-weight:700;">Inflexão Imediata: Amortização já nasce maior que os Juros no Mês 1.</span>`;
+            } else {
+                msgInflexao = `• Início (Mês 1): Juros = <strong style="color:var(--danger);">${fmtBRL.format(dados[0].juros)}</strong> > Amortização = <strong>${fmtBRL.format(dados[0].amort)}</strong><br>
+                • <strong style="color:#B45309;">Ponto de Inflexão (Virada): Ocorre no MÊS ${mesInflexao}</strong> (Juros = ${fmtBRL.format(dados[mesInflexao-1].juros)} e Amortização = ${fmtBRL.format(dados[mesInflexao-1].amort)}).<br>
+                • Final (Mês ${n}): Amortização = <strong style="color:var(--success);">${fmtBRL.format(dados[n-1].amort)}</strong> >> Juros = ${fmtBRL.format(dados[n-1].juros)}`;
+            }
+
+            document.getElementById('s6_res_detalhes').innerHTML = `
+                <div><strong>Prestação Fixa:</strong> ${fmtBRL.format(pmt)} (${n} meses)</div>
+                <div style="margin-top:4px;">${msgInflexao}</div>
+            `;
+
+            desenharGraficoS6(dados, mesInflexao);
+        }
+
+        function desenharGraficoS6(dados, mesVirada) {
+            const svg = document.getElementById('s6_svg_chart');
+            const total = dados.length;
+            const maxVal = Math.max(...dados.map(d => Math.max(d.juros, d.amort)), 1);
+
+            const stepX = 260 / (total - 1 || 1);
+            const startX = 30;
+
+            let ptsJ = "";
+            let ptsA = "";
+            let viradaX = 0;
+            let viradaY = 0;
+
+            dados.forEach((d, idx) => {
+                const x = startX + idx * stepX;
+                const yJ = 65 - (d.juros / maxVal) * 50;
+                const yA = 65 - (d.amort / maxVal) * 50;
+                ptsJ += `${x},${yJ} `;
+                ptsA += `${x},${yA} `;
+
+                if (d.mes === mesVirada) {
+                    viradaX = x;
+                    viradaY = (yJ + yA) / 2;
+                }
+            });
+
+            let viradaMarker = "";
+            if (mesVirada > 1 && viradaX > 0) {
+                viradaMarker = `
+                    <circle cx="${viradaX}" cy="${viradaY}" r="5" fill="#F59E0B" stroke="#B45309" stroke-width="1.5"/>
+                    <text x="${viradaX}" y="${viradaY - 8}" font-size="7.5" font-weight="bold" fill="#B45309" text-anchor="middle">Virada M${mesVirada}</text>
+                `;
+            }
+
+            svg.innerHTML = `
+                <line x1="20" y1="65" x2="310" y2="65" stroke="#CBD5E1" stroke-width="1.5"/>
+                <!-- Linha Juros (Vermelho) -->
+                <polyline points="${ptsJ.trim()}" fill="none" stroke="#DC2626" stroke-width="2.5"/>
+                <!-- Linha Amortização (Verde) -->
+                <polyline points="${ptsA.trim()}" fill="none" stroke="#059669" stroke-width="2.5"/>
+                ${viradaMarker}
+                <text x="35" y="15" font-size="8" font-weight="bold" fill="#DC2626">Juros (Queda)</text>
+                <text x="280" y="15" font-size="8" font-weight="bold" fill="#059669" text-anchor="end">Amortização (Alta)</text>
+            `;
+        }
+
+        calcularSimulador6();
+
+        function checkQuiz6(op, btn) {
+            const fb = document.getElementById('quiz-fb-6');
+            fb.style.display = 'block';
+            if (op === 1) {
+                fb.style.borderLeftColor = 'var(--success)';
+                fb.innerHTML = `<h4 style="color:var(--success);">Correto! (Alternativa A)</h4>
+                <p>Como a Prestação = Amortização + Juros, no momento em que a amortização empata ou ultrapassa os juros, ela responde por no mínimo <strong>50% da parcela</strong> (2.490,91 / 2 = R$ 1.245,46).</p>`;
+            } else {
+                fb.style.borderLeftColor = 'var(--danger)';
+                fb.innerHTML = `<h4 style="color:var(--danger);">Atenção!</h4>
+                <p>No ponto de igualdade entre as parcelas, cada componente corresponde exatamente à metade (50%) do valor da prestação.</p>`;
+            }
+        }
+    </script>
+</body>
+</html>

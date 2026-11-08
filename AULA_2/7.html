@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aula 2 • Parte 7 — Construção Passo a Passo da Tabela Price | CEST</title>
+    <meta name="author" content="Prof. Msc. Philipe Sampaio Lima">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23002060'/><circle cx='50' cy='50' r='30' fill='%230080FF'/><text x='50' y='58' font-size='24' font-weight='bold' fill='white' text-anchor='middle'>7</text></svg>">
+    
+    <style>
+        :root {
+            --primary: #002060;
+            --primary-dark: #001138;
+            --primary-light: #003399;
+            --secondary: #0080FF;
+            --secondary-light: #E6F2FF;
+            --accent: #00A3FF;
+            --background: #F4F7FA;
+            --surface: #FFFFFF;
+            --text-primary: #0F172A;
+            --text-secondary: #475569;
+            --text-muted: #64748B;
+            --border: #CBD5E1;
+            --success: #059669;
+            --warning: #D97706;
+            --danger: #DC2626;
+            --radius-md: 12px;
+            --shadow-md: 0 8px 24px -4px rgba(0, 32, 96, 0.12);
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: #0b1329;
+            color: var(--text-primary);
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .stage {
+            width: 96vw;
+            height: 54vw;
+            max-width: 1600px;
+            max-height: 900px;
+            background-color: var(--background);
+            border-radius: var(--radius-md);
+            box-shadow: 0 15px 45px rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .slide-topbar {
+            height: 52px;
+            background-color: var(--primary);
+            color: #FFFFFF;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 1.5rem;
+            flex-shrink: 0;
+            border-bottom: 2px solid var(--secondary);
+        }
+        .topbar-left { display: flex; align-items: center; gap: 12px; font-weight: 700; font-size: 0.9rem; }
+        .topbar-badge {
+            background-color: rgba(255,255,255,0.15); padding: 3px 8px; border-radius: 4px; color: var(--secondary-light); font-size: 0.75rem;
+        }
+        .topbar-right { display: flex; align-items: center; gap: 15px; font-size: 0.85rem; color: rgba(255,255,255,0.85); }
+
+        .slide-viewport { flex-grow: 1; position: relative; overflow: hidden; }
+        .slide {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            padding: 2.2rem 3rem; display: flex; flex-direction: column; opacity: 0; visibility: hidden;
+            transform: translateX(30px); transition: all 0.28s ease-out; overflow-y: auto;
+        }
+        .slide.active { opacity: 1; visibility: visible; transform: translateX(0); z-index: 2; }
+
+        .slide-tag { color: var(--secondary); font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.35rem; }
+        .slide-title { font-size: 1.85rem; font-weight: 800; color: var(--primary); line-height: 1.25; margin-bottom: 1.25rem; }
+        .slide-content { font-size: 1.05rem; line-height: 1.6; color: var(--text-secondary); flex-grow: 1; display: flex; flex-direction: column; justify-content: center; }
+
+        .highlight-box {
+            background-color: var(--surface); border-left: 5px solid var(--secondary); padding: 1.25rem 1.75rem;
+            border-radius: 0 var(--radius-md) var(--radius-md) 0; box-shadow: var(--shadow-md); margin: 0.8rem 0;
+        }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+        .card-panel { background: var(--surface); padding: 1.3rem; border-radius: var(--radius-md); border: 1px solid var(--border); }
+
+        .table-responsive { width: 100%; overflow-x: auto; margin-top: 0.4rem; }
+        table.fin-table {
+            width: 100%; border-collapse: collapse; text-align: right; font-size: 0.82rem; background: #fff; border-radius: 6px; overflow: hidden;
+        }
+        table.fin-table th {
+            background-color: var(--primary); color: #fff; padding: 0.45rem 0.65rem; font-weight: 700; text-align: center;
+        }
+        table.fin-table td {
+            padding: 0.4rem 0.65rem; border-bottom: 1px solid var(--border); color: var(--text-primary);
+        }
+        table.fin-table tr:nth-child(even) { background-color: var(--background); }
+        table.fin-table tr.total-row { background-color: var(--secondary-light); font-weight: 800; color: var(--primary); }
+
+        .tab-btn-group { display: flex; gap: 8px; margin-bottom: 0.8rem; }
+        .tab-btn {
+            background: var(--background); border: 1.5px solid var(--border); padding: 0.5rem 1rem; border-radius: 6px; font-weight: 700; font-size: 0.85rem; cursor: pointer; color: var(--primary); transition: 0.2s;
+        }
+        .tab-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+
+        .slide-footer {
+            height: 56px; background-color: var(--surface); border-top: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: space-between; padding: 0 1.5rem; flex-shrink: 0;
+        }
+        .nav-controls { display: flex; align-items: center; gap: 10px; }
+        .btn-nav {
+            background-color: var(--background); border: 1px solid var(--border); color: var(--primary);
+            padding: 6px 14px; border-radius: 6px; font-weight: 700; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; gap: 6px;
+        }
+        .btn-nav:hover { background-color: var(--secondary); color: #FFFFFF; }
+        .progress-indicator { font-weight: 700; font-size: 0.88rem; color: var(--text-muted); }
+    </style>
+</head>
+<body>
+
+    <div class="stage">
+        <div class="slide-topbar">
+            <div class="topbar-left">
+                <span>CEST • MATEMÁTICA FINANCEIRA</span>
+                <span class="topbar-badge">Aula 2 • Parte 7</span>
+            </div>
+            <div class="topbar-right">
+                <span>Prof. Msc. Philipe Sampaio Lima</span>
+                <button class="btn-nav" id="btnFullscreen" style="padding:4px 8px; font-size:0.75rem;">⛶ Tela Cheia</button>
+            </div>
+        </div>
+
+        <div class="slide-viewport">
+            
+            <!-- SLIDE 1: ABERTURA -->
+            <div class="slide active">
+                <span class="slide-tag">Montagem Completa</span>
+                <h1 class="slide-title" style="font-size:2.35rem;">Construção da Tabela Price: 6 e 12 Meses</h1>
+                <div class="slide-content">
+                    <div class="highlight-box">
+                        <h3 style="color:var(--primary); font-size:1.25rem; margin-bottom:0.5rem;">Roteiro da Aula Prática:</h3>
+                        <p>1. Aplicar a sequência analítica oficial: Prestação Fixa &rarr; Juros sobre Saldo Anterior &rarr; Amortização &rarr; Novo Saldo.</p>
+                        <p>2. Comparar duas planilhas completas com o mesmo capital financiado (<strong>R$ 36.000,00 a 2,0% ao mês</strong>) nos prazos de <strong>6 meses e 12 meses</strong>.</p>
+                        <p>3. Verificar linha por linha como o prazo altera a parcela mensal e o custo total de juros desembolsado.</p>
+                        <p>4. Auditar o fechamento com liquidação total (saldo final exatamente R$ 0,00).</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SLIDE 2: O ALGORITMO DE AUDITORIA -->
+            <div class="slide">
+                <span class="slide-tag">Regras de Preenchimento</span>
+                <h2 class="slide-title">O Algoritmo Recursivo da Planilha Price</h2>
+                <div class="slide-content">
+                    <div class="card-panel">
+                        <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; text-align:center;">
+                            <div style="background:var(--background); padding:0.85rem; border-radius:6px; border-top:3px solid var(--secondary);">
+                                <strong style="color:var(--primary); font-size:0.9rem;">1. Prestação (PMT)</strong>
+                                <p style="font-size:0.82rem; margin-top:0.3rem;">Calculada no início e repetida identicamente em todas as linhas.</p>
+                            </div>
+                            <div style="background:var(--background); padding:0.85rem; border-radius:6px; border-top:3px solid var(--danger);">
+                                <strong style="color:var(--danger); font-size:0.9rem;">2. Juros (J)</strong>
+                                <p style="font-size:0.82rem; margin-top:0.3rem;">Saldo Anterior multiplicado pela Taxa Decimal.</p>
+                            </div>
+                            <div style="background:var(--background); padding:0.85rem; border-radius:6px; border-top:3px solid var(--success);">
+                                <strong style="color:var(--success); font-size:0.9rem;">3. Amortização (A)</strong>
+                                <p style="font-size:0.82rem; margin-top:0.3rem;">Prestação Fixa subtraída dos Juros apurados.</p>
+                            </div>
+                            <div style="background:var(--background); padding:0.85rem; border-radius:6px; border-top:3px solid var(--primary);">
+                                <strong style="color:var(--primary); font-size:0.9rem;">4. Novo Saldo (SD)</strong>
+                                <p style="font-size:0.82rem; margin-top:0.3rem;">Saldo Anterior subtraído da Amortização do período.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="highlight-box" style="margin-top:1rem;">
+                        <strong>Critério de Validação:</strong> A soma da coluna de Amortização tem que fechar obrigatoriamente no valor do capital tomado por empréstimo.
+                    </div>
+                </div>
+            </div>
+
+            <!-- SLIDE 3: TABELA COMPLETA DE 6 MESES -->
+            <div class="slide">
+                <span class="slide-tag">Planilha Completa: 6 Meses</span>
+                <h2 class="slide-title">R$ 36.000,00 em 6 Parcelas Fixas (2,0% a.m.)</h2>
+                <div class="slide-content">
+                    <p>Prestação mensal constante calculada: <strong>R$ 6.427,07</strong>:</p>
+                    <div class="card-panel" style="padding:0.7rem;">
+                        <div class="table-responsive">
+                            <table class="fin-table">
+                                <thead>
+                                    <tr>
+                                        <th>Mês</th>
+                                        <th>Prestação Fixa</th>
+                                        <th>Juros (2% a.m.)</th>
+                                        <th>Amortização</th>
+                                        <th>Saldo Devedor</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr><td style="text-align:center;">0</td><td>-</td><td>-</td><td>-</td><td><strong>R$ 36.000,00</strong></td></tr>
+                                    <tr><td style="text-align:center;">1</td><td>R$ 6.427,07</td><td style="color:var(--danger);">R$ 720,00</td><td style="color:var(--success);">R$ 5.707,07</td><td>R$ 30.292,93</td></tr>
+                                    <tr><td style="text-align:center;">2</td><td>R$ 6.427,07</td><td style="color:var(--danger);">R$ 605,86</td><td style="color:var(--success);">R$ 5.821,21</td><td>R$ 24.471,72</td></tr>
+                                    <tr><td style="text-align:center;">3</td><td>R$ 6.427,07</td><td style="color:var(--danger);">R$ 489,43</td><td style="color:var(--success);">R$ 5.937,64</td><td>R$ 18.534,08</td></tr>
+                                    <tr><td style="text-align:center;">4</td><td>R$ 6.427,07</td><td style="color:var(--danger);">R$ 370,68</td><td style="color:var(--success);">R$ 6.056,39</td><td>R$ 12.477,69</td></tr>
+                                    <tr><td style="text-align:center;">5</td><td>R$ 6.427,07</td><td style="color:var(--danger);">R$ 249,55</td><td style="color:var(--success);">R$ 6.177,52</td><td>R$ 6.300,17</td></tr>
+                                    <tr><td style="text-align:center;">6</td><td>R$ 6.426,17</td><td style="color:var(--danger);">R$ 126,00</td><td style="color:var(--success);">R$ 6.300,17</td><td style="color:var(--success); font-weight:700;">R$ 0,00</td></tr>
+                                    <tr class="total-row">
+                                        <td style="text-align:center;">Totais</td><td>R$ 38.561,52</td><td style="color:var(--danger);">R$ 2.561,52</td><td style="color:var(--success);">R$ 36.000,00</td><td>-</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SLIDE 4: TABELA COMPLETA DE 12 MESES -->
+            <div class="slide">
+                <span class="slide-tag">Planilha Completa: 12 Meses</span>
+                <h2 class="slide-title">R$ 36.000,00 em 12 Parcelas Fixas (2,0% a.m.)</h2>
+                <div class="slide-content">
+                    <p>Prestação mensal constante calculada: <strong>R$ 3.404,22</strong>:</p>
+                    <div class="card-panel" style="padding:0.6rem;">
+                        <div class="table-responsive" style="max-height:270px; overflow-y:auto;">
+                            <table class="fin-table">
+                                <thead>
+                                    <tr>
+                                        <th>Mês</th>
+                                        <th>Prestação Fixa</th>
+                                        <th>Juros (2% a.m.)</th>
+                                        <th>Amortização</th>
+                                        <th>Saldo Devedor</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr><td style="text-align:center;">0</td><td>-</td><td>-</td><td>-</td><td><strong>R$ 36.000,00</strong></td></tr>
+                                    <tr><td style="text-align:center;">1</td><td>R$ 3.404,22</td><td style="color:var(--danger);">R$ 720,00</td><td style="color:var(--success);">R$ 2.684,22</td><td>R$ 33.315,78</td></tr>
+                                    <tr><td style="text-align:center;">2</td><td>R$ 3.404,22</td><td style="color:var(--danger);">R$ 666,32</td><td style="color:var(--success);">R$ 2.737,90</td><td>R$ 30.577,88</td></tr>
+                                    <tr><td style="text-align:center;">3</td><td>R$ 3.404,22</td><td style="color:var(--danger);">R$ 611,56</td><td style="color:var(--success);">R$ 2.792,66</td><td>R$ 27.785,22</td></tr>
+                                    <tr><td style="text-align:center;">4</td><td>R$ 3.404,22</td><td style="color:var(--danger);">R$ 555,70</td><td style="color:var(--success);">R$ 2.848,52</td><td>R$ 24.936,70</td></tr>
+                                    <tr><td style="text-align:center;">5</td><td>R$ 3.404,22</td><td style="color:var(--danger);">R$ 498,73</td><td style="color:var(--success);">R$ 2.905,49</td><td>R$ 22.031,21</td></tr>
+                                    <tr><td style="text-align:center;">6</td><td>R$ 3.404,22</td><td style="color:var(--danger);">R$ 440,62</td><td style="color:var(--success);">R$ 2.963,60</td><td>R$ 19.067,61</td></tr>
+                                    <tr><td style="text-align:center;">7</td><td>R$ 3.404,22</td><td style="color:var(--danger);">R$ 381,35</td><td style="color:var(--success);">R$ 3.022,87</td><td>R$ 16.044,74</td></tr>
+                                    <tr><td style="text-align:center;">8</td><td>R$ 3.404,22</td><td style="color:var(--danger);">R$ 320,89</td><td style="color:var(--success);">R$ 3.083,33</td><td>R$ 12.961,41</td></tr>
+                                    <tr><td style="text-align:center;">9</td><td>R$ 3.404,22</td><td style="color:var(--danger);">R$ 259,23</td><td style="color:var(--success);">R$ 3.144,99</td><td>R$ 9.816,42</td></tr>
+                                    <tr><td style="text-align:center;">10</td><td>R$ 3.404,22</td><td style="color:var(--danger);">R$ 196,33</td><td style="color:var(--success);">R$ 3.207,89</td><td>R$ 6.608,53</td></tr>
+                                    <tr><td style="text-align:center;">11</td><td>R$ 3.404,22</td><td style="color:var(--danger);">R$ 132,17</td><td style="color:var(--success);">R$ 3.272,05</td><td>R$ 3.336,48</td></tr>
+                                    <tr><td style="text-align:center;">12</td><td>R$ 3.403,21</td><td style="color:var(--danger);">R$ 66,73</td><td style="color:var(--success);">R$ 3.336,48</td><td style="color:var(--success); font-weight:700;">R$ 0,00</td></tr>
+                                    <tr class="total-row">
+                                        <td style="text-align:center;">Totais</td><td>R$ 40.849,63</td><td style="color:var(--danger);">R$ 4.849,63</td><td style="color:var(--success);">R$ 36.000,00</td><td>-</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SLIDE 5: COMPARAÇÃO DIRETA 6 MESES VS 12 MESES -->
+            <div class="slide">
+                <span class="slide-tag">Auditoria Comparativa</span>
+                <h2 class="slide-title">Confronto de Resultados: 6 Meses vs. 12 Meses</h2>
+                <div class="slide-content">
+                    <p style="margin-bottom:0.8rem;">O que acontece quando o administrador opta por 6 ou 12 meses para pagar o mesmo valor de R$ 36.000,00?</p>
+                    <div class="grid-2">
+                        <div class="card-panel" style="border-top:4px solid var(--primary);">
+                            <h4 style="color:var(--primary); margin-bottom:0.4rem;">Cenário 6 Meses</h4>
+                            <p style="font-size:0.92rem;">• Prestação Mensal: <strong>R$ 6.427,07</strong></p>
+                            <p style="font-size:0.92rem;">• Total Desembolsado: <strong>R$ 38.561,52</strong></p>
+                            <p style="font-size:0.92rem; color:var(--success); font-weight:700; margin-top:0.3rem;">• Juros Totais Pagos: R$ 2.561,52 (7,1% sobre a dívida)</p>
+                            <p style="font-size:0.85rem; color:var(--text-muted); margin-top:0.3rem;">Exige maior desembolso mensal, mas quita com rapidez economizando caixa.</p>
+                        </div>
+                        <div class="card-panel" style="border-top:4px solid var(--secondary);">
+                            <h4 style="color:var(--secondary); margin-bottom:0.4rem;">Cenário 12 Meses</h4>
+                            <p style="font-size:0.92rem;">• Prestação Mensal: <strong>R$ 3.404,22</strong></p>
+                            <p style="font-size:0.92rem;">• Total Desembolsado: <strong>R$ 40.849,63</strong></p>
+                            <p style="font-size:0.92rem; color:var(--danger); font-weight:700; margin-top:0.3rem;">• Juros Totais Pagos: R$ 4.849,63 (13,5% sobre a dívida)</p>
+                            <p style="font-size:0.85rem; color:var(--text-muted); margin-top:0.3rem;">Alivia a saída mensal em 47%, mas quase dobra o total de juros desembolsado.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SLIDE 6: SÍNTESE E PRÓXIMA PARTE -->
+            <div class="slide">
+                <span class="slide-tag">Fechamento da Parte 7</span>
+                <h2 class="slide-title">Síntese e Encaminhamento</h2>
+                <div class="slide-content">
+                    <div class="card-panel">
+                        <h3 style="color:var(--primary); margin-bottom:0.6rem;">Pontos Consolidados:</h3>
+                        <p>✔ As planilhas de 6 e 12 meses demonstram visualmente como os juros encolhem e a amortização se expande a cada prestação.</p>
+                        <p>✔ O ajuste de centavos no último período assegura o fechamento matemático de quitação exata.</p>
+                        <p>✔ O prazo longo reduz o valor da parcela mensal, mas prolonga a incidência dos juros sobre a empresa.</p>
+                    </div>
+                    <div class="highlight-box" style="margin-top:1.2rem; text-align:center;">
+                        <h4 style="color:var(--secondary); font-size:1.15rem;">Próxima Apresentação (8.html):</h4>
+                        <p style="margin-top:0.3rem;">Vamos ao <strong>Simulador Central Interativo da Tabela Price</strong>, onde qualquer prazo e taxa podem ser testados livremente.</p>
+                        <a href="8.html" class="btn-nav" style="display:inline-flex; margin-top:0.8rem; background:var(--secondary); color:#fff; border:none; padding:0.65rem 1.5rem;">
+                            Avançar para Aula 2 • Parte 8 (8.html) &rarr;
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="slide-footer">
+            <div class="nav-controls">
+                <button class="btn-nav" id="btnPrev">← Anterior (↑)</button>
+                <button class="btn-nav" id="btnNext">Próximo (↓) →</button>
+            </div>
+            <div class="progress-indicator" id="slideIndicator">Slide 01 de 06</div>
+            <div>
+                <a href="6.html" class="btn-nav" style="text-decoration:none;">⮌ Voltar à Parte 6</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const slides = document.querySelectorAll('.slide');
+        const totalSlides = slides.length;
+        let currentSlide = 0;
+        const slideIndicator = document.getElementById('slideIndicator');
+        const btnPrev = document.getElementById('btnPrev');
+        const btnNext = document.getElementById('btnNext');
+        const btnFullscreen = document.getElementById('btnFullscreen');
+
+        function updateSlide(index) {
+            slides.forEach((s, idx) => s.classList.toggle('active', idx === index));
+            slideIndicator.textContent = `Slide ${String(index + 1).padStart(2, '0')} de ${String(totalSlides).padStart(2, '0')}`;
+        }
+
+        function nextSlide() {
+            if (currentSlide < totalSlides - 1) {
+                currentSlide++;
+                updateSlide(currentSlide);
+            } else {
+                window.location.href = "8.html";
+            }
+        }
+
+        function prevSlide() {
+            if (currentSlide > 0) {
+                currentSlide--;
+                updateSlide(currentSlide);
+            } else {
+                window.location.href = "6.html";
+            }
+        }
+
+        btnNext.addEventListener('click', nextSlide);
+        btnPrev.addEventListener('click', prevSlide);
+
+        window.addEventListener('keydown', (e) => {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') return;
+            if (e.key === 'ArrowDown' || e.key === 'PageDown' || e.key === 'ArrowRight') {
+                e.preventDefault();
+                nextSlide();
+            } else if (e.key === 'ArrowUp' || e.key === 'PageUp' || e.key === 'ArrowLeft') {
+                e.preventDefault();
+                prevSlide();
+            } else if (e.key === 'f' || e.key === 'F') {
+                toggleFullscreen();
+            }
+        });
+
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(() => {});
+            } else {
+                if (document.exitFullscreen) document.exitFullscreen();
+            }
+        }
+        btnFullscreen.addEventListener('click', toggleFullscreen);
+    </script>
+</body>
+</html>

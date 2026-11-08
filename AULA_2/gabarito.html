@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gabarito Oficial e Memória de Cálculo • Atividade 2 (Price) | CEST</title>
+    <meta name="author" content="Prof. Msc. Philipe Sampaio Lima">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23002060'/><circle cx='50' cy='50' r='30' fill='%23059669'/><text x='50' y='58' font-size='22' font-weight='bold' fill='white' text-anchor='middle'>G2</text></svg>">
+    
+    <style>
+        :root {
+            --primary: #002060;
+            --primary-dark: #001138;
+            --primary-light: #003399;
+            --secondary: #0080FF;
+            --secondary-light: #E6F2FF;
+            --accent: #00A3FF;
+            --background: #F4F7FA;
+            --surface: #FFFFFF;
+            --text-primary: #0F172A;
+            --text-secondary: #475569;
+            --text-muted: #64748B;
+            --border: #CBD5E1;
+            --success: #059669;
+            --warning: #D97706;
+            --danger: #DC2626;
+            --radius-sm: 6px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --shadow-sm: 0 1px 3px rgba(0, 32, 96, 0.05);
+            --shadow-md: 0 4px 18px -2px rgba(0, 32, 96, 0.08);
+            --max-w: 1100px;
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        html { scroll-behavior: smooth; font-size: 16px; }
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--background);
+            color: var(--text-primary);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+            padding-bottom: 5rem;
+        }
+
+        .container { width: 100%; max-width: var(--max-w); margin: 0 auto; padding: 0 1.25rem; }
+
+        header {
+            background-color: var(--surface);
+            border-bottom: 2px solid var(--success);
+            padding: 1.25rem 0;
+            box-shadow: var(--shadow-sm);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .header-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        .brand-box { display: flex; align-items: center; gap: 12px; }
+        .brand-box svg { width: 38px; height: 38px; flex-shrink: 0; }
+        .brand-titles h1 { font-size: 1.15rem; font-weight: 800; color: var(--primary); line-height: 1.2; }
+        .brand-titles p { font-size: 0.8rem; color: var(--text-muted); font-weight: 600; }
+
+        .intro-card {
+            background: linear-gradient(135deg, #064E3B 0%, #022C22 100%);
+            color: #FFFFFF;
+            padding: 2rem;
+            border-radius: var(--radius-md);
+            margin: 2rem 0;
+            box-shadow: var(--shadow-md);
+        }
+        .intro-title { font-size: 1.6rem; font-weight: 800; margin-bottom: 0.5rem; color: #FFFFFF; }
+        .intro-desc { font-size: 0.95rem; color: rgba(255,255,255,0.85); line-height: 1.6; max-width: 900px; }
+
+        .solution-card {
+            background: var(--surface);
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border);
+            padding: 2rem;
+            margin-bottom: 2.5rem;
+            box-shadow: var(--shadow-sm);
+        }
+        .sol-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1.5px solid var(--background);
+            padding-bottom: 0.85rem;
+            margin-bottom: 1.25rem;
+        }
+        .sol-badge {
+            background-color: var(--success);
+            color: #fff;
+            font-size: 0.8rem;
+            font-weight: 700;
+            padding: 4px 12px;
+            border-radius: 20px;
+            text-transform: uppercase;
+        }
+        .sol-theme { font-size: 0.85rem; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: 0.05em; }
+
+        .step-box {
+            background-color: var(--background);
+            border-left: 4px solid var(--primary);
+            padding: 1rem 1.25rem;
+            border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+            margin: 1rem 0;
+            font-size: 0.95rem;
+        }
+        .formula-block {
+            background-color: #FFFFFF;
+            border: 1px solid var(--border);
+            padding: 0.85rem 1.25rem;
+            border-radius: var(--radius-sm);
+            font-family: monospace;
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin: 0.6rem 0;
+            line-height: 1.6;
+        }
+        .result-highlight {
+            background-color: #ECFDF5;
+            border: 1px solid #A7F3D0;
+            color: #065F46;
+            padding: 1rem 1.25rem;
+            border-radius: var(--radius-sm);
+            font-weight: 700;
+            margin: 1rem 0;
+        }
+        .managerial-note {
+            background-color: var(--secondary-light);
+            border-left: 4px solid var(--secondary);
+            padding: 0.85rem 1.25rem;
+            border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+            font-size: 0.92rem;
+            color: var(--primary);
+            margin-top: 0.8rem;
+        }
+        .error-alert {
+            background-color: #FEF2F2;
+            border-left: 4px solid var(--danger);
+            padding: 0.85rem 1.25rem;
+            border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+            font-size: 0.9rem;
+            color: #991B1B;
+            margin-top: 0.8rem;
+        }
+
+        .action-dock {
+            background: var(--surface);
+            border: 2px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 1.5rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+            box-shadow: var(--shadow-md);
+            margin-top: 3rem;
+        }
+        .btn-print {
+            display: inline-flex; align-items: center; gap: 8px; background-color: var(--primary); color: #fff; border: none; padding: 0.85rem 1.8rem; border-radius: var(--radius-sm); font-size: 0.95rem; font-weight: 700; cursor: pointer; transition: 0.2s;
+        }
+        .btn-print:hover { background-color: var(--primary-light); }
+
+        @media print {
+            body { background: #fff !important; color: #000 !important; padding: 0; }
+            header, .action-dock { display: none !important; }
+            .container { max-width: 100% !important; padding: 0 !important; }
+            .intro-card { background: #064E3B !important; color: #fff !important; -webkit-print-color-adjust: exact; padding: 1.25rem !important; }
+            .solution-card { border: 1px solid #CBD5E1 !important; page-break-inside: avoid; margin-bottom: 1.5rem !important; box-shadow: none !important; }
+            .formula-block { border: 1px solid #000 !important; }
+            .result-highlight { background: #ECFDF5 !important; -webkit-print-color-adjust: exact; border: 1px solid #059669 !important; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="container header-content">
+            <div class="brand-box">
+                <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="100" height="100" rx="16" fill="#002060"/>
+                    <path d="M20 75 V30 L50 30 L50 75" stroke="#FFFFFF" stroke-width="8" stroke-linejoin="round"/>
+                    <path d="M50 30 L80 30 L80 75" stroke="#FFFFFF" stroke-width="8" stroke-linejoin="round"/>
+                    <path d="M30 52 H70" stroke="#0080FF" stroke-width="8"/>
+                </svg>
+                <div class="brand-titles">
+                    <h1>CEST • Centro Universitário Santa Terezinha</h1>
+                    <p>Curso de Administração • Matemática Financeira • Prof. Msc. Philipe Sampaio Lima</p>
+                </div>
+            </div>
+            <div>
+                <a href="../index.html" style="font-size:0.85rem; font-weight:700; color:var(--secondary); text-decoration:none;">
+                    ⌂ Retornar ao Portal Principal
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        
+        <section class="intro-card">
+            <h2 class="intro-title">Gabarito Analítico Passo a Passo • Atividade 2</h2>
+            <p class="intro-desc">
+                Memória de cálculo integral, desenvolvimento matemático em linguagem direta sem códigos complexos e interpretação financeira detalhada para as 5 questões da <strong>Atividade Prática 2 — Sistema Francês de Amortização (Price)</strong>.
+            </p>
+        </section>
+
+        <!-- QUESTÃO 1 -->
+        <article class="solution-card">
+            <div class="sol-header">
+                <span class="sol-badge">Gabarito Questão 01</span>
+                <span class="sol-theme">Hospital de Olhos • Cálculo da Prestação e Juros (6 Meses)</span>
+            </div>
+            <p><strong>Enunciado Típico:</strong> Financiamento de R$ 50.000,00 contratado no Sistema Price a 2,0% ao mês com prazo de 6 meses. Calcular a prestação mensal e os juros do 1º mês.</p>
+            
+            <div class="step-box">
+                <strong>1. Dados Disponíveis:</strong><br>
+                • Capital Financiado (PV) = R$ 50.000,00<br>
+                • Taxa Mensal (i) = 2,0% a.m. = 0,02 (em formato decimal)<br>
+                • Prazo (n) = 6 meses
+            </div>
+
+            <div class="step-box">
+                <strong>2. Fórmulas Utilizadas:</strong>
+                <div class="formula-block">
+                    Prestação = PV × [ i / (1 - (1 + i)^(-n)) ]<br>
+                    Juros do 1º Mês = PV × i
+                </div>
+            </div>
+
+            <div class="step-box">
+                <strong>3. Desenvolvimento Passo a Passo:</strong><br>
+                • Fator de atualização: (1 + 0,02)^(-6) = (1,02)^(-6) = 0,88797138<br>
+                • Denominador: 1 - 0,88797138 = 0,11202862<br>
+                • Fator FRC: 0,02 / 0,11202862 = 0,17852581<br>
+                • Prestação Fixa (PMT) = 50.000,00 × 0,17852581 = <strong>R$ 8.926,29</strong><br>
+                • Juros do 1º Mês = 50.000,00 × 0,02 = <strong>R$ 1.000,00</strong>
+            </div>
+
+            <div class="result-highlight">
+                Resultado Oficial: Prestação Fixa = R$ 8.926,29 | Juros do 1º Mês = R$ 1.000,00
+            </div>
+
+            <div class="managerial-note">
+                <strong>Interpretação Financeira:</strong> Da primeira prestação de R$ 8.926,29, R$ 1.000,00 são juros que remuneram o capital emprestado e R$ 7.926,29 amortizam a dívida, deixando o saldo remanescente em R$ 42.073,71.
+            </div>
+        </article>
+
+        <!-- QUESTÃO 2 -->
+        <article class="solution-card">
+            <div class="sol-header">
+                <span class="sol-badge">Gabarito Questão 02</span>
+                <span class="sol-theme">Auto Peças Tropical • Amortização Inicial (12 Meses)</span>
+            </div>
+            <p><strong>Enunciado Típico:</strong> Financiamento de R$ 60.000,00 a 2,0% ao mês com prazo de 12 meses. Determinar a prestação mensal e a cota de amortização do 1º mês.</p>
+
+            <div class="step-box">
+                <strong>1. Dados Disponíveis:</strong><br>
+                • Capital Financiado (PV) = R$ 60.000,00<br>
+                • Taxa Mensal (i) = 2,0% a.m. = 0,02<br>
+                • Prazo (n) = 12 meses
+            </div>
+
+            <div class="step-box">
+                <strong>2. Desenvolvimento dos Cálculos:</strong><br>
+                • Fator de atualização: (1,02)^(-12) = 0,78849318<br>
+                • Denominador: 1 - 0,78849318 = 0,21150682<br>
+                • FRC = 0,02 / 0,21150682 = 0,09455960<br>
+                • Prestação Fixa (PMT) = 60.000,00 × 0,09455960 = <strong>R$ 5.673,71</strong><br>
+                • Juros do 1º Mês = 60.000,00 × 0,02 = R$ 1.200,00<br>
+                • Amortização do 1º Mês = 5.673,71 - 1.200,00 = <strong>R$ 4.473,71</strong>
+            </div>
+
+            <div class="result-highlight">
+                Resultado Oficial: Prestação = R$ 5.673,71 | 1ª Amortização = R$ 4.473,71
+            </div>
+
+            <div class="error-alert">
+                <strong>Alerta de Auditoria:</strong> Não divida o capital de R$ 60.000 por 12 (isso daria R$ 5.000 e é regra do SAC). Na Tabela Price, a amortização inicial é calculada subtraindo os juros da prestação fixa.
+            </div>
+        </article>
+
+        <!-- QUESTÃO 3 -->
+        <article class="solution-card">
+            <div class="sol-header">
+                <span class="sol-badge">Gabarito Questão 03</span>
+                <span class="sol-theme">Lojas Guajajaras • Termo Geral da Amortização em PG</span>
+            </div>
+            <p><strong>Enunciado Típico:</strong> Empréstimo com taxa de 2,0% ao mês cuja primeira amortização (A1) foi de R$ 5.707,07. Calcular a amortização contida no 3º mês sem preencher toda a tabela.</p>
+
+            <div class="step-box">
+                <strong>1. Fórmula do Termo Geral:</strong>
+                <div class="formula-block">
+                    Amortização(t) = Amortização(1) × (1 + taxa)^(t - 1)
+                </div>
+            </div>
+
+            <div class="step-box">
+                <strong>2. Substituição e Resolução:</strong><br>
+                • Para o mês t = 3, o expoente é (3 - 1) = 2:<br>
+                • Amortização(3) = 5.707,07 × (1 + 0,02)^2<br>
+                • (1,02)^2 = 1,0404<br>
+                • Amortização(3) = 5.707,07 × 1,0404 = <strong>R$ 5.937,64</strong>
+            </div>
+
+            <div class="result-highlight">
+                Resultado Oficial: Amortização do 3º Mês = R$ 5.937,64
+            </div>
+
+            <div class="managerial-note">
+                <strong>Interpretação Financeira:</strong> Do 1º para o 3º mês, a amortização cresceu R$ 230,57, exatamente igual à redução acumulada na despesa de juros ocorrida no mesmo intervalo.
+            </div>
+        </article>
+
+        <!-- QUESTÃO 4 -->
+        <article class="solution-card">
+            <div class="sol-header">
+                <span class="sol-badge">Gabarito Questão 04</span>
+                <span class="sol-theme">Indústria Metalúrgica Alvorada • Custo Total em 12 Meses</span>
+            </div>
+            <p><strong>Enunciado Típico:</strong> Financiamento de R$ 80.000,00 contratado sob Tabela Price em 12 parcelas fixas à taxa de 2,0% ao mês. Calcular os juros totais suportados pela indústria.</p>
+
+            <div class="step-box">
+                <strong>1. Cálculo da Prestação:</strong><br>
+                • FRC(2%, 12) = 0,09455960<br>
+                • Prestação = 80.000,00 × 0,09455960 = <strong>R$ 7.564,77</strong> ao mês
+            </div>
+
+            <div class="step-box">
+                <strong>2. Desembolso Global e Juros:</strong><br>
+                • Total Desembolsado = 12 × 7.564,77 = <strong>R$ 90.777,24</strong><br>
+                • Juros Totais = Total Desembolsado - Capital Financiado<br>
+                • Juros Totais = 90.777,24 - 80.000,00 = <strong>R$ 10.777,24</strong>
+            </div>
+
+            <div class="result-highlight">
+                Resultado Oficial: Desembolso Total = R$ 90.777,24 | Juros Totais = R$ 10.777,24
+            </div>
+
+            <div class="managerial-note">
+                <strong>Interpretação Financeira:</strong> O custo financeiro acumulado representou 13,47% sobre o capital liberado para modernização do parque de máquinas.
+            </div>
+        </article>
+
+        <!-- QUESTÃO 5 -->
+        <article class="solution-card">
+            <div class="sol-header">
+                <span class="sol-badge">Gabarito Questão 05</span>
+                <span class="sol-theme">Distribuidora São Francisco • Princípio da Quitação Integral</span>
+            </div>
+            <p><strong>Enunciado Típico:</strong> Operação de R$ 50.000,00 em 6 parcelas na Tabela Price. Qual é a soma acumulada de todas as amortizações individuais pagas ao longo do contrato?</p>
+
+            <div class="step-box">
+                <strong>Regra Fundamental da Matemática Financeira:</strong>
+                <div class="formula-block">
+                    Soma de Todas as Amortizações = Capital Financiado (PV)
+                </div>
+                • A amortização é a devolução do principal tomado emprestado.<br>
+                • Se o contrato extinguiu a dívida ao final dos 6 períodos sem carência residual, a soma das amortizações precisa fechar rigorosamente em <strong>R$ 50.000,00</strong>.
+            </div>
+
+            <div class="result-highlight">
+                Resultado Oficial: Soma Total de Amortizações = R$ 50.000,00
+            </div>
+
+            <div class="error-alert">
+                <strong>Erro Comum Evitado:</strong> Somar juros na amortização total. Os juros remuneram a instituição financeira e não quitam o capital tomado por empréstimo.
+            </div>
+        </article>
+
+        <div class="action-dock">
+            <div>
+                <h4 style="color:var(--primary); font-size:1.1rem; font-weight:800;">Registro da Sessão de Correção</h4>
+                <p style="font-size:0.85rem; color:var(--text-secondary);">Gabarito analítico emitido para validação das respostas da Atividade Prática 2.</p>
+            </div>
+            <button class="btn-print" onclick="window.print()">
+                Imprimir ou Salvar Gabarito em PDF
+            </button>
+        </div>
+
+    </main>
+
+</body>
+</html>

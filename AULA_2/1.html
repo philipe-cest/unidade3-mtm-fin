@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aula 2 • Parte 1 — Origem e Conceito do Sistema Price | CEST</title>
+    <meta name="author" content="Prof. Msc. Philipe Sampaio Lima">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23002060'/><circle cx='50' cy='50' r='30' fill='%230080FF'/><text x='50' y='58' font-size='24' font-weight='bold' fill='white' text-anchor='middle'>1</text></svg>">
+    
+    <style>
+        :root {
+            --primary: #002060;
+            --primary-dark: #001138;
+            --primary-light: #003399;
+            --secondary: #0080FF;
+            --secondary-light: #E6F2FF;
+            --accent: #00A3FF;
+            --background: #F4F7FA;
+            --surface: #FFFFFF;
+            --text-primary: #0F172A;
+            --text-secondary: #475569;
+            --text-muted: #64748B;
+            --border: #CBD5E1;
+            --success: #059669;
+            --warning: #D97706;
+            --danger: #DC2626;
+            --radius-md: 12px;
+            --shadow-md: 0 8px 24px -4px rgba(0, 32, 96, 0.12);
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: #0b1329;
+            color: var(--text-primary);
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .stage {
+            width: 96vw;
+            height: 54vw;
+            max-width: 1600px;
+            max-height: 900px;
+            background-color: var(--background);
+            border-radius: var(--radius-md);
+            box-shadow: 0 15px 45px rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .slide-topbar {
+            height: 52px;
+            background-color: var(--primary);
+            color: #FFFFFF;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 1.5rem;
+            flex-shrink: 0;
+            border-bottom: 2px solid var(--secondary);
+        }
+        .topbar-left { display: flex; align-items: center; gap: 12px; font-weight: 700; font-size: 0.9rem; }
+        .topbar-badge {
+            background-color: rgba(255,255,255,0.15); padding: 3px 8px; border-radius: 4px; color: var(--secondary-light); font-size: 0.75rem;
+        }
+        .topbar-right { display: flex; align-items: center; gap: 15px; font-size: 0.85rem; color: rgba(255,255,255,0.85); }
+
+        .slide-viewport { flex-grow: 1; position: relative; overflow: hidden; }
+        .slide {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            padding: 2.2rem 3rem; display: flex; flex-direction: column; opacity: 0; visibility: hidden;
+            transform: translateX(30px); transition: all 0.28s ease-out; overflow-y: auto;
+        }
+        .slide.active { opacity: 1; visibility: visible; transform: translateX(0); z-index: 2; }
+
+        .slide-tag { color: var(--secondary); font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.35rem; }
+        .slide-title { font-size: 1.85rem; font-weight: 800; color: var(--primary); line-height: 1.25; margin-bottom: 1.25rem; }
+        .slide-content { font-size: 1.08rem; line-height: 1.6; color: var(--text-secondary); flex-grow: 1; display: flex; flex-direction: column; justify-content: center; }
+
+        .highlight-box {
+            background-color: var(--surface); border-left: 5px solid var(--secondary); padding: 1.25rem 1.75rem;
+            border-radius: 0 var(--radius-md) var(--radius-md) 0; box-shadow: var(--shadow-md); margin: 1rem 0;
+        }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; align-items: stretch; }
+        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.2rem; }
+        .card-panel { background: var(--surface); padding: 1.4rem; border-radius: var(--radius-md); border: 1px solid var(--border); box-shadow: 0 2px 6px rgba(0,0,0,0.03); }
+
+        .sim-container {
+            display: grid; grid-template-columns: 0.95fr 1.05fr; gap: 1.5rem; background: var(--surface); padding: 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--border);
+        }
+        .sim-form { display: flex; flex-direction: column; gap: 0.6rem; font-size: 0.88rem; }
+        .form-row { display: flex; flex-direction: column; gap: 0.2rem; }
+        .form-row label { font-weight: 600; color: var(--primary); font-size: 0.82rem; }
+        .form-row input { padding: 0.45rem 0.65rem; border: 1px solid var(--border); border-radius: 6px; font-weight: 600; color: var(--text-primary); }
+        .btn-calc { background: var(--secondary); color: #fff; border: none; padding: 0.65rem; border-radius: 6px; font-weight: 700; cursor: pointer; transition: 0.2s; margin-top: 0.4rem; }
+        .btn-calc:hover { background: var(--primary); }
+        .sim-results {
+            background: var(--background); border-radius: 8px; padding: 1.1rem; display: flex; flex-direction: column; justify-content: space-between; border: 1px solid var(--border);
+        }
+        .res-highlight { font-size: 1.45rem; font-weight: 800; color: var(--primary); }
+
+        .chart-box {
+            background: #fff; border: 1px solid var(--border); border-radius: 6px; padding: 0.75rem; display: flex; flex-direction: column; align-items: center; justify-content: center; margin-top: 0.5rem;
+        }
+
+        .slide-footer {
+            height: 56px; background-color: var(--surface); border-top: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: space-between; padding: 0 1.5rem; flex-shrink: 0;
+        }
+        .nav-controls { display: flex; align-items: center; gap: 10px; }
+        .btn-nav {
+            background-color: var(--background); border: 1px solid var(--border); color: var(--primary);
+            padding: 6px 14px; border-radius: 6px; font-weight: 700; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; gap: 6px;
+        }
+        .btn-nav:hover { background-color: var(--secondary); color: #FFFFFF; }
+        .progress-indicator { font-weight: 700; font-size: 0.88rem; color: var(--text-muted); }
+    </style>
+</head>
+<body>
+
+    <div class="stage">
+        <div class="slide-topbar">
+            <div class="topbar-left">
+                <span>CEST • MATEMÁTICA FINANCEIRA</span>
+                <span class="topbar-badge">Aula 2 • Parte 1</span>
+            </div>
+            <div class="topbar-right">
+                <span>Prof. Msc. Philipe Sampaio Lima</span>
+                <button class="btn-nav" id="btnFullscreen" style="padding:4px 8px; font-size:0.75rem;">⛶ Tela Cheia</button>
+            </div>
+        </div>
+
+        <div class="slide-viewport">
+            
+            <!-- SLIDE 1: ABERTURA -->
+            <div class="slide active">
+                <span class="slide-tag">Unidade III • Sistema Price</span>
+                <h1 class="slide-title" style="font-size:2.35rem;">Origem Histórica e Conceito do Sistema Francês (Price)</h1>
+                <div class="slide-content">
+                    <div class="highlight-box">
+                        <h3 style="color:var(--primary); font-size:1.25rem; margin-bottom:0.5rem;">Objetivos Desta Apresentação:</h3>
+                        <p>1. Conhecer as origens históricas do modelo desenvolvido por Richard Price no século XVIII e sua consolidação na França.</p>
+                        <p>2. Definir a premissa central do <strong>Sistema Francês de Amortização</strong>: prestações periódicas rigorosamente constantes (PMT).</p>
+                        <p>3. Compreender a equivalência atuarial entre o capital financiado e a série uniforme de anuidades.</p>
+                        <p>4. Analisar por que a Tabela Price domina as operações de crédito ao consumidor, empréstimos bancários e bens de consumo duráveis.</p>
+                    </div>
+                    <p style="color:var(--text-muted); font-size:0.95rem;">
+                        Comandos: utilize <kbd>↓ Seta Baixo</kbd> ou <kbd>PgDn</kbd> para avançar e <kbd>↑ Seta Cima</kbd> para retroceder.
+                    </p>
+                </div>
+            </div>
+
+            <!-- SLIDE 2: ORIGEM HISTÓRICA -->
+            <div class="slide">
+                <span class="slide-tag">História da Matemática Financeira</span>
+                <h2 class="slide-title">De Richard Price ao Sistema Bancário Moderno</h2>
+                <div class="slide-content">
+                    <div class="grid-2">
+                        <div class="card-panel" style="border-left:5px solid var(--secondary);">
+                            <h3 style="color:var(--primary); margin-bottom:0.5rem;">Richard Price (1723–1791)</h3>
+                            <p style="font-size:0.93rem;">
+                                Filósofo, teólogo e atuário britânico, Price publicou em 1771 a obra clássica <em>Observations on Reversionary Payments</em>. Seu trabalho formulou as bases das anuidades compostas, fundos de amortização (<em>sinking funds</em>) e tábuas atuariais para fundos de pensão.
+                            </p>
+                        </div>
+                        <div class="card-panel" style="border-left:5px solid var(--primary);">
+                            <h3 style="color:var(--primary); margin-bottom:0.5rem;">Por que "Sistema Francês"?</h3>
+                            <p style="font-size:0.93rem;">
+                                No século XIX, o sistema financeiro francês adotou em larga escala a tabela de anuidades uniformes de Price para modernizar os empréstimos públicos e hipotecários do <em>Crédit Foncier de France</em>. No Brasil, os dois termos (Price e Sistema Francês) tornaram-se sinônimos na prática bancária.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="highlight-box" style="margin-top:1rem;">
+                        <strong>Visão Gerencial:</strong> O modelo transformou a relação de crédito: em vez de pagar todo o principal no final, o devedor passou a quitá-lo em parcelas iguais e previsíveis.
+                    </div>
+                </div>
+            </div>
+
+            <!-- SLIDE 3: O CONCEITO CENTRAL -->
+            <div class="slide">
+                <span class="slide-tag">Definição Operacional</span>
+                <h2 class="slide-title">A Premissa Básica: Parcelas Rigorosamente Iguais</h2>
+                <div class="slide-content">
+                    <p style="margin-bottom:1rem;">O Sistema Francês de Amortização estrutura-se sobre uma única condição primordial:</p>
+                    <div class="card-panel" style="text-align:center; padding:1.4rem; background:linear-gradient(135deg, #001e5c 0%, #002b82 100%); color:#fff;">
+                        <span style="font-size:0.85rem; text-transform:uppercase; color:var(--secondary-light); font-weight:700;">A Premissa Price</span>
+                        <div style="font-size:1.8rem; font-weight:800; color:#60A5FA; margin-top:0.4rem;">
+                            PMT₁ = PMT₂ = PMT₃ = ... = PMTₙ = Constante
+                        </div>
+                    </div>
+                    <div class="grid-3" style="margin-top:1.1rem;">
+                        <div class="card-panel">
+                            <h4 style="color:var(--primary); margin-bottom:0.3rem;">1. Prestações Fixas</h4>
+                            <p style="font-size:0.88rem;">O valor monetário que sai da conta corrente da empresa é exatamente idêntico do primeiro ao último mês.</p>
+                        </div>
+                        <div class="card-panel">
+                            <h4 style="color:var(--danger); margin-bottom:0.3rem;">2. Juros Decrescentes</h4>
+                            <p style="font-size:0.88rem;">Como o saldo devedor vai diminuindo a cada pagamento, a parcela de juros embutida na prestação cai mês a mês.</p>
+                        </div>
+                        <div class="card-panel">
+                            <h4 style="color:var(--success); margin-bottom:0.3rem;">3. Amortização Crescente</h4>
+                            <p style="font-size:0.88rem;">Para manter a soma constante, a parcela de amortização precisa obrigatoriamente crescer ao longo do contrato.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SLIDE 4: APLICAÇÕES PRÁTICAS NO BRASIL -->
+            <div class="slide">
+                <span class="slide-tag">Ambiente de Mercado</span>
+                <h2 class="slide-title">Onde o Sistema Price é Empregado no Mercado?</h2>
+                <div class="slide-content">
+                    <p style="margin-bottom:0.9rem;">No cenário econômico nacional, o Sistema Price é a base de quase todas as operações pré-fixadas de varejo:</p>
+                    <div class="grid-2">
+                        <div class="card-panel">
+                            <h4 style="color:var(--primary); margin-bottom:0.4rem;">Financiamento ao Consumidor</h4>
+                            <p style="font-size:0.92rem;">
+                                • Crédito Direto ao Consumidor (CDC) para veículos e frotas.<br>
+                                • Empréstimos consignados e crédito pessoal bancário.<br>
+                                • Financiamento de máquinas leves, ferramentas e eletrônicos corporativos.<br>
+                                • Compras a prazo no varejo e cartões de crédito parcelados.
+                            </p>
+                        </div>
+                        <div class="card-panel">
+                            <h4 style="color:var(--primary); margin-bottom:0.4rem;">Crédito Imobiliário & Corporativo</h4>
+                            <p style="font-size:0.92rem;">
+                                • Carteiras hipotecárias comerciais com parcelas pré-fixadas.<br>
+                                • Linhas de investimento empresarial do BNDES (Finame em certas modalidades).<br>
+                                • Antecipação de recebíveis estruturados em parcelas uniformes.<br>
+                                • Emissões de debêntures com amortizações periódicas de valor fixo.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="highlight-box" style="margin-top:1rem;">
+                        <strong>Por que os bancos preferem a Price?</strong> Porque nas primeiras parcelas o recebimento de juros é muito alto, antecipando o lucro da instituição financeira.
+                    </div>
+                </div>
+            </div>
+
+            <!-- SLIDE 5: CASO NUMÉRICO CONTEXTUALIZADO -->
+            <div class="slide">
+                <span class="slide-tag">Exemplo Prático</span>
+                <h2 class="slide-title">Exemplo Numérico: Operação Comercial em São Luís</h2>
+                <div class="slide-content">
+                    <p><strong>Situação:</strong> Uma clínica médica em São Luís contrata financiamento de <strong>R$ 30.000,00</strong> a <strong>2% ao mês</strong> para quitação em <strong>3 parcelas mensais</strong> no Sistema Price:</p>
+                    <div class="card-panel" style="margin-top:0.8rem;">
+                        <h4 style="color:var(--primary); margin-bottom:0.5rem;">Cálculo Preliminar da Parcela:</h4>
+                        <p>1. Dados: Capital (PV) = R$ 30.000,00 | Taxa (i) = 2% a.m. (0,02) | Prazo (n) = 3 meses</p>
+                        <p style="margin-top:0.3rem;">2. Prestação Fixa calculada pelo modelo:</p>
+                        <p style="font-weight:700; color:var(--primary); font-size:1.15rem; margin:0.3rem 0;">
+                            PMT = R$ 10.402,64 (constante nos 3 meses)
+                        </p>
+                        <p style="margin-top:0.3rem;">3. Desembolso Total ao longo do trimestre:</p>
+                        <p style="font-weight:700; color:var(--text-primary); font-size:1.05rem; margin:0.3rem 0;">
+                            Total Pago = 3 × 10.402,64 = R$ 31.207,92
+                        </p>
+                        <p style="margin-top:0.3rem;">4. Total de juros suportados pela clínica médica:</p>
+                        <p style="font-weight:700; color:var(--danger); font-size:1.05rem; margin:0.3rem 0;">
+                            Juros Totais = 31.207,92 - 30.000,00 = R$ 1.207,92
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SLIDE 6: SIMULADOR INTERATIVO -->
+            <div class="slide">
+                <span class="slide-tag">Laboratório Interativo com SVG</span>
+                <h2 class="slide-title">Simulador: Prestação Constante vs. Custo Total</h2>
+                <div class="slide-content">
+                    <div class="sim-container">
+                        <div class="sim-form">
+                            <div class="form-row">
+                                <label>Capital Financiado (R$):</label>
+                                <input type="number" id="s1_pv" value="30000" step="5000">
+                            </div>
+                            <div class="form-row">
+                                <label>Prazo de Vigência (Meses):</label>
+                                <input type="number" id="s1_n" value="12" min="2" max="60" step="1">
+                            </div>
+                            <div class="form-row">
+                                <label>Taxa de Juros Mensal (% a.m.):</label>
+                                <input type="number" id="s1_i" value="2.0" step="0.1">
+                            </div>
+                            <button class="btn-calc" onclick="calcularSimulador1()">Calcular Prestação Price</button>
+                        </div>
+                        <div class="sim-results">
+                            <div>
+                                <span style="font-size:0.8rem; color:var(--text-muted); font-weight:600;">Prestação Fixa Mensal (PMT):</span>
+                                <div id="s1_res_pmt" class="res-highlight">R$ 2.836,79</div>
+                                <div id="s1_res_totais" style="font-size:0.85rem; color:var(--text-secondary); font-weight:600; margin-top:4px;">
+                                    Total Pago: R$ 34.041,48 | Juros Totais: R$ 4.041,48
+                                </div>
+                            </div>
+                            <div class="chart-box">
+                                <span style="font-size:0.75rem; font-weight:700; color:var(--text-muted); margin-bottom:4px;">COMPOSIÇÃO DO TOTAL DESEMBOLSADO</span>
+                                <svg id="s1_svg_chart" viewBox="0 0 340 90" style="width:100%; height:85px;"></svg>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SLIDE 7: VERIFICAÇÃO FORMATIVA -->
+            <div class="slide">
+                <span class="slide-tag">Verificação Rápida</span>
+                <h2 class="slide-title">Desafio em Sala: Conceito Price</h2>
+                <div class="slide-content">
+                    <p style="font-size:1.15rem; margin-bottom:1rem;">
+                        No Sistema Francês de Amortização (Tabela Price), a prestação periódica paga pela empresa tomadora permanece rigorosamente constante ao longo de todo o prazo. O que acontece com as parcelas de juros e de amortização contidas nessa mesma prestação?
+                    </p>
+                    <div style="display:flex; flex-direction:column; gap:0.6rem; margin:1rem 0;">
+                        <button class="btn-nav" onclick="checkQuiz1(1, this)" style="justify-content:flex-start; padding:0.75rem 1rem;">
+                            A) Tanto os juros quanto a amortização permanecem absolutamente constantes em todas as parcelas.
+                        </button>
+                        <button class="btn-nav" onclick="checkQuiz1(2, this)" style="justify-content:flex-start; padding:0.75rem 1rem;">
+                            B) Os juros decrescem porque o saldo devedor diminui, enquanto a amortização cresce na mesma proporção para manter a soma constante.
+                        </button>
+                        <button class="btn-nav" onclick="checkQuiz1(3, this)" style="justify-content:flex-start; padding:0.75rem 1rem;">
+                            C) A amortização diminui e os juros aumentam com a inflação acumulada do período.
+                        </button>
+                    </div>
+                    <div id="quiz-fb-1" class="highlight-box" style="display:none; margin-top:0.4rem;"></div>
+                </div>
+            </div>
+
+            <!-- SLIDE 8: SÍNTESE E PRÓXIMA PARTE -->
+            <div class="slide">
+                <span class="slide-tag">Fechamento da Parte 1</span>
+                <h2 class="slide-title">Síntese e Encaminhamento</h2>
+                <div class="slide-content">
+                    <div class="card-panel">
+                        <h3 style="color:var(--primary); margin-bottom:0.6rem;">Pontos Centrais Dominados:</h3>
+                        <p>✔ O Sistema Price foi concebido por Richard Price no século XVIII e adotado amplamente na França como modelo de anuidade uniforme.</p>
+                        <p>✔ Sua marca registrada é a <strong>prestação constante</strong> (PMT), que garante máxima previsibilidade orçamentária.</p>
+                        <p>✔ Internamente, a parcela abriga uma dinâmica compensatória: <strong>juros em queda</strong> e <strong>amortização em alta</strong>.</p>
+                    </div>
+                    <div class="highlight-box" style="margin-top:1.2rem; text-align:center;">
+                        <h4 style="color:var(--secondary); font-size:1.15rem;">Próxima Apresentação (2.html):</h4>
+                        <p style="margin-top:0.3rem;">Vamos dissecar as <strong>Características da Parcela Fixa</strong> e entender como ela afeta a gestão financeira da empresa tomadora.</p>
+                        <a href="2.html" class="btn-nav" style="display:inline-flex; margin-top:0.8rem; background:var(--secondary); color:#fff; border:none; padding:0.65rem 1.5rem;">
+                            Avançar para Aula 2 • Parte 2 (2.html) &rarr;
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="slide-footer">
+            <div class="nav-controls">
+                <button class="btn-nav" id="btnPrev">← Anterior (↑)</button>
+                <button class="btn-nav" id="btnNext">Próximo (↓) →</button>
+            </div>
+            <div class="progress-indicator" id="slideIndicator">Slide 01 de 08</div>
+            <div>
+                <a href="../index.html" class="btn-nav" style="text-decoration:none;">⌂ Portal Principal</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const slides = document.querySelectorAll('.slide');
+        const totalSlides = slides.length;
+        let currentSlide = 0;
+        const slideIndicator = document.getElementById('slideIndicator');
+        const btnPrev = document.getElementById('btnPrev');
+        const btnNext = document.getElementById('btnNext');
+        const btnFullscreen = document.getElementById('btnFullscreen');
+
+        function updateSlide(index) {
+            slides.forEach((s, idx) => s.classList.toggle('active', idx === index));
+            slideIndicator.textContent = `Slide ${String(index + 1).padStart(2, '0')} de ${String(totalSlides).padStart(2, '0')}`;
+        }
+
+        function nextSlide() {
+            if (currentSlide < totalSlides - 1) {
+                currentSlide++;
+                updateSlide(currentSlide);
+            } else {
+                window.location.href = "2.html";
+            }
+        }
+
+        function prevSlide() {
+            if (currentSlide > 0) {
+                currentSlide--;
+                updateSlide(currentSlide);
+            } else {
+                window.location.href = "../index.html";
+            }
+        }
+
+        btnNext.addEventListener('click', nextSlide);
+        btnPrev.addEventListener('click', prevSlide);
+
+        window.addEventListener('keydown', (e) => {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') return;
+            if (e.key === 'ArrowDown' || e.key === 'PageDown' || e.key === 'ArrowRight') {
+                e.preventDefault();
+                nextSlide();
+            } else if (e.key === 'ArrowUp' || e.key === 'PageUp' || e.key === 'ArrowLeft') {
+                e.preventDefault();
+                prevSlide();
+            } else if (e.key === 'f' || e.key === 'F') {
+                toggleFullscreen();
+            }
+        });
+
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(() => {});
+            } else {
+                if (document.exitFullscreen) document.exitFullscreen();
+            }
+        }
+        btnFullscreen.addEventListener('click', toggleFullscreen);
+
+        const fmtBRL = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
+
+        function calcularSimulador1() {
+            const pv = parseFloat(document.getElementById('s1_pv').value) || 0;
+            const n = parseInt(document.getElementById('s1_n').value) || 1;
+            const i = (parseFloat(document.getElementById('s1_i').value) || 0) / 100;
+
+            let pmt = 0;
+            if (i > 0) {
+                pmt = pv * (i / (1 - Math.pow(1 + i, -n)));
+            } else {
+                pmt = pv / n;
+            }
+
+            const totalPago = pmt * n;
+            const jurosTotal = totalPago - pv;
+
+            document.getElementById('s1_res_pmt').textContent = `${fmtBRL.format(pmt)} / mês`;
+            document.getElementById('s1_res_totais').textContent = `Total Pago: ${fmtBRL.format(totalPago)} | Juros Totais: ${fmtBRL.format(jurosTotal)}`;
+
+            desenharGraficoS1(pv, jurosTotal);
+        }
+
+        function desenharGraficoS1(pv, juros) {
+            const maxVal = Math.max(pv, juros, 1);
+            const hPv = Math.max(12, (pv / maxVal) * 55);
+            const hJuros = Math.max(12, (juros / maxVal) * 55);
+
+            const svg = document.getElementById('s1_svg_chart');
+            svg.innerHTML = `
+                <line x1="20" y1="70" x2="320" y2="70" stroke="#CBD5E1" stroke-width="1.5"/>
+                
+                <!-- Barra Capital Financiado -->
+                <rect x="70" y="${70 - hPv}" width="60" height="${hPv}" rx="3" fill="#002060"/>
+                <text x="100" y="${64 - hPv}" font-size="8.5" font-weight="bold" fill="#002060" text-anchor="middle">${fmtBRL.format(pv)}</text>
+                <text x="100" y="82" font-size="8.5" fill="#64748B" text-anchor="middle">Principal (PV)</text>
+
+                <!-- Barra Juros Pagos -->
+                <rect x="210" y="${70 - hJuros}" width="60" height="${hJuros}" rx="3" fill="#DC2626"/>
+                <text x="240" y="${64 - hJuros}" font-size="8.5" font-weight="bold" fill="#DC2626" text-anchor="middle">${fmtBRL.format(juros)}</text>
+                <text x="240" y="82" font-size="8.5" fill="#DC2626" font-weight="bold" text-anchor="middle">Juros Totais</text>
+            `;
+        }
+
+        calcularSimulador1();
+
+        function checkQuiz1(op, btn) {
+            const fb = document.getElementById('quiz-fb-1');
+            fb.style.display = 'block';
+            if (op === 2) {
+                fb.style.borderLeftColor = 'var(--success)';
+                fb.innerHTML = `<h4 style="color:var(--success);">Correto! (Alternativa B)</h4>
+                <p>Essa é a dinâmica fundamental da Tabela Price: como a dívida diminui a cada mês, os juros periódicos encolhem. Para que a prestação permaneça igual, a amortização absorve a diferença e cresce periodicamente.</p>`;
+            } else {
+                fb.style.borderLeftColor = 'var(--danger)';
+                fb.innerHTML = `<h4 style="color:var(--danger);">Atenção!</h4>
+                <p>A prestação é fixa, mas a sua composição interna varia todos os meses: juros caem e amortização sobe.</p>`;
+            }
+        }
+    </script>
+</body>
+</html>
