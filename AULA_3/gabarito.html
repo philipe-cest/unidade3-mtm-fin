@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gabarito Oficial e Memória de Cálculo • Atividade 3 | CEST</title>
+    <meta name="author" content="Prof. Msc. Philipe Sampaio Lima">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23002060'/><circle cx='50' cy='50' r='30' fill='%23059669'/><text x='50' y='58' font-size='22' font-weight='bold' fill='white' text-anchor='middle'>G3</text></svg>">
+    
+    <style>
+        :root {
+            --primary: #002060;
+            --primary-dark: #001138;
+            --primary-light: #003399;
+            --secondary: #0080FF;
+            --secondary-light: #E6F2FF;
+            --accent: #00A3FF;
+            --background: #F4F7FA;
+            --surface: #FFFFFF;
+            --text-primary: #0F172A;
+            --text-secondary: #475569;
+            --text-muted: #64748B;
+            --border: #CBD5E1;
+            --success: #059669;
+            --warning: #D97706;
+            --danger: #DC2626;
+            --radius-sm: 6px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --shadow-sm: 0 1px 3px rgba(0, 32, 96, 0.05);
+            --shadow-md: 0 4px 18px -2px rgba(0, 32, 96, 0.08);
+            --max-w: 1100px;
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        html { scroll-behavior: smooth; font-size: 16px; }
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--background);
+            color: var(--text-primary);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+            padding-bottom: 5rem;
+        }
+
+        .container { width: 100%; max-width: var(--max-w); margin: 0 auto; padding: 0 1.25rem; }
+
+        header {
+            background-color: var(--surface);
+            border-bottom: 2px solid var(--success);
+            padding: 1.25rem 0;
+            box-shadow: var(--shadow-sm);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .header-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        .brand-box { display: flex; align-items: center; gap: 12px; }
+        .brand-box svg { width: 38px; height: 38px; flex-shrink: 0; }
+        .brand-titles h1 { font-size: 1.15rem; font-weight: 800; color: var(--primary); line-height: 1.2; }
+        .brand-titles p { font-size: 0.8rem; color: var(--text-muted); font-weight: 600; }
+
+        .intro-card {
+            background: linear-gradient(135deg, #064E3B 0%, #022C22 100%);
+            color: #FFFFFF;
+            padding: 2rem;
+            border-radius: var(--radius-md);
+            margin: 2rem 0;
+            box-shadow: var(--shadow-md);
+        }
+        .intro-title { font-size: 1.6rem; font-weight: 800; margin-bottom: 0.5rem; color: #FFFFFF; }
+        .intro-desc { font-size: 0.95rem; color: rgba(255,255,255,0.85); line-height: 1.6; max-width: 900px; }
+
+        .solution-card {
+            background: var(--surface);
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border);
+            padding: 2rem;
+            margin-bottom: 2.5rem;
+            box-shadow: var(--shadow-sm);
+        }
+        .sol-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1.5px solid var(--background);
+            padding-bottom: 0.85rem;
+            margin-bottom: 1.25rem;
+        }
+        .sol-badge {
+            background-color: var(--success);
+            color: #fff;
+            font-size: 0.8rem;
+            font-weight: 700;
+            padding: 4px 12px;
+            border-radius: 20px;
+            text-transform: uppercase;
+        }
+        .sol-theme { font-size: 0.85rem; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: 0.05em; }
+
+        .step-box {
+            background-color: var(--background);
+            border-left: 4px solid var(--primary);
+            padding: 1rem 1.25rem;
+            border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+            margin: 1rem 0;
+            font-size: 0.95rem;
+        }
+        .formula-block {
+            background-color: #FFFFFF;
+            border: 1px solid var(--border);
+            padding: 0.85rem 1.25rem;
+            border-radius: var(--radius-sm);
+            font-family: monospace;
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin: 0.6rem 0;
+        }
+        .result-highlight {
+            background-color: #ECFDF5;
+            border: 1px solid #A7F3D0;
+            color: #065F46;
+            padding: 1rem 1.25rem;
+            border-radius: var(--radius-sm);
+            font-weight: 700;
+            margin: 1rem 0;
+        }
+        .managerial-note {
+            background-color: var(--secondary-light);
+            border-left: 4px solid var(--secondary);
+            padding: 0.85rem 1.25rem;
+            border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+            font-size: 0.92rem;
+            color: var(--primary);
+            margin-top: 0.8rem;
+        }
+
+        .action-dock {
+            background: var(--surface);
+            border: 2px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 1.5rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+            box-shadow: var(--shadow-md);
+            margin-top: 3rem;
+        }
+        .btn-print {
+            display: inline-flex; align-items: center; gap: 8px; background-color: var(--primary); color: #fff; border: none; padding: 0.85rem 1.8rem; border-radius: var(--radius-sm); font-size: 0.95rem; font-weight: 700; cursor: pointer; transition: 0.2s;
+        }
+        .btn-print:hover { background-color: var(--primary-light); }
+
+        @media print {
+            body { background: #fff !important; color: #000 !important; padding: 0; }
+            header, .action-dock { display: none !important; }
+            .container { max-width: 100% !important; padding: 0 !important; }
+            .intro-card { background: #064E3B !important; color: #fff !important; -webkit-print-color-adjust: exact; padding: 1.25rem !important; }
+            .solution-card { border: 1px solid #CBD5E1 !important; page-break-inside: avoid; margin-bottom: 1.5rem !important; box-shadow: none !important; }
+            .formula-block { border: 1px solid #000 !important; }
+            .result-highlight { background: #ECFDF5 !important; -webkit-print-color-adjust: exact; border: 1px solid #059669 !important; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="container header-content">
+            <div class="brand-box">
+                <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="100" height="100" rx="16" fill="#002060"/>
+                    <path d="M20 75 V30 L50 30 L50 75" stroke="#FFFFFF" stroke-width="8" stroke-linejoin="round"/>
+                    <path d="M50 30 L80 30 L80 75" stroke="#FFFFFF" stroke-width="8" stroke-linejoin="round"/>
+                    <path d="M30 52 H70" stroke="#0080FF" stroke-width="8"/>
+                </svg>
+                <div class="brand-titles">
+                    <h1>CEST • Centro Universitário Santa Terezinha</h1>
+                    <p>Curso de Administração • Matemática Financeira • Prof. Msc. Philipe Sampaio Lima</p>
+                </div>
+            </div>
+            <div>
+                <a href="../index.html" style="font-size:0.85rem; font-weight:700; color:var(--secondary); text-decoration:none;">
+                    ⌂ Retornar ao Portal Principal
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        
+        <section class="intro-card">
+            <h2 class="intro-title">Gabarito Analítico Passo a Passo • Atividade 3</h2>
+            <p class="intro-desc">
+                Memória de cálculo integral, dedução analítica das fórmulas em texto direto e justificativas de governança para as 5 questões avaliativas de <strong>Sistema de Amortização Constante (SAC) e Comparativos</strong>.
+            </p>
+        </section>
+
+        <!-- QUESTÃO 1 -->
+        <article class="solution-card">
+            <div class="sol-header">
+                <span class="sol-badge">Gabarito Questão 01</span>
+                <span class="sol-theme">Construtora Maranhense • Amortização Fixa e 1ª Prestação</span>
+            </div>
+            <p><strong>Enunciado Típico:</strong> Financiamento de R$ 150.000,00 contratado pelo SAC em 6 meses com taxa de 2,0% ao mês. Calcular a amortização mensal fixa e o valor da 1ª prestação.</p>
+            
+            <div class="step-box">
+                <strong>1. Dados Disponíveis:</strong><br>
+                • Capital Financiado (PV) = R$ 150.000,00<br>
+                • Prazo Total (n) = 6 meses<br>
+                • Taxa Mensal (i) = 2,0% a.m. = 0,02 (em formato decimal)
+            </div>
+
+            <div class="step-box">
+                <strong>2. Fórmulas Utilizadas:</strong>
+                <div class="formula-block">
+                    Amortização = PV / n<br>
+                    Juros 1 = PV × Taxa de Juros<br>
+                    Prestação 1 = Amortização + Juros 1
+                </div>
+            </div>
+
+            <div class="step-box">
+                <strong>3. Desenvolvimento dos Cálculos:</strong><br>
+                • Amortização Fixa = 150.000,00 / 6 = <strong>R$ 25.000,00 por mês</strong><br>
+                • Juros do Mês 1 = 150.000,00 × 0,02 = <strong>R$ 3.000,00</strong><br>
+                • Prestação 1 = 25.000,00 + 3.000,00 = <strong>R$ 28.000,00</strong>
+            </div>
+
+            <div class="result-highlight">
+                Resultado Oficial: Amortização = R$ 25.000,00/mês | 1ª Prestação = R$ 28.000,00
+            </div>
+
+            <div class="managerial-note">
+                <strong>Interpretação Financeira:</strong> A primeira parcela é a mais elevada do contrato (R$ 28.000,00). O saldo devedor após o primeiro pagamento reduz-se para R$ 125.000,00.
+            </div>
+        </article>
+
+        <!-- QUESTÃO 2 -->
+        <article class="solution-card">
+            <div class="sol-header">
+                <span class="sol-badge">Gabarito Questão 02</span>
+                <span class="sol-theme">Hospital Regional dos Cocais • Redução Periódica e 2ª Prestação</span>
+            </div>
+            <p><strong>Enunciado Típico:</strong> Financiamento de R$ 120.000,00 contratado pelo SAC em 6 meses a 2,5% ao mês. Calcular a redução mensal constante e a 2ª prestação.</p>
+
+            <div class="step-box">
+                <strong>1. Cálculos de Base:</strong><br>
+                • Amortização Fixa = 120.000,00 / 6 = R$ 20.000,00<br>
+                • Redução Mensal = Amortização × Taxa = 20.000,00 × 0,025 = <strong>R$ 500,00 por mês</strong><br>
+                • Juros do Mês 1 = 120.000,00 × 0,025 = R$ 3.000,00<br>
+                • Prestação 1 = 20.000,00 + 3.000,00 = R$ 23.000,00
+            </div>
+
+            <div class="step-box">
+                <strong>2. Apuração Direta da 2ª Prestação:</strong><br>
+                • Prestação 2 = Prestação 1 - Redução Mensal<br>
+                • Prestação 2 = 23.000,00 - 500,00 = <strong>R$ 22.500,00</strong>
+            </div>
+
+            <div class="result-highlight">
+                Resultado Oficial: Redução Mensal = R$ 500,00 | 2ª Prestação = R$ 22.500,00
+            </div>
+        </article>
+
+        <!-- QUESTÃO 3 -->
+        <article class="solution-card">
+            <div class="sol-header">
+                <span class="sol-badge">Gabarito Questão 03</span>
+                <span class="sol-theme">Laticínios Vale do Itapecuru • Saldo Intermediário e Juros Totais</span>
+            </div>
+            <p><strong>Enunciado Típico:</strong> Financiamento de R$ 100.000,00 pelo SAC em 8 meses a 2,0% ao mês. Calcular o saldo devedor no mês 4 e o total de juros pagos.</p>
+
+            <div class="step-box">
+                <strong>1. Saldo Devedor na Metade do Prazo:</strong><br>
+                • Como a amortização é linear, no mês 4 (metade de 8 meses), a dívida caiu exatamente 50%:<br>
+                • Saldo no Mês 4 = 100.000,00 / 2 = <strong>R$ 50.000,00</strong>
+            </div>
+
+            <div class="step-box">
+                <strong>2. Soma Analítica dos Juros no SAC:</strong>
+                <div class="formula-block">
+                    Juros Totais SAC = PV × Taxa × (n + 1) / 2
+                </div>
+                • Juros Totais = 100.000,00 × 0,02 × (8 + 1) / 2<br>
+                • Juros Totais = 2.000,00 × 4,5 = <strong>R$ 9.000,00</strong>
+            </div>
+
+            <div class="result-highlight">
+                Resultado Oficial: Saldo no Mês 4 = R$ 50.000,00 | Juros Totais = R$ 9.000,00
+            </div>
+        </article>
+
+        <!-- QUESTÃO 4 -->
+        <article class="solution-card">
+            <div class="sol-header">
+                <span class="sol-badge">Gabarito Questão 04</span>
+                <span class="sol-theme">Distribuidora Açailândia • Confronto SAC vs. Price</span>
+            </div>
+            <p><strong>Enunciado Típico:</strong> Empréstimo de R$ 120.000,00 em 5 meses a 2,0% ao mês. Calcular os juros totais no SAC e a economia gerada em relação à Tabela Price.</p>
+
+            <div class="step-box">
+                <strong>1. Juros no SAC:</strong><br>
+                • Juros SAC = 120.000,00 × 0,02 × (5 + 1) / 2 = 2.400,00 × 3 = <strong>R$ 7.200,00</strong>
+            </div>
+
+            <div class="step-box">
+                <strong>2. Juros na Tabela Price:</strong><br>
+                • Prestação Price = 120.000 × [0,02 / (1 - (1+0,02)^(-5))] = R$ 25.459,01<br>
+                • Total Pago na Price = 5 × 25.459,01 = R$ 127.295,05<br>
+                • Juros Totais Price = 127.295,05 - 120.000,00 = <strong>R$ 7.295,05</strong>
+            </div>
+
+            <div class="step-box">
+                <strong>3. Economia Gerada pelo SAC:</strong><br>
+                • Economia = 7.295,05 - 7.200,00 = <strong>R$ 95,05</strong>
+            </div>
+
+            <div class="result-highlight">
+                Resultado Oficial: Juros SAC = R$ 7.200,00 | Economia vs. Price = R$ 95,05
+            </div>
+        </article>
+
+        <!-- QUESTÃO 5 -->
+        <article class="solution-card">
+            <div class="sol-header">
+                <span class="sol-badge">Gabarito Questão 05</span>
+                <span class="sol-theme">Agroindustrial Balsas • Confronto SAC vs. Sistema Americano</span>
+            </div>
+            <p><strong>Enunciado Típico:</strong> Operação de R$ 200.000,00 em 5 meses a 2,0% ao mês. Calcular os juros totais no Sistema Americano e a economia propiciada pelo SAC.</p>
+
+            <div class="step-box">
+                <strong>1. Juros no Sistema Americano (SAA):</strong><br>
+                • Juros Mensais = 200.000,00 × 0,02 = R$ 4.000,00<br>
+                • Juros Totais SAA = 5 × 4.000,00 = <strong>R$ 20.000,00</strong>
+            </div>
+
+            <div class="step-box">
+                <strong>2. Juros no SAC:</strong><br>
+                • Juros SAC = 200.000,00 × 0,02 × (5 + 1) / 2 = 4.000,00 × 3 = <strong>R$ 12.000,00</strong>
+            </div>
+
+            <div class="step-box">
+                <strong>3. Economia Real:</strong><br>
+                • Economia = 20.000,00 - 12.000,00 = <strong>R$ 8.000,00</strong>
+            </div>
+
+            <div class="result-highlight">
+                Resultado Oficial: Juros SAA = R$ 20.000,00 | Economia com SAC = R$ 8.000,00
+            </div>
+
+            <div class="managerial-note">
+                <strong>Parecer da Controladoria:</strong> Ao amortizar o principal mês a mês no SAC em vez de reter a dívida inteira até o final como no Sistema Americano, a empresa economizou 40% de despesas financeiras líquidas.
+            </div>
+        </article>
+
+        <div class="action-dock">
+            <div>
+                <h4 style="color:var(--primary); font-size:1.1rem; font-weight:800;">Registro da Sessão de Correção</h4>
+                <p style="font-size:0.85rem; color:var(--text-secondary);">Documento emitido para fins pedagógicos e conferência de resolução discente.</p>
+            </div>
+            <button class="btn-print" onclick="window.print()">
+                Imprimir ou Salvar Gabarito em PDF
+            </button>
+        </div>
+
+    </main>
+
+</body>
+</html>

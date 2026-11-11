@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aula 3 • Parte 2 — Cálculo da Amortização Fixa no SAC | CEST</title>
+    <meta name="author" content="Prof. Msc. Philipe Sampaio Lima">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23002060'/><circle cx='50' cy='50' r='30' fill='%230080FF'/><text x='50' y='58' font-size='24' font-weight='bold' fill='white' text-anchor='middle'>2</text></svg>">
+    
+    <style>
+        :root {
+            --primary: #002060;
+            --primary-dark: #001138;
+            --primary-light: #003399;
+            --secondary: #0080FF;
+            --secondary-light: #E6F2FF;
+            --accent: #00A3FF;
+            --background: #F4F7FA;
+            --surface: #FFFFFF;
+            --text-primary: #0F172A;
+            --text-secondary: #475569;
+            --text-muted: #64748B;
+            --border: #CBD5E1;
+            --success: #059669;
+            --warning: #D97706;
+            --danger: #DC2626;
+            --radius-md: 12px;
+            --shadow-md: 0 8px 24px -4px rgba(0, 32, 96, 0.12);
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: #0b1329;
+            color: var(--text-primary);
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .stage {
+            width: 96vw;
+            height: 54vw;
+            max-width: 1600px;
+            max-height: 900px;
+            background-color: var(--background);
+            border-radius: var(--radius-md);
+            box-shadow: 0 15px 45px rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .slide-topbar {
+            height: 52px;
+            background-color: var(--primary);
+            color: #FFFFFF;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 1.5rem;
+            flex-shrink: 0;
+            border-bottom: 2px solid var(--secondary);
+        }
+        .topbar-left { display: flex; align-items: center; gap: 12px; font-weight: 700; font-size: 0.9rem; }
+        .topbar-badge {
+            background-color: rgba(255,255,255,0.15); padding: 3px 8px; border-radius: 4px; color: var(--secondary-light); font-size: 0.75rem;
+        }
+        .topbar-right { display: flex; align-items: center; gap: 15px; font-size: 0.85rem; color: rgba(255,255,255,0.85); }
+
+        .slide-viewport { flex-grow: 1; position: relative; overflow: hidden; }
+        .slide {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            padding: 2.2rem 3rem; display: flex; flex-direction: column; opacity: 0; visibility: hidden;
+            transform: translateX(30px); transition: all 0.28s ease-out; overflow-y: auto;
+        }
+        .slide.active { opacity: 1; visibility: visible; transform: translateX(0); z-index: 2; }
+
+        .slide-tag { color: var(--secondary); font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.35rem; }
+        .slide-title { font-size: 1.85rem; font-weight: 800; color: var(--primary); line-height: 1.25; margin-bottom: 1.25rem; }
+        .slide-content { font-size: 1.08rem; line-height: 1.6; color: var(--text-secondary); flex-grow: 1; display: flex; flex-direction: column; justify-content: center; }
+
+        .highlight-box {
+            background-color: var(--surface); border-left: 5px solid var(--secondary); padding: 1.25rem 1.75rem;
+            border-radius: 0 var(--radius-md) var(--radius-md) 0; box-shadow: var(--shadow-md); margin: 1rem 0;
+        }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.2rem; }
+        .card-panel { background: var(--surface); padding: 1.4rem; border-radius: var(--radius-md); border: 1px solid var(--border); }
+
+        .sim-container {
+            display: grid; grid-template-columns: 0.95fr 1.05fr; gap: 1.5rem; background: var(--surface); padding: 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--border);
+        }
+        .form-row { display: flex; flex-direction: column; gap: 0.2rem; margin-bottom: 0.5rem; }
+        .form-row label { font-weight: 600; color: var(--primary); font-size: 0.82rem; }
+        .form-row input { padding: 0.45rem 0.65rem; border: 1px solid var(--border); border-radius: 6px; font-weight: 600; }
+        .btn-calc { background: var(--secondary); color: #fff; border: none; padding: 0.65rem; border-radius: 6px; font-weight: 700; cursor: pointer; transition: 0.2s; width: 100%; }
+        .btn-calc:hover { background: var(--primary); }
+
+        .chart-box {
+            background: #fff; border: 1px solid var(--border); border-radius: 6px; padding: 0.75rem; display: flex; flex-direction: column; align-items: center; justify-content: center; margin-top: 0.5rem;
+        }
+
+        .slide-footer {
+            height: 56px; background-color: var(--surface); border-top: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: space-between; padding: 0 1.5rem; flex-shrink: 0;
+        }
+        .nav-controls { display: flex; align-items: center; gap: 10px; }
+        .btn-nav {
+            background-color: var(--background); border: 1px solid var(--border); color: var(--primary);
+            padding: 6px 14px; border-radius: 6px; font-weight: 700; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; gap: 6px;
+        }
+        .btn-nav:hover { background-color: var(--secondary); color: #FFFFFF; }
+        .progress-indicator { font-weight: 700; font-size: 0.88rem; color: var(--text-muted); }
+    </style>
+</head>
+<body>
+
+    <div class="stage">
+        <div class="slide-topbar">
+            <div class="topbar-left">
+                <span>CEST • MATEMÁTICA FINANCEIRA</span>
+                <span class="topbar-badge">Aula 3 • Parte 2</span>
+            </div>
+            <div class="topbar-right">
+                <span>Prof. Msc. Philipe Sampaio Lima</span>
+                <button class="btn-nav" id="btnFullscreen" style="padding:4px 8px; font-size:0.75rem;">⛶ Tela Cheia</button>
+            </div>
+        </div>
+
+        <div class="slide-viewport">
+            
+            <!-- SLIDE 1: ABERTURA -->
+            <div class="slide active">
+                <span class="slide-tag">Engenharia Financeira do SAC</span>
+                <h1 class="slide-title" style="font-size:2.35rem;">Cálculo da Amortização Fixa no SAC</h1>
+                <div class="slide-content">
+                    <div class="highlight-box">
+                        <h3 style="color:var(--primary); font-size:1.25rem; margin-bottom:0.5rem;">O que vamos dominar nesta aula:</h3>
+                        <p>1. A fórmula analítica da cota de amortização: Amortização = Capital Financiado / Prazo Total.</p>
+                        <p>2. A independência total da amortização em relação à taxa de juros praticada no contrato.</p>
+                        <p>3. A dinâmica da Progressão Aritmética (P.A.) decrescente no saldo devedor.</p>
+                        <p>4. Simulador interativo demonstrando a linha reta de redução do saldo devedor até o valor zero.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SLIDE 2: A FÓRMULA CENTRAL -->
+            <div class="slide">
+                <span class="slide-tag">Equação de Partida</span>
+                <h2 class="slide-title">A Fórmula da Amortização Periódica</h2>
+                <div class="slide-content">
+                    <p style="margin-bottom:0.8rem;">Enquanto no Sistema Price a fórmula envolve exponenciais complexos com taxa de juros, no SAC a cota de amortização é uma divisão aritmética direta:</p>
+                    <div class="card-panel" style="text-align:center; padding:1.4rem; background:linear-gradient(135deg, #001e5c 0%, #002b82 100%); color:#fff;">
+                        <span style="font-size:0.85rem; text-transform:uppercase; color:var(--secondary-light); font-weight:700;">Fórmula da Amortização Constante</span>
+                        <div style="font-size:1.9rem; font-weight:800; color:#60A5FA; margin-top:0.4rem;">
+                            Amortização = PV / n
+                        </div>
+                    </div>
+                    <div class="grid-3" style="margin-top:1.1rem;">
+                        <div class="card-panel">
+                            <h4 style="color:var(--primary); margin-bottom:0.3rem;">PV (Valor Presente)</h4>
+                            <p style="font-size:0.88rem;">É o montante total de recursos liberados na data zero do contrato.</p>
+                        </div>
+                        <div class="card-panel">
+                            <h4 style="color:var(--primary); margin-bottom:0.3rem;">n (Número de Meses)</h4>
+                            <p style="font-size:0.88rem;">Quantidade total de períodos previstos para liquidação integral da dívida.</p>
+                        </div>
+                        <div class="card-panel">
+                            <h4 style="color:var(--success); margin-bottom:0.3rem;">Amortização Fixa</h4>
+                            <p style="font-size:0.88rem;">Cota monetária idêntica que será debitada da dívida a cada período.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SLIDE 3: INDEPENDÊNCIA DA TAXA -->
+            <div class="slide">
+                <span class="slide-tag">Propriedade Fundamental</span>
+                <h2 class="slide-title">Por que a Amortização Não Depende dos Juros?</h2>
+                <div class="slide-content">
+                    <p style="margin-bottom:0.8rem;">Essa é uma das características mais singulares da matemática financeira do SAC:</p>
+                    <div class="grid-2">
+                        <div class="card-panel" style="border-left:5px solid var(--secondary);">
+                            <h4 style="color:var(--primary); margin-bottom:0.4rem;">Independência Matemática</h4>
+                            <p style="font-size:0.92rem;">
+                                Se você financiar R$ 100.000 em 10 meses a 1% ao mês, a amortização é <strong>R$ 10.000/mês</strong>.<br>
+                                Se a taxa subir para 5% ao mês, a amortização continua sendo <strong>R$ 10.000/mês</strong>!<br>
+                                A taxa altera os juros e a prestação, mas a cota de abatimento da dívida não muda em nada.
+                            </p>
+                        </div>
+                        <div class="card-panel" style="border-left:5px solid var(--success);">
+                            <h4 style="color:var(--success); margin-bottom:0.4rem;">Vantagem de Governança</h4>
+                            <p style="font-size:0.92rem;">
+                                Para a contabilidade da empresa tomadora, a redução do passivo exigível é absolutamente previsível: a cada mês o balanço patrimonial deduz exatamente o mesmo montante de dívida bancária.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SLIDE 4: TRAJETÓRIA DO SALDO DEVEDOR -->
+            <div class="slide">
+                <span class="slide-tag">Evolução do Passivo</span>
+                <h2 class="slide-title">Saldo Devedor: Uma Progressão Aritmética Linear</h2>
+                <div class="slide-content">
+                    <p style="margin-bottom:0.8rem;">Como a amortização é fixa, o saldo devedor residual decresce em linha reta perfeita (Progressão Aritmética de razão negativa igual a -Amortização):</p>
+                    <div class="card-panel" style="background:var(--background); padding:1rem;">
+                        <p style="font-size:0.92rem; line-height:1.7;">
+                            • Saldo no Mês 0 = <strong>PV</strong><br>
+                            • Saldo no Mês 1 = PV - Amortização<br>
+                            • Saldo no Mês 2 = PV - 2 × Amortização<br>
+                            • Saldo no Mês k = <strong>PV - k × Amortização</strong><br>
+                            • Saldo no Mês n = PV - n × (PV / n) = <strong>R$ 0,00 (Quitação Total)</strong>
+                        </p>
+                    </div>
+                    <div class="highlight-box" style="margin-top:0.9rem;">
+                        <strong>Fórmula Rápida para Qualquer Mês:</strong> Quer saber a dívida no mês 15 de um financiamento de 60 meses? Basta calcular: Saldo(15) = PV - 15 × Amortização!
+                    </div>
+                </div>
+            </div>
+
+            <!-- SLIDE 5: CASO NUMÉRICO RESOLVIDO -->
+            <div class="slide">
+                <span class="slide-tag">Exemplo Prático</span>
+                <h2 class="slide-title">Demonstração: Financiamento de Galpão Industrial</h2>
+                <div class="slide-content">
+                    <p>Uma indústria de embalagens em São Luís financia <strong>R$ 120.000,00</strong> em <strong>6 meses</strong> no SAC:</p>
+                    <div class="card-panel" style="font-size:0.92rem; margin-top:0.6rem;">
+                        <p>1. Cota Fixa de Amortização: <strong>Amortização = 120.000 / 6 = R$ 20.000,00 por mês</strong>.</p>
+                        <p style="margin-top:0.3rem;">2. Evolução cronológica do Saldo Devedor:</p>
+                        <p style="padding-left:1rem; font-weight:700; color:var(--primary); margin:0.2rem 0;">
+                            Mês 0: R$ 120.000,00<br>
+                            Mês 1: 120.000 - 20.000 = R$ 100.000,00<br>
+                            Mês 2: 100.000 - 20.000 = R$ 80.000,00<br>
+                            Mês 3: 80.000 - 20.000 = R$ 60.000,00 (Exatamente a metade do financiamento!)<br>
+                            Mês 4: 60.000 - 20.000 = R$ 40.000,00<br>
+                            Mês 5: 40.000 - 20.000 = R$ 20.000,00<br>
+                            Mês 6: 20.000 - 20.000 = R$ 0,00
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SLIDE 6: SIMULADOR DE SALDO LINEAR -->
+            <div class="slide">
+                <span class="slide-tag">Laboratório Interativo</span>
+                <h2 class="slide-title">Simulador: Queda Linear do Saldo Devedor</h2>
+                <div class="slide-content">
+                    <div class="sim-container">
+                        <div>
+                            <div class="form-row">
+                                <label>Capital Financiado (PV em R$):</label>
+                                <input type="number" id="s2_pv" value="120000" step="10000">
+                            </div>
+                            <div class="form-row">
+                                <label>Prazo de Vigência (Meses):</label>
+                                <input type="number" id="s2_n" value="6" min="2" max="24" step="1">
+                            </div>
+                            <button class="btn-calc" onclick="calcularSimulador2()">Atualizar Reta do Saldo</button>
+                            <div style="margin-top:0.8rem; font-size:0.85rem; color:var(--primary); font-weight:700;" id="s2_lbl_amort">
+                                Amortização Fixa: R$ 20.000,00 / mês
+                            </div>
+                        </div>
+                        <div style="background:var(--background); padding:1rem; border-radius:8px; display:flex; flex-direction:column; justify-content:space-between; border:1px solid var(--border);">
+                            <div id="s2_saldo_preview" style="font-size:0.85rem; line-height:1.6;">
+                                <!-- Preenchido dinamicamente via JS -->
+                            </div>
+                            <div class="chart-box">
+                                <span style="font-size:0.75rem; font-weight:700; color:var(--text-muted); margin-bottom:4px;">REDUÇÃO LINEAR DO SALDO DEVEDOR (EM R$)</span>
+                                <svg id="s2_svg_chart" viewBox="0 0 320 75" style="width:100%; height:70px;"></svg>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SLIDE 7: VERIFICAÇÃO FORMATIVA -->
+            <div class="slide">
+                <span class="slide-tag">Verificação Rápida</span>
+                <h2 class="slide-title">Desafio em Sala: Metade do Saldo Devedor</h2>
+                <div class="slide-content">
+                    <p style="font-size:1.15rem; margin-bottom:1rem;">
+                        Uma empresa contrai um financiamento pelo SAC no montante de <strong>R$ 300.000,00</strong> com prazo de <strong>30 meses</strong>. Em qual mês a dívida da empresa atinge exatamente a metade do capital contratado (R$ 150.000,00)?
+                    </p>
+                    <div style="display:flex; flex-direction:column; gap:0.6rem; margin:1rem 0;">
+                        <button class="btn-nav" onclick="checkQuiz2(1, this)" style="justify-content:flex-start; padding:0.75rem 1rem;">
+                            A) No mês 15, porque a queda do saldo devedor no SAC é linear e atinge a metade na metade exata do prazo.
+                        </button>
+                        <button class="btn-nav" onclick="checkQuiz2(2, this)" style="justify-content:flex-start; padding:0.75rem 1rem;">
+                            B) No mês 20, porque os juros atrasam a amortização da dívida nos primeiros períodos.
+                        </button>
+                        <button class="btn-nav" onclick="checkQuiz2(3, this)" style="justify-content:flex-start; padding:0.75rem 1rem;">
+                            C) No mês 10, porque as primeiras amortizações são maiores que as finais.
+                        </button>
+                    </div>
+                    <div id="quiz-fb-2" class="highlight-box" style="display:none; margin-top:0.4rem;"></div>
+                </div>
+            </div>
+
+            <!-- SLIDE 8: SÍNTESE E PRÓXIMA PARTE -->
+            <div class="slide">
+                <span class="slide-tag">Fechamento da Parte 2</span>
+                <h2 class="slide-title">Síntese e Encaminhamento</h2>
+                <div class="slide-content">
+                    <div class="card-panel">
+                        <h3 style="color:var(--primary); margin-bottom:0.6rem;">Pontos Consolidados:</h3>
+                        <p>✔ A cota de amortização é obtida simplesmente dividindo o capital financiado pelo número de parcelas (A = PV / n).</p>
+                        <p>✔ O saldo devedor encolhe em progressão aritmética, atingindo 50% na metade exata do prazo contratual.</p>
+                        <p>✔ A taxa de juros não afeta a cota de amortização, influenciando exclusivamente os juros e o valor da parcela.</p>
+                    </div>
+                    <div class="highlight-box" style="margin-top:1.2rem; text-align:center;">
+                        <h4 style="color:var(--secondary); font-size:1.15rem;">Próxima Apresentação (3.html):</h4>
+                        <p style="margin-top:0.3rem;">Vamos investigar a dinâmica das <strong>Prestações Decrescentes</strong> e deduzir a fórmula da <strong>Razão de Queda Constante</strong> entre parcelas consecutivas.</p>
+                        <a href="3.html" class="btn-nav" style="display:inline-flex; margin-top:0.8rem; background:var(--secondary); color:#fff; border:none; padding:0.65rem 1.5rem;">
+                            Avançar para Aula 3 • Parte 3 (3.html) &rarr;
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="slide-footer">
+            <div class="nav-controls">
+                <button class="btn-nav" id="btnPrev">← Anterior (↑)</button>
+                <button class="btn-nav" id="btnNext">Próximo (↓) →</button>
+            </div>
+            <div class="progress-indicator" id="slideIndicator">Slide 01 de 08</div>
+            <div>
+                <a href="1.html" class="btn-nav" style="text-decoration:none;">⮌ Voltar à Parte 1</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const slides = document.querySelectorAll('.slide');
+        const totalSlides = slides.length;
+        let currentSlide = 0;
+        const slideIndicator = document.getElementById('slideIndicator');
+        const btnPrev = document.getElementById('btnPrev');
+        const btnNext = document.getElementById('btnNext');
+        const btnFullscreen = document.getElementById('btnFullscreen');
+
+        function updateSlide(index) {
+            slides.forEach((s, idx) => s.classList.toggle('active', idx === index));
+            slideIndicator.textContent = `Slide ${String(index + 1).padStart(2, '0')} de ${String(totalSlides).padStart(2, '0')}`;
+        }
+
+        function nextSlide() {
+            if (currentSlide < totalSlides - 1) {
+                currentSlide++;
+                updateSlide(currentSlide);
+            } else {
+                window.location.href = "3.html";
+            }
+        }
+
+        function prevSlide() {
+            if (currentSlide > 0) {
+                currentSlide--;
+                updateSlide(currentSlide);
+            } else {
+                window.location.href = "1.html";
+            }
+        }
+
+        btnNext.addEventListener('click', nextSlide);
+        btnPrev.addEventListener('click', prevSlide);
+
+        window.addEventListener('keydown', (e) => {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') return;
+            if (e.key === 'ArrowDown' || e.key === 'PageDown' || e.key === 'ArrowRight') {
+                e.preventDefault();
+                nextSlide();
+            } else if (e.key === 'ArrowUp' || e.key === 'PageUp' || e.key === 'ArrowLeft') {
+                e.preventDefault();
+                prevSlide();
+            } else if (e.key === 'f' || e.key === 'F') {
+                toggleFullscreen();
+            }
+        });
+
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(() => {});
+            } else {
+                if (document.exitFullscreen) document.exitFullscreen();
+            }
+        }
+        btnFullscreen.addEventListener('click', toggleFullscreen);
+
+        const fmtBRL = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
+
+        function calcularSimulador2() {
+            const pv = parseFloat(document.getElementById('s2_pv').value) || 0;
+            const n = Math.min(24, Math.max(2, parseInt(document.getElementById('s2_n').value) || 6));
+            const amort = pv / n;
+
+            document.getElementById('s2_lbl_amort').textContent = `Amortização Fixa: ${fmtBRL.format(amort)} / mês`;
+            
+            const metadeMes = Math.floor(n / 2);
+            const saldoMetade = pv - metadeMes * amort;
+
+            document.getElementById('s2_saldo_preview').innerHTML = `
+                <div><strong>Início (Mês 0):</strong> Saldo Inicial = ${fmtBRL.format(pv)}</div>
+                <div><strong>Metade (Mês ${metadeMes}):</strong> Saldo = ${fmtBRL.format(saldoMetade)}</div>
+                <div><strong>Término (Mês ${n}):</strong> Saldo = <span style="color:var(--success); font-weight:700;">R$ 0,00</span></div>
+            `;
+
+            desenharGraficoS2(pv, n, amort);
+        }
+
+        function desenharGraficoS2(pv, n, amort) {
+            const svg = document.getElementById('s2_svg_chart');
+            const maxVal = Math.max(pv, 1);
+
+            let points = [];
+            for (let m = 0; m <= n; m++) {
+                const sd = pv - m * amort;
+                const x = 30 + (m / n) * 260;
+                const y = 65 - (sd / maxVal) * 50;
+                points.push(`${x},${y}`);
+            }
+
+            svg.innerHTML = `
+                <line x1="20" y1="65" x2="300" y2="65" stroke="#CBD5E1" stroke-width="1.5"/>
+                <polyline points="${points.join(' ')}" fill="none" stroke="#002060" stroke-width="3"/>
+                
+                <circle cx="30" cy="${65 - (pv/maxVal)*50}" r="4" fill="#002060"/>
+                <text x="30" y="${60 - (pv/maxVal)*50}" font-size="8" font-weight="bold" fill="#002060" text-anchor="middle">M0</text>
+                
+                <circle cx="290" cy="65" r="4" fill="#059669"/>
+                <text x="290" y="58" font-size="8" font-weight="bold" fill="#059669" text-anchor="middle">M${n}</text>
+            `;
+        }
+
+        calcularSimulador2();
+
+        function checkQuiz2(op, btn) {
+            const fb = document.getElementById('quiz-fb-2');
+            fb.style.display = 'block';
+            if (op === 1) {
+                fb.style.borderLeftColor = 'var(--success)';
+                fb.innerHTML = `<h4 style="color:var(--success);">Correto! (Alternativa A)</h4>
+                <p>Como o saldo devedor encolhe em progressão linear perfeita de R$ 10.000 ao mês (300.000 / 30), a metade da dívida (R$ 150.000) é alcançada com exatidão na metade do prazo: mês 15.</p>`;
+            } else {
+                fb.style.borderLeftColor = 'var(--danger)';
+                fb.innerHTML = `<h4 style="color:var(--danger);">Atenção!</h4>
+                <p>No SAC a amortização é fixa e o saldo devedor é linear. Portanto, 50% da dívida é liquidada exatamente em 50% do tempo contratado.</p>`;
+            }
+        }
+    </script>
+</body>
+</html>

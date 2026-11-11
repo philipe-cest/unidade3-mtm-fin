@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Atividade Prática 3 • Sistema de Amortização Constante (SAC) | CEST</title>
+    <meta name="author" content="Prof. Msc. Philipe Sampaio Lima">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23002060'/><circle cx='50' cy='50' r='30' fill='%230080FF'/><text x='50' y='58' font-size='22' font-weight='bold' fill='white' text-anchor='middle'>AT3</text></svg>">
+    
+    <style>
+        :root {
+            --primary: #002060;
+            --primary-dark: #001138;
+            --primary-light: #003399;
+            --secondary: #0080FF;
+            --secondary-light: #E6F2FF;
+            --accent: #00A3FF;
+            --background: #F4F7FA;
+            --surface: #FFFFFF;
+            --text-primary: #0F172A;
+            --text-secondary: #475569;
+            --text-muted: #64748B;
+            --border: #CBD5E1;
+            --success: #059669;
+            --warning: #D97706;
+            --danger: #DC2626;
+            --radius-sm: 6px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --shadow-sm: 0 1px 3px rgba(0, 32, 96, 0.05);
+            --shadow-md: 0 4px 18px -2px rgba(0, 32, 96, 0.08);
+            --max-w: 1100px;
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        html { scroll-behavior: smooth; font-size: 16px; }
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--background);
+            color: var(--text-primary);
+            line-height: 1.55;
+            -webkit-font-smoothing: antialiased;
+            padding-bottom: 5rem;
+        }
+
+        .container { width: 100%; max-width: var(--max-w); margin: 0 auto; padding: 0 1.25rem; }
+
+        header {
+            background-color: var(--surface);
+            border-bottom: 2px solid var(--secondary);
+            padding: 1.25rem 0;
+            box-shadow: var(--shadow-sm);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .header-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        .brand-box { display: flex; align-items: center; gap: 12px; }
+        .brand-box svg { width: 38px; height: 38px; flex-shrink: 0; }
+        .brand-titles h1 { font-size: 1.15rem; font-weight: 800; color: var(--primary); line-height: 1.2; }
+        .brand-titles p { font-size: 0.8rem; color: var(--text-muted); font-weight: 600; }
+
+        .intro-card {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: #FFFFFF;
+            padding: 2rem;
+            border-radius: var(--radius-md);
+            margin: 2rem 0;
+            box-shadow: var(--shadow-md);
+        }
+        .intro-title { font-size: 1.6rem; font-weight: 800; margin-bottom: 0.5rem; color: #FFFFFF; }
+        .intro-desc { font-size: 0.95rem; color: rgba(255,255,255,0.85); line-height: 1.6; max-width: 900px; }
+
+        .student-box {
+            background: var(--surface);
+            border: 2px solid var(--secondary);
+            border-radius: var(--radius-md);
+            padding: 1.5rem;
+            margin-bottom: 2.5rem;
+            box-shadow: var(--shadow-md);
+            display: grid;
+            grid-template-columns: 1.5fr 1fr;
+            gap: 1.25rem;
+            align-items: center;
+        }
+        .student-field label {
+            display: block; font-size: 0.85rem; font-weight: 700; color: var(--primary); margin-bottom: 0.35rem; text-transform: uppercase; letter-spacing: 0.05em;
+        }
+        .student-field input {
+            width: 100%; padding: 0.85rem 1rem; border: 1.5px solid var(--border); border-radius: var(--radius-sm); font-size: 1.05rem; font-weight: 600; color: var(--text-primary); transition: 0.2s;
+        }
+        .student-field input:focus { border-color: var(--secondary); outline: none; background: #fff; box-shadow: 0 0 0 3px rgba(0,128,255,0.15); }
+        .student-meta {
+            font-size: 0.85rem; color: var(--text-secondary); background: var(--background); padding: 0.85rem; border-radius: var(--radius-sm); border: 1px solid var(--border);
+        }
+
+        .forms-callout {
+            background: linear-gradient(135deg, #107C41 0%, #0B532A 100%);
+            color: #fff;
+            padding: 1.5rem 2rem;
+            border-radius: var(--radius-md);
+            margin-bottom: 2.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+            box-shadow: 0 8px 24px -4px rgba(16, 124, 65, 0.25);
+        }
+        .forms-info h3 { font-size: 1.25rem; font-weight: 800; margin-bottom: 0.25rem; }
+        .forms-info p { font-size: 0.9rem; opacity: 0.9; }
+        .btn-forms {
+            display: inline-flex; align-items: center; gap: 8px; background-color: #FFFFFF; color: #0B532A; padding: 0.85rem 1.6rem; border-radius: 30px; font-weight: 800; font-size: 0.95rem; text-decoration: none; transition: 0.2s; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .btn-forms:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,0,0,0.25); background-color: #F0FDF4; }
+
+        .question-card {
+            background: var(--surface);
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border);
+            padding: 2rem;
+            margin-bottom: 2.5rem;
+            box-shadow: var(--shadow-sm);
+            transition: border-color 0.2s;
+        }
+        .question-card:hover { border-color: rgba(0, 32, 96, 0.3); }
+        .q-header {
+            display: flex; justify-content: space-between; align-items: center; border-bottom: 1.5px solid var(--background); padding-bottom: 0.85rem; margin-bottom: 1.25rem;
+        }
+        .q-badge {
+            background-color: var(--primary); color: #fff; font-size: 0.8rem; font-weight: 700; padding: 4px 12px; border-radius: 20px; text-transform: uppercase;
+        }
+        .q-theme { font-size: 0.85rem; font-weight: 700; color: var(--secondary); text-transform: uppercase; letter-spacing: 0.05em; }
+        
+        .q-statement {
+            font-size: 1.05rem; line-height: 1.65; color: var(--text-primary); margin-bottom: 1.25rem;
+        }
+        .q-highlight {
+            background-color: var(--secondary-light); padding: 0.85rem 1.25rem; border-radius: var(--radius-sm); border-left: 4px solid var(--secondary); margin: 0.85rem 0 1.25rem 0; font-size: 0.95rem; color: var(--primary); line-height: 1.6;
+        }
+
+        .q-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 1.75rem; align-items: start;
+        }
+        .answer-form {
+            display: flex; flex-direction: column; gap: 1rem;
+        }
+        .input-group label {
+            display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-secondary); margin-bottom: 0.3rem;
+        }
+        .input-group input {
+            width: 100%; padding: 0.75rem 0.9rem; border: 1.5px solid var(--border); border-radius: var(--radius-sm); font-size: 1rem; font-weight: 700; color: var(--text-primary);
+        }
+        .input-group input:focus { border-color: var(--secondary); outline: none; }
+        .input-hint { font-size: 0.75rem; color: var(--text-muted); margin-top: 3px; }
+
+        .btn-check-q {
+            background-color: var(--primary); color: #fff; border: none; padding: 0.75rem 1.25rem; border-radius: var(--radius-sm); font-weight: 700; font-size: 0.9rem; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px;
+        }
+        .btn-check-q:hover { background-color: var(--primary-light); }
+
+        .q-feedback {
+            margin-top: 1rem; padding: 0.85rem 1rem; border-radius: var(--radius-sm); font-size: 0.9rem; display: none; line-height: 1.5;
+        }
+        .q-feedback.correct {
+            display: block; background-color: #ECFDF5; border: 1px solid #A7F3D0; color: #065F46;
+        }
+        .q-feedback.incorrect {
+            display: block; background-color: #FEF2F2; border: 1px solid #FECACA; color: #991B1B;
+        }
+
+        .q-chart-panel {
+            background: #FFFFFF;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.02);
+            min-height: 220px;
+        }
+        .chart-header { font-size: 0.78rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.5rem; letter-spacing: 0.05em; text-align: center; }
+
+        .action-dock {
+            background: var(--surface);
+            border: 2px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 1.5rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+            box-shadow: var(--shadow-md);
+            margin-top: 3rem;
+        }
+        .action-dock-text h4 { font-size: 1.15rem; color: var(--primary); font-weight: 800; }
+        .action-dock-text p { font-size: 0.85rem; color: var(--text-secondary); }
+        .btn-export-pdf {
+            display: inline-flex; align-items: center; gap: 8px; background-color: var(--secondary); color: #fff; border: none; padding: 0.95rem 2rem; border-radius: var(--radius-sm); font-size: 1rem; font-weight: 800; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 12px rgba(0,128,255,0.3);
+        }
+        .btn-export-pdf:hover { background-color: var(--primary-light); transform: translateY(-2px); }
+
+        @media (max-width: 900px) {
+            .student-box { grid-template-columns: 1fr; }
+            .q-grid { grid-template-columns: 1fr; gap: 1.5rem; }
+            .forms-callout { flex-direction: column; align-items: flex-start; }
+            .action-dock { flex-direction: column; align-items: stretch; text-align: center; }
+            .btn-export-pdf { width: 100%; justify-content: center; }
+        }
+
+        @media print {
+            body { background: #fff !important; color: #000 !important; padding: 0; }
+            header, .forms-callout, .action-dock, .btn-check-q, .input-hint { display: none !important; }
+            .container { max-width: 100% !important; padding: 0 !important; }
+            .intro-card { background: #002060 !important; color: #fff !important; -webkit-print-color-adjust: exact; padding: 1.25rem !important; }
+            .student-box { border: 1.5px solid #002060 !important; padding: 1rem !important; margin-bottom: 1.5rem !important; }
+            .question-card { border: 1px solid #CBD5E1 !important; page-break-inside: avoid; margin-bottom: 1.5rem !important; box-shadow: none !important; }
+            .q-chart-panel { border: 1px solid #ccc !important; }
+            input { border: 1px solid #000 !important; color: #000 !important; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="container header-content">
+            <div class="brand-box">
+                <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="100" height="100" rx="16" fill="#002060"/>
+                    <path d="M20 75 V30 L50 30 L50 75" stroke="#FFFFFF" stroke-width="8" stroke-linejoin="round"/>
+                    <path d="M50 30 L80 30 L80 75" stroke="#FFFFFF" stroke-width="8" stroke-linejoin="round"/>
+                    <path d="M30 52 H70" stroke="#0080FF" stroke-width="8"/>
+                </svg>
+                <div class="brand-titles">
+                    <h1>CEST • Centro Universitário Santa Terezinha</h1>
+                    <p>Curso de Administração • Matemática Financeira • Prof. Msc. Philipe Sampaio Lima</p>
+                </div>
+            </div>
+            <div>
+                <a href="10.html" style="font-size:0.85rem; font-weight:700; color:var(--secondary); text-decoration:none; display:flex; align-items:center; gap:4px;">
+                    &larr; Voltar à Aula 3 • Parte 10
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        
+        <section class="intro-card">
+            <h2 class="intro-title">Atividade Avaliativa 3 • Sistema de Amortização Constante (SAC)</h2>
+            <p class="intro-desc">
+                Esta atividade avalia o cálculo da amortização fixa, a redução contínua das prestações em progressão aritmética, a soma total de juros e o comparativo estratégico entre o SAC, o Sistema Francês (Price) e o Sistema Americano.
+                Preencha o seu nome obrigatório, digite as respostas em formato numérico brasileiro (com vírgula) e valide suas respostas com tolerância de 5% antes de emitir a folha em PDF.
+            </p>
+        </section>
+
+        <section class="student-box" id="studentSection">
+            <div class="student-field">
+                <label for="studentName">Nome Completo do Aluno (Obrigatório):</label>
+                <input type="text" id="studentName" placeholder="Digite seu nome completo aqui..." oninput="salvarNome()">
+            </div>
+            <div class="student-meta">
+                <div><strong>Disciplina:</strong> Matemática Financeira (1798)</div>
+                <div><strong>Encontro:</strong> Aula 3 • SAC e Comparativos</div>
+                <div><strong>Data da Sessão:</strong> <span id="sessionDate">--/--/----</span></div>
+            </div>
+        </section>
+
+        <section class="forms-callout">
+            <div class="forms-info">
+                <h3>Envio da Produção Discente Efetiva (TDE - Aula 3)</h3>
+                <p>Após conferir as questões e gerar o seu PDF, envie o documento no formulário oficial da disciplina:</p>
+            </div>
+            <a href="https://forms.gle/CEST_MTMFIN_UNIDADE3_TDE3" target="_blank" rel="noopener noreferrer" class="btn-forms">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                Submeter no Google Forms
+            </a>
+        </section>
+
+        <!-- CONTAINER DAS QUESTÕES DINÂMICAS -->
+        <div id="questionsContainer"></div>
+
+        <div class="action-dock">
+            <div class="action-dock-text">
+                <h4>Finalizou o cálculo das 5 questões?</h4>
+                <p>O arquivo PDF será padronizado como: <code>Aula3_SAC_Comparativos_[Seu_Nome].pdf</code></p>
+            </div>
+            <button class="btn-export-pdf" onclick="exportarPDF()">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Exportar Folha de Resposta em PDF
+            </button>
+        </div>
+
+    </main>
+
+    <script>
+        const fmtBRL = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
+        const fmtNum = (val, dec = 2) => Number(val).toLocaleString('pt-BR', { minimumFractionDigits: dec, maximumFractionDigits: dec });
+
+        function getRandom(min, max, step) {
+            const steps = Math.floor((max - min) / step);
+            return min + (Math.floor(Math.random() * (steps + 1)) * step);
+        }
+
+        const questionData = [
+            {
+                id: 1,
+                empresa: "Construtora Maranhense de Edificações",
+                pv: getRandom(120000, 180000, 10000),
+                taxa: getRandom(1.5, 2.5, 0.5),
+                n: getRandom(5, 8, 1),
+                descContexto: "Aquisição de máquinas para terraplanagem contratada pelo Sistema de Amortização Constante (SAC). Calcule a cota de amortização fixa mensal e o valor da 1ª prestação."
+            },
+            {
+                id: 2,
+                empresa: "Hospital Regional dos Cocais",
+                pv: getRandom(100000, 160000, 10000),
+                taxa: getRandom(2.0, 3.0, 0.5),
+                n: getRandom(6, 10, 2),
+                descContexto: "Modernização do centro cirúrgico financiada pelo SAC. Calcule a redução constante entre prestações consecutivas e o valor da 2ª prestação."
+            },
+            {
+                id: 3,
+                empresa: "Laticínios Vale do Itapecuru",
+                pv: getRandom(80000, 140000, 10000),
+                taxa: getRandom(1.8, 2.6, 0.2),
+                n: getRandom(6, 10, 2),
+                descContexto: "Financiamento de tanques de resfriamento. Determine o saldo devedor na metade do prazo e a soma de todos os juros pagos ao longo de todo o contrato."
+            },
+            {
+                id: 4,
+                empresa: "Distribuidora Açailândia de Alimentos",
+                pv: getRandom(90000, 150000, 10000),
+                taxa: getRandom(2.0, 3.0, 0.5),
+                n: getRandom(4, 6, 1),
+                descContexto: "Confronto direto entre SAC e Price. Calcule o total de juros desembolsados no SAC e a economia obtida em relação à Tabela Price."
+            },
+            {
+                id: 5,
+                empresa: "Agroindustrial Balsas Grãos",
+                pv: getRandom(150000, 250000, 10000),
+                taxa: getRandom(1.5, 2.5, 0.5),
+                n: getRandom(4, 6, 1),
+                descContexto: "Comparação entre SAC e Sistema Americano (SAA). Apure os juros totais no Sistema Americano e a economia líquida gerada pela escolha do SAC."
+            }
+        ];
+
+        document.addEventListener("DOMContentLoaded", () => {
+            const d = new Date();
+            document.getElementById("sessionDate").textContent = `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
+            
+            const savedName = localStorage.getItem("aluno_mtmfin_nome");
+            if (savedName) document.getElementById("studentName").value = savedName;
+
+            renderQuestions();
+        });
+
+        function salvarNome() {
+            const n = document.getElementById("studentName").value;
+            localStorage.setItem("aluno_mtmfin_nome", n);
+        }
+
+        function renderQuestions() {
+            const container = document.getElementById("questionsContainer");
+            container.innerHTML = "";
+
+            questionData.forEach((q) => {
+                const i = q.taxa / 100;
+                const amort = q.pv / q.n;
+                const pmt1 = amort + (q.pv * i);
+                const razao = amort * i;
+                const pmt2 = pmt1 - razao;
+                const jurosSAC = q.pv * i * (q.n + 1) / 2;
+                const metadePrazo = q.n / 2;
+                const saldoMetade = q.pv - metadePrazo * amort;
+
+                // Price
+                const pmtPrice = q.pv * (i / (1 - Math.pow(1 + i, -q.n)));
+                const jurosPrice = (pmtPrice * q.n) - q.pv;
+                const economiaPrice = jurosPrice - jurosSAC;
+
+                // Americano
+                const jurosSAA = q.pv * i * q.n;
+                const economiaSAA = jurosSAA - jurosSAC;
+
+                q.gabarito = {
+                    amort: amort,
+                    pmt1: pmt1,
+                    razao: razao,
+                    pmt2: pmt2,
+                    saldoMetade: saldoMetade,
+                    jurosSAC: jurosSAC,
+                    jurosPrice: jurosPrice,
+                    economiaPrice: economiaPrice,
+                    jurosSAA: jurosSAA,
+                    economiaSAA: economiaSAA
+                };
+
+                const card = document.createElement("div");
+                card.className = "question-card";
+                card.id = `qCard_${q.id}`;
+
+                let formHtml = "";
+                if (q.id === 1) {
+                    formHtml = `
+                        <p class="q-statement">
+                            A empresa <strong>${q.empresa}</strong> obteve financiamento de <strong>${fmtBRL.format(q.pv)}</strong> pelo Sistema SAC, em <strong>${q.n} parcelas mensais</strong> com taxa de <strong>${q.taxa.toFixed(1).replace('.', ',')}% ao mês</strong>.<br>
+                            ${q.descContexto}
+                        </p>
+                        <div class="q-highlight">
+                            Fórmulas: Amortização Fixa = PV / n | Juros 1 = PV × Taxa | Prestação 1 = Amortização + Juros 1
+                        </div>
+                        <div class="q-grid">
+                            <div class="answer-form">
+                                <div class="input-group">
+                                    <label for="ans_1_amort">1. Amortização mensal constante (R$):</label>
+                                    <input type="text" id="ans_1_amort" placeholder="Ex: 25000,00" oninput="validarNumeroBR(this); atualizarGraficoQuestao(1);">
+                                </div>
+                                <div class="input-group">
+                                    <label for="ans_1_pmt1">2. Valor da 1ª prestação do SAC (R$):</label>
+                                    <input type="text" id="ans_1_pmt1" placeholder="Ex: 28000,00" oninput="validarNumeroBR(this);">
+                                </div>
+                                <button class="btn-check-q" onclick="verificarQuestao(1)">Validar Resposta (Tolerância de 5%)</button>
+                                <div id="fb_1" class="q-feedback"></div>
+                            </div>
+                            <div class="q-chart-panel">
+                                <div class="chart-header">Decomposição da 1ª Parcela (Questão 01)</div>
+                                <svg id="svg_q_1" viewBox="0 0 340 160" style="width:100%; height:150px;"></svg>
+                            </div>
+                        </div>
+                    `;
+                } else if (q.id === 2) {
+                    formHtml = `
+                        <p class="q-statement">
+                            O <strong>${q.empresa}</strong> contraiu <strong>${fmtBRL.format(q.pv)}</strong> pelo SAC em <strong>${q.n} meses</strong> à taxa de <strong>${q.taxa.toFixed(1).replace('.', ',')}% ao mês</strong>.<br>
+                            ${q.descContexto}
+                        </p>
+                        <div class="q-highlight">
+                            Fórmulas: Redução Mensal = Amortização × Taxa | Prestação 2 = Prestação 1 - Redução Mensal
+                        </div>
+                        <div class="q-grid">
+                            <div class="answer-form">
+                                <div class="input-group">
+                                    <label for="ans_2_razao">1. Valor da redução mensal da prestação (R$):</label>
+                                    <input type="text" id="ans_2_razao" placeholder="Ex: 400,00" oninput="validarNumeroBR(this);">
+                                </div>
+                                <div class="input-group">
+                                    <label for="ans_2_pmt2">2. Valor da 2ª prestação do contrato (R$):</label>
+                                    <input type="text" id="ans_2_pmt2" placeholder="Ex: 22000,00" oninput="validarNumeroBR(this); atualizarGraficoQuestao(2);">
+                                </div>
+                                <button class="btn-check-q" onclick="verificarQuestao(2)">Validar Resposta (Tolerância de 5%)</button>
+                                <div id="fb_2" class="q-feedback"></div>
+                            </div>
+                            <div class="q-chart-panel">
+                                <div class="chart-header">Queda das Prestações 1 e 2 (Questão 02)</div>
+                                <svg id="svg_q_2" viewBox="0 0 340 160" style="width:100%; height:150px;"></svg>
+                            </div>
+                        </div>
+                    `;
+                } else if (q.id === 3) {
+                    formHtml = `
+                        <p class="q-statement">
+                            A empresa <strong>${q.empresa}</strong> financiou <strong>${fmtBRL.format(q.pv)}</strong> em <strong>${q.n} meses</strong> à taxa de <strong>${q.taxa.toFixed(1).replace('.', ',')}% ao mês</strong> no SAC.<br>
+                            ${q.descContexto}
+                        </p>
+                        <div class="q-highlight">
+                            Fórmulas: Saldo no Mês k = PV - k × Amortização | Juros Totais SAC = PV × Taxa × (n + 1) / 2
+                        </div>
+                        <div class="q-grid">
+                            <div class="answer-form">
+                                <div class="input-group">
+                                    <label for="ans_3_saldo">1. Saldo devedor na metade do prazo (Mês ${metadePrazo}) em R$:</label>
+                                    <input type="text" id="ans_3_saldo" placeholder="Ex: 50000,00" oninput="validarNumeroBR(this);">
+                                </div>
+                                <div class="input-group">
+                                    <label for="ans_3_juros">2. Soma de todos os juros pagos no SAC (R$):</label>
+                                    <input type="text" id="ans_3_juros" placeholder="Ex: 8400,00" oninput="validarNumeroBR(this); atualizarGraficoQuestao(3);">
+                                </div>
+                                <button class="btn-check-q" onclick="verificarQuestao(3)">Validar Resposta (Tolerância de 5%)</button>
+                                <div id="fb_3" class="q-feedback"></div>
+                            </div>
+                            <div class="q-chart-panel">
+                                <div class="chart-header">Composição Total: Principal vs Juros (Questão 03)</div>
+                                <svg id="svg_q_3" viewBox="0 0 340 160" style="width:100%; height:150px;"></svg>
+                            </div>
+                        </div>
+                    `;
+                } else if (q.id === 4) {
+                    formHtml = `
+                        <p class="q-statement">
+                            A <strong>${q.empresa}</strong> avalia tomar <strong>${fmtBRL.format(q.pv)}</strong> em <strong>${q.n} meses</strong> a <strong>${q.taxa.toFixed(1).replace('.', ',')}% ao mês</strong>. O gestor quer comparar os juros do SAC com os da Tabela Price.<br>
+                            ${q.descContexto}
+                        </p>
+                        <div class="q-highlight">
+                            Fórmulas: Juros SAC = PV × Taxa × (n + 1) / 2 | Economia do SAC = Juros Totais Price - Juros Totais SAC
+                        </div>
+                        <div class="q-grid">
+                            <div class="answer-form">
+                                <div class="input-group">
+                                    <label for="ans_4_juros">1. Juros totais acumulados no SAC (R$):</label>
+                                    <input type="text" id="ans_4_juros" placeholder="Ex: 7500,00" oninput="validarNumeroBR(this);">
+                                </div>
+                                <div class="input-group">
+                                    <label for="ans_4_eco">2. Economia de juros obtida ao optar pelo SAC em vez da Price (R$):</label>
+                                    <input type="text" id="ans_4_eco" placeholder="Ex: 180,00" oninput="validarNumeroBR(this); atualizarGraficoQuestao(4);">
+                                </div>
+                                <button class="btn-check-q" onclick="verificarQuestao(4)">Validar Resposta (Tolerância de 5%)</button>
+                                <div id="fb_4" class="q-feedback"></div>
+                            </div>
+                            <div class="q-chart-panel">
+                                <div class="chart-header">Juros Totais: SAC vs Price (Questão 04)</div>
+                                <svg id="svg_q_4" viewBox="0 0 340 160" style="width:100%; height:150px;"></svg>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    formHtml = `
+                        <p class="q-statement">
+                            A companhia <strong>${q.empresa}</strong> analisa um crédito de <strong>${fmtBRL.format(q.pv)}</strong> por <strong>${q.n} meses</strong> a <strong>${q.taxa.toFixed(1).replace('.', ',')}% ao mês</strong>.<br>
+                            ${q.descContexto}
+                        </p>
+                        <div class="q-highlight">
+                            Fórmulas: Juros Americano = PV × Taxa × n | Economia do SAC = Juros Americano - Juros SAC
+                        </div>
+                        <div class="q-grid">
+                            <div class="answer-form">
+                                <div class="input-group">
+                                    <label for="ans_5_jurossaa">1. Juros totais no Sistema Americano (R$):</label>
+                                    <input type="text" id="ans_5_jurossaa" placeholder="Ex: 24000,00" oninput="validarNumeroBR(this);">
+                                </div>
+                                <div class="input-group">
+                                    <label for="ans_5_ecosaa">2. Economia gerada ao escolher o SAC em vez do Americano (R$):</label>
+                                    <input type="text" id="ans_5_ecosaa" placeholder="Ex: 10000,00" oninput="validarNumeroBR(this); atualizarGraficoQuestao(5);">
+                                </div>
+                                <button class="btn-check-q" onclick="verificarQuestao(5)">Validar Resposta (Tolerância de 5%)</button>
+                                <div id="fb_5" class="q-feedback"></div>
+                            </div>
+                            <div class="q-chart-panel">
+                                <div class="chart-header">Juros Totais: SAC vs Americano (Questão 05)</div>
+                                <svg id="svg_q_5" viewBox="0 0 340 160" style="width:100%; height:150px;"></svg>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                card.innerHTML = `
+                    <div class="q-header">
+                        <span class="q-badge">Questão 0${q.id}</span>
+                        <span class="q-theme">${q.empresa} • Sistema SAC</span>
+                    </div>
+                    ${formHtml}
+                `;
+                container.appendChild(card);
+                atualizarGraficoQuestao(q.id);
+            });
+        }
+
+        function validarNumeroBR(input) {
+            let val = input.value.replace(/[^0-9,]/g, "");
+            const parts = val.split(",");
+            if (parts.length > 2) {
+                val = parts[0] + "," + parts.slice(1).join("");
+            }
+            input.value = val;
+        }
+
+        function parseBRFloat(str) {
+            if (!str) return 0;
+            return parseFloat(str.replace(".", "").replace(",", ".")) || 0;
+        }
+
+        function atualizarGraficoQuestao(qid) {
+            const q = questionData.find(item => item.id === qid);
+            const svg = document.getElementById(`svg_q_${qid}`);
+            if (!svg) return;
+
+            if (qid === 1) {
+                const total = q.gabarito.pmt1;
+                const hAmort = (q.gabarito.amort / total) * 90;
+                const hJuros = ((total - q.gabarito.amort) / total) * 90;
+
+                svg.innerHTML = `
+                    <line x1="25" y1="125" x2="315" y2="125" stroke="#CBD5E1" stroke-width="2"/>
+                    <rect x="70" y="${125 - hAmort}" width="60" height="${hAmort}" fill="#059669" rx="3"/>
+                    <text x="100" y="${118 - hAmort}" font-size="8.5" font-weight="bold" fill="#059669" text-anchor="middle">${fmtBRL.format(q.gabarito.amort)}</text>
+                    <text x="100" y="140" font-size="8.5" fill="#059669" font-weight="700" text-anchor="middle">Amortização</text>
+
+                    <rect x="180" y="${125 - hJuros}" width="60" height="${hJuros}" fill="#DC2626" rx="3"/>
+                    <text x="210" y="${118 - hJuros}" font-size="8.5" font-weight="bold" fill="#DC2626" text-anchor="middle">${fmtBRL.format(total - q.gabarito.amort)}</text>
+                    <text x="210" y="140" font-size="8.5" fill="#DC2626" font-weight="700" text-anchor="middle">Juros Mês 1</text>
+                `;
+            } else if (qid === 2) {
+                const maxVal = q.gabarito.pmt1;
+                const h1 = 90;
+                const h2 = (q.gabarito.pmt2 / maxVal) * 90;
+
+                svg.innerHTML = `
+                    <line x1="25" y1="125" x2="315" y2="125" stroke="#CBD5E1" stroke-width="2"/>
+                    <rect x="70" y="${125 - h1}" width="60" height="${h1}" fill="#002060" rx="3"/>
+                    <text x="100" y="${118 - h1}" font-size="8.5" font-weight="bold" fill="#002060" text-anchor="middle">${fmtBRL.format(q.gabarito.pmt1)}</text>
+                    <text x="100" y="140" font-size="8.5" fill="#002060" font-weight="700" text-anchor="middle">1ª Parcela</text>
+
+                    <rect x="180" y="${125 - h2}" width="60" height="${h2}" fill="#059669" rx="3"/>
+                    <text x="210" y="${118 - h2}" font-size="8.5" font-weight="bold" fill="#059669" text-anchor="middle">${fmtBRL.format(q.gabarito.pmt2)}</text>
+                    <text x="210" y="140" font-size="8.5" fill="#059669" font-weight="700" text-anchor="middle">2ª Parcela</text>
+                `;
+            } else if (qid === 3) {
+                const maxVal = q.pv;
+                const hPv = 90;
+                const hJ = (q.gabarito.jurosSAC / maxVal) * 90;
+
+                svg.innerHTML = `
+                    <line x1="25" y1="125" x2="315" y2="125" stroke="#CBD5E1" stroke-width="2"/>
+                    <rect x="70" y="${125 - hPv}" width="60" height="${hPv}" rx="3" fill="#002060"/>
+                    <text x="100" y="${118 - hPv}" font-size="8.5" font-weight="bold" fill="#002060" text-anchor="middle">${fmtBRL.format(q.pv)}</text>
+                    <text x="100" y="140" font-size="8.5" fill="#002060" font-weight="700" text-anchor="middle">Principal (PV)</text>
+
+                    <rect x="180" y="${125 - hJ}" width="60" height="${hJ}" rx="3" fill="#059669"/>
+                    <text x="210" y="${118 - hJ}" font-size="8.5" font-weight="bold" fill="#059669" text-anchor="middle">${fmtBRL.format(q.gabarito.jurosSAC)}</text>
+                    <text x="210" y="140" font-size="8.5" fill="#059669" font-weight="700" text-anchor="middle">Juros SAC</text>
+                `;
+            } else if (qid === 4) {
+                const maxVal = q.gabarito.jurosPrice;
+                const hSAC = (q.gabarito.jurosSAC / maxVal) * 90;
+                const hPrice = 90;
+
+                svg.innerHTML = `
+                    <line x1="25" y1="125" x2="315" y2="125" stroke="#CBD5E1" stroke-width="2"/>
+                    <rect x="70" y="${125 - hSAC}" width="60" height="${hSAC}" rx="3" fill="#059669"/>
+                    <text x="100" y="${118 - hSAC}" font-size="8.5" font-weight="bold" fill="#059669" text-anchor="middle">${fmtBRL.format(q.gabarito.jurosSAC)}</text>
+                    <text x="100" y="140" font-size="8.5" fill="#059669" font-weight="700" text-anchor="middle">Juros SAC</text>
+
+                    <rect x="180" y="${125 - hPrice}" width="60" height="${hPrice}" rx="3" fill="#002060"/>
+                    <text x="210" y="${118 - hPrice}" font-size="8.5" font-weight="bold" fill="#002060" text-anchor="middle">${fmtBRL.format(q.gabarito.jurosPrice)}</text>
+                    <text x="210" y="140" font-size="8.5" fill="#002060" font-weight="700" text-anchor="middle">Juros Price</text>
+                `;
+            } else {
+                const maxVal = q.gabarito.jurosSAA;
+                const hSAC = (q.gabarito.jurosSAC / maxVal) * 90;
+                const hSAA = 90;
+
+                svg.innerHTML = `
+                    <line x1="25" y1="125" x2="315" y2="125" stroke="#CBD5E1" stroke-width="2"/>
+                    <rect x="70" y="${125 - hSAC}" width="60" height="${hSAC}" rx="3" fill="#059669"/>
+                    <text x="100" y="${118 - hSAC}" font-size="8.5" font-weight="bold" fill="#059669" text-anchor="middle">${fmtBRL.format(q.gabarito.jurosSAC)}</text>
+                    <text x="100" y="140" font-size="8.5" fill="#059669" font-weight="700" text-anchor="middle">Juros SAC</text>
+
+                    <rect x="180" y="${125 - hSAA}" width="60" height="${hSAA}" rx="3" fill="#DC2626"/>
+                    <text x="210" y="${118 - hSAA}" font-size="8.5" font-weight="bold" fill="#DC2626" text-anchor="middle">${fmtBRL.format(q.gabarito.jurosSAA)}</text>
+                    <text x="210" y="140" font-size="8.5" fill="#DC2626" font-weight="700" text-anchor="middle">Americano</text>
+                `;
+            }
+        }
+
+        function verificarQuestao(qid) {
+            const q = questionData.find(item => item.id === qid);
+            const fb = document.getElementById(`fb_${qid}`);
+
+            if (qid === 1) {
+                const userAmort = parseBRFloat(document.getElementById("ans_1_amort").value);
+                const userPmt1 = parseBRFloat(document.getElementById("ans_1_pmt1").value);
+
+                if (userAmort <= 0 || userPmt1 <= 0) {
+                    fb.className = "q-feedback incorrect";
+                    fb.textContent = "Preencha a amortização e a 1ª prestação para validar.";
+                    return;
+                }
+
+                const diffA = Math.abs(userAmort - q.gabarito.amort) / q.gabarito.amort;
+                const diffP = Math.abs(userPmt1 - q.gabarito.pmt1) / q.gabarito.pmt1;
+
+                if (diffA <= 0.05 && diffP <= 0.05) {
+                    fb.className = "q-feedback correct";
+                    fb.innerHTML = `<strong>Correto! (Tolerância de 5%)</strong><br>Amortização Fixa: ${fmtBRL.format(q.gabarito.amort)} | 1ª Prestação: ${fmtBRL.format(q.gabarito.pmt1)}`;
+                } else {
+                    fb.className = "q-feedback incorrect";
+                    fb.innerHTML = `<strong>Valores incorretos.</strong> Lembre-se: Amortização = PV / n, e Prestação 1 = Amortização + (PV × Taxa).`;
+                }
+            } else if (qid === 2) {
+                const userRazao = parseBRFloat(document.getElementById("ans_2_razao").value);
+                const userPmt2 = parseBRFloat(document.getElementById("ans_2_pmt2").value);
+
+                if (userRazao <= 0 || userPmt2 <= 0) {
+                    fb.className = "q-feedback incorrect";
+                    fb.textContent = "Preencha a redução mensal e a 2ª prestação.";
+                    return;
+                }
+
+                const diffR = Math.abs(userRazao - q.gabarito.razao) / q.gabarito.razao;
+                const diffP = Math.abs(userPmt2 - q.gabarito.pmt2) / q.gabarito.pmt2;
+
+                if (diffR <= 0.05 && diffP <= 0.05) {
+                    fb.className = "q-feedback correct";
+                    fb.innerHTML = `<strong>Correto!</strong> Redução Mensal: ${fmtBRL.format(q.gabarito.razao)} | 2ª Prestação: ${fmtBRL.format(q.gabarito.pmt2)}`;
+                } else {
+                    fb.className = "q-feedback incorrect";
+                    fb.innerHTML = `<strong>Valores incorretos.</strong> Redução = Amortização × Taxa, e Prestação 2 = Prestação 1 - Redução.`;
+                }
+            } else if (qid === 3) {
+                const userSaldo = parseBRFloat(document.getElementById("ans_3_saldo").value);
+                const userJuros = parseBRFloat(document.getElementById("ans_3_juros").value);
+
+                if (userSaldo <= 0 || userJuros <= 0) {
+                    fb.className = "q-feedback incorrect";
+                    fb.textContent = "Preencha o saldo na metade do prazo e os juros totais.";
+                    return;
+                }
+
+                const diffS = Math.abs(userSaldo - q.gabarito.saldoMetade) / q.gabarito.saldoMetade;
+                const diffJ = Math.abs(userJuros - q.gabarito.jurosSAC) / q.gabarito.jurosSAC;
+
+                if (diffS <= 0.05 && diffJ <= 0.05) {
+                    fb.className = "q-feedback correct";
+                    fb.innerHTML = `<strong>Correto!</strong> Saldo no Mês ${q.n / 2}: ${fmtBRL.format(q.gabarito.saldoMetade)} | Juros Totais SAC: ${fmtBRL.format(q.gabarito.jurosSAC)}`;
+                } else {
+                    fb.className = "q-feedback incorrect";
+                    fb.innerHTML = `<strong>Valores incorretos.</strong> Saldo na metade = PV / 2. Juros Totais SAC = PV × Taxa × (n + 1) / 2.`;
+                }
+            } else if (qid === 4) {
+                const userJuros = parseBRFloat(document.getElementById("ans_4_juros").value);
+                const userEco = parseBRFloat(document.getElementById("ans_4_eco").value);
+
+                if (userJuros <= 0 || userEco <= 0) {
+                    fb.className = "q-feedback incorrect";
+                    fb.textContent = "Preencha os juros do SAC e a economia em relação à Price.";
+                    return;
+                }
+
+                const diffJ = Math.abs(userJuros - q.gabarito.jurosSAC) / q.gabarito.jurosSAC;
+                const diffE = Math.abs(userEco - q.gabarito.economiaPrice) / q.gabarito.economiaPrice;
+
+                if (diffJ <= 0.05 && diffE <= 0.05) {
+                    fb.className = "q-feedback correct";
+                    fb.innerHTML = `<strong>Correto!</strong> Juros SAC: ${fmtBRL.format(q.gabarito.jurosSAC)} | Economia vs. Price: ${fmtBRL.format(q.gabarito.economiaPrice)}`;
+                } else {
+                    fb.className = "q-feedback incorrect";
+                    fb.innerHTML = `<strong>Valores incorretos.</strong> Calcule os juros totais do SAC e subtraia dos juros totais do Sistema Price.`;
+                }
+            } else {
+                const userJurosSAA = parseBRFloat(document.getElementById("ans_5_jurossaa").value);
+                const userEcoSAA = parseBRFloat(document.getElementById("ans_5_ecosaa").value);
+
+                if (userJurosSAA <= 0 || userEcoSAA <= 0) {
+                    fb.className = "q-feedback incorrect";
+                    fb.textContent = "Preencha os juros do Sistema Americano e a economia.";
+                    return;
+                }
+
+                const diffJ = Math.abs(userJurosSAA - q.gabarito.jurosSAA) / q.gabarito.jurosSAA;
+                const diffE = Math.abs(userEcoSAA - q.gabarito.economiaSAA) / q.gabarito.economiaSAA;
+
+                if (diffJ <= 0.05 && diffE <= 0.05) {
+                    fb.className = "q-feedback correct";
+                    fb.innerHTML = `<strong>Perfeito!</strong> Juros Americano: ${fmtBRL.format(q.gabarito.jurosSAA)} | Economia com SAC: ${fmtBRL.format(q.gabarito.economiaSAA)}`;
+                } else {
+                    fb.className = "q-feedback incorrect";
+                    fb.innerHTML = `<strong>Valores incorretos.</strong> Juros Americano = PV × Taxa × n. A economia é a diferença para os juros do SAC.`;
+                }
+            }
+        }
+
+        function exportarPDF() {
+            const nomeAluno = document.getElementById("studentName").value.trim();
+            if (!nomeAluno) {
+                alert("ATENÇÃO: É obrigatório inserir o Nome Completo do Aluno no início da página antes de exportar o PDF!");
+                document.getElementById("studentName").focus();
+                document.getElementById("studentSection").scrollIntoView({ behavior: 'smooth' });
+                return;
+            }
+
+            const nomeFormatado = nomeAluno.replace(/[^a-zA-Z0-9À-ÿ\s]/g, "").trim().replace(/\s+/g, "_");
+            const tituloOriginal = document.title;
+            
+            document.title = `Aula3_SAC_Comparativos_${nomeFormatado}`;
+            window.print();
+
+            setTimeout(() => {
+                document.title = tituloOriginal;
+            }, 1000);
+        }
+    </script>
+</body>
+</html>

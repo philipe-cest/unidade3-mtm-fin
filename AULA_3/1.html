@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aula 3 • Parte 1 — Conceito e Mecânica do SAC | CEST</title>
+    <meta name="author" content="Prof. Msc. Philipe Sampaio Lima">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23002060'/><circle cx='50' cy='50' r='30' fill='%230080FF'/><text x='50' y='58' font-size='24' font-weight='bold' fill='white' text-anchor='middle'>1</text></svg>">
+    
+    <style>
+        :root {
+            --primary: #002060;
+            --primary-dark: #001138;
+            --primary-light: #003399;
+            --secondary: #0080FF;
+            --secondary-light: #E6F2FF;
+            --accent: #00A3FF;
+            --background: #F4F7FA;
+            --surface: #FFFFFF;
+            --text-primary: #0F172A;
+            --text-secondary: #475569;
+            --text-muted: #64748B;
+            --border: #CBD5E1;
+            --success: #059669;
+            --warning: #D97706;
+            --danger: #DC2626;
+            --radius-md: 12px;
+            --shadow-md: 0 8px 24px -4px rgba(0, 32, 96, 0.12);
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: #0b1329;
+            color: var(--text-primary);
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .stage {
+            width: 96vw;
+            height: 54vw;
+            max-width: 1600px;
+            max-height: 900px;
+            background-color: var(--background);
+            border-radius: var(--radius-md);
+            box-shadow: 0 15px 45px rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .slide-topbar {
+            height: 52px;
+            background-color: var(--primary);
+            color: #FFFFFF;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 1.5rem;
+            flex-shrink: 0;
+            border-bottom: 2px solid var(--secondary);
+        }
+        .topbar-left { display: flex; align-items: center; gap: 12px; font-weight: 700; font-size: 0.9rem; }
+        .topbar-badge {
+            background-color: rgba(255,255,255,0.15); padding: 3px 8px; border-radius: 4px; color: var(--secondary-light); font-size: 0.75rem;
+        }
+        .topbar-right { display: flex; align-items: center; gap: 15px; font-size: 0.85rem; color: rgba(255,255,255,0.85); }
+
+        .slide-viewport { flex-grow: 1; position: relative; overflow: hidden; }
+        .slide {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            padding: 2.2rem 3rem; display: flex; flex-direction: column; opacity: 0; visibility: hidden;
+            transform: translateX(30px); transition: all 0.28s ease-out; overflow-y: auto;
+        }
+        .slide.active { opacity: 1; visibility: visible; transform: translateX(0); z-index: 2; }
+
+        .slide-tag { color: var(--secondary); font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.35rem; }
+        .slide-title { font-size: 1.85rem; font-weight: 800; color: var(--primary); line-height: 1.25; margin-bottom: 1.25rem; }
+        .slide-content { font-size: 1.08rem; line-height: 1.6; color: var(--text-secondary); flex-grow: 1; display: flex; flex-direction: column; justify-content: center; }
+
+        .highlight-box {
+            background-color: var(--surface); border-left: 5px solid var(--secondary); padding: 1.25rem 1.75rem;
+            border-radius: 0 var(--radius-md) var(--radius-md) 0; box-shadow: var(--shadow-md); margin: 1rem 0;
+        }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; align-items: stretch; }
+        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.2rem; }
+        .card-panel { background: var(--surface); padding: 1.4rem; border-radius: var(--radius-md); border: 1px solid var(--border); box-shadow: 0 2px 6px rgba(0,0,0,0.03); }
+
+        .sim-container {
+            display: grid; grid-template-columns: 0.95fr 1.05fr; gap: 1.5rem; background: var(--surface); padding: 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--border);
+        }
+        .sim-form { display: flex; flex-direction: column; gap: 0.6rem; font-size: 0.88rem; }
+        .form-row { display: flex; flex-direction: column; gap: 0.2rem; }
+        .form-row label { font-weight: 600; color: var(--primary); font-size: 0.82rem; }
+        .form-row input { padding: 0.45rem 0.65rem; border: 1px solid var(--border); border-radius: 6px; font-weight: 600; color: var(--text-primary); }
+        .btn-calc { background: var(--secondary); color: #fff; border: none; padding: 0.65rem; border-radius: 6px; font-weight: 700; cursor: pointer; transition: 0.2s; margin-top: 0.4rem; }
+        .btn-calc:hover { background: var(--primary); }
+        .sim-results {
+            background: var(--background); border-radius: 8px; padding: 1.1rem; display: flex; flex-direction: column; justify-content: space-between; border: 1px solid var(--border);
+        }
+        .res-highlight { font-size: 1.45rem; font-weight: 800; color: var(--primary); }
+
+        .chart-box {
+            background: #fff; border: 1px solid var(--border); border-radius: 6px; padding: 0.75rem; display: flex; flex-direction: column; align-items: center; justify-content: center; margin-top: 0.5rem;
+        }
+
+        .slide-footer {
+            height: 56px; background-color: var(--surface); border-top: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: space-between; padding: 0 1.5rem; flex-shrink: 0;
+        }
+        .nav-controls { display: flex; align-items: center; gap: 10px; }
+        .btn-nav {
+            background-color: var(--background); border: 1px solid var(--border); color: var(--primary);
+            padding: 6px 14px; border-radius: 6px; font-weight: 700; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; gap: 6px;
+        }
+        .btn-nav:hover { background-color: var(--secondary); color: #FFFFFF; }
+        .progress-indicator { font-weight: 700; font-size: 0.88rem; color: var(--text-muted); }
+    </style>
+</head>
+<body>
+
+    <div class="stage">
+        <div class="slide-topbar">
+            <div class="topbar-left">
+                <span>CEST • MATEMÁTICA FINANCEIRA</span>
+                <span class="topbar-badge">Aula 3 • Parte 1</span>
+            </div>
+            <div class="topbar-right">
+                <span>Prof. Msc. Philipe Sampaio Lima</span>
+                <button class="btn-nav" id="btnFullscreen" style="padding:4px 8px; font-size:0.75rem;">⛶ Tela Cheia</button>
+            </div>
+        </div>
+
+        <div class="slide-viewport">
+            
+            <!-- SLIDE 1: ABERTURA -->
+            <div class="slide active">
+                <span class="slide-tag">Unidade III • Sistema SAC</span>
+                <h1 class="slide-title" style="font-size:2.35rem;">Conceito e Mecânica do Sistema de Amortização Constante (SAC)</h1>
+                <div class="slide-content">
+                    <div class="highlight-box">
+                        <h3 style="color:var(--primary); font-size:1.25rem; margin-bottom:0.5rem;">Objetivos Desta Sessão:</h3>
+                        <p>1. Compreender a definição estrutural do <strong>SAC (Sistema de Amortização Constante)</strong> e sua presença no mercado financeiro brasileiro.</p>
+                        <p>2. Diferenciar o SAC do Sistema Price: no SAC a <strong>amortização é fixa</strong> e a <strong>prestação é decrescente</strong>.</p>
+                        <p>3. Analisar a redução contínua do saldo devedor e a consequente diminuição dos juros em cada parcela.</p>
+                        <p>4. Manipular o primeiro simulador dinâmico observando a curvatura decrescente das prestações periódicas.</p>
+                    </div>
+                    <p style="color:var(--text-muted); font-size:0.95rem;">
+                        Comandos: utilize <kbd>↓ Seta Baixo</kbd> ou <kbd>PgDn</kbd> para avançar e <kbd>↑ Seta Cima</kbd> para retroceder.
+                    </p>
+                </div>
+            </div>
+
+            <!-- SLIDE 2: ORIGEM E APLICAÇÃO NO BRASIL -->
+            <div class="slide">
+                <span class="slide-tag">Contexto Econômico Nacional</span>
+                <h2 class="slide-title">O SAC no Sistema Financeiro Nacional</h2>
+                <div class="slide-content">
+                    <div class="grid-2">
+                        <div class="card-panel" style="border-left:5px solid var(--secondary);">
+                            <h3 style="color:var(--primary); margin-bottom:0.5rem;">Criação e Consolidação</h3>
+                            <p style="font-size:0.93rem;">
+                                Desenvolvido originalmente na Europa, o SAC foi institucionalizado no Brasil na década de 1960 pelo extinto Banco Nacional da Habitação (BNH) para viabilizar as operações do Sistema Financeiro da Habitação (SFH). O objetivo era garantir que o saldo devedor encolhesse de forma real a cada mês.
+                            </p>
+                        </div>
+                        <div class="card-panel" style="border-left:5px solid var(--primary);">
+                            <h3 style="color:var(--primary); margin-bottom:0.5rem;">Onde é Utilizado Hoje?</h3>
+                            <p style="font-size:0.93rem;">
+                                • Crédito Imobiliário residencial e comercial (Caixa Econômica Federal e bancos privados).<br>
+                                • Financiamentos de longo prazo para projetos de infraestrutura (BNDES).<br>
+                                • Linhas de investimento rural e agroindustrial (Banco do Brasil e BNB).<br>
+                                • Financiamentos corporativos de frotas pesadas e galpões logísticos.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="highlight-box" style="margin-top:1rem;">
+                        <strong>Visão Gerencial:</strong> O SAC protege a organização tomadora contra o prolongamento excessivo da dívida, garantindo que o principal diminua com velocidade constante desde o primeiro pagamento.
+                    </div>
+                </div>
+            </div>
+
+            <!-- SLIDE 3: A PREMISSA FUNDAMENTAL DO SAC -->
+            <div class="slide">
+                <span class="slide-tag">Premissa Estrutural</span>
+                <h2 class="slide-title">A Regra de Ouro: Amortização Rigorosamente Igual</h2>
+                <div class="slide-content">
+                    <p style="margin-bottom:1rem;">Diferente da Tabela Price (onde a prestação é constante), no SAC quem se mantém inalterada do início ao fim é a <strong>amortização</strong>:</p>
+                    <div class="card-panel" style="text-align:center; padding:1.4rem; background:linear-gradient(135deg, #001e5c 0%, #002b82 100%); color:#fff;">
+                        <span style="font-size:0.85rem; text-transform:uppercase; color:var(--secondary-light); font-weight:700;">A Premissa Central do SAC</span>
+                        <div style="font-size:1.8rem; font-weight:800; color:#60A5FA; margin-top:0.4rem;">
+                            Amortização = Capital Financiado / Prazo de Pagamento
+                        </div>
+                    </div>
+                    <div class="grid-3" style="margin-top:1.1rem;">
+                        <div class="card-panel">
+                            <h4 style="color:var(--success); margin-bottom:0.3rem;">1. Amortização Fixa</h4>
+                            <p style="font-size:0.88rem;">O valor abatido da dívida é idêntico em todos os períodos: A = PV / n.</p>
+                        </div>
+                        <div class="card-panel">
+                            <h4 style="color:var(--danger); margin-bottom:0.3rem;">2. Juros Decrescentes</h4>
+                            <p style="font-size:0.88rem;">Como o saldo devedor diminui linearmente, os juros periódicos encolhem mês a mês.</p>
+                        </div>
+                        <div class="card-panel">
+                            <h4 style="color:var(--primary); margin-bottom:0.3rem;">3. Prestação Decrescente</h4>
+                            <p style="font-size:0.88rem;">Prestação = Amortização Fixa + Juros Decrescentes. Por isso, a parcela cai a cada mês.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SLIDE 4: ANATOMIA DA PARCELA SAC -->
+            <div class="slide">
+                <span class="slide-tag">Decomposição Periódica</span>
+                <h2 class="slide-title">Por que a Parcela SAC Diminui a Cada Mês?</h2>
+                <div class="slide-content">
+                    <p style="margin-bottom:0.9rem;">A equação fundamental de qualquer financiamento continua sendo respeitada: <strong>Prestação = Amortização + Juros</strong>. A dinâmica interna do SAC segue este fluxo:</p>
+                    <div class="grid-2">
+                        <div class="card-panel" style="border-top:4px solid var(--danger);">
+                            <h4 style="color:var(--danger); margin-bottom:0.4rem;">Primeira Prestação: A Mais Cara</h4>
+                            <p style="font-size:0.92rem;">
+                                • O saldo devedor inicial está no seu valor total máximo.<br>
+                                • Os juros do primeiro mês atingem o teto da operação.<br>
+                                • Somando a Amortização Fixa com os juros máximos, a primeira parcela é o desembolso mais pesado do contrato.
+                            </p>
+                        </div>
+                        <div class="card-panel" style="border-top:4px solid var(--success);">
+                            <h4 style="color:var(--success); margin-bottom:0.4rem;">Última Prestação: A Mais Barata</h4>
+                            <p style="font-size:0.92rem;">
+                                • Resta apenas uma cota de amortização para extinguir a dívida.<br>
+                                • Os juros incidem apenas sobre essa última fração, tornando-se mínimos.<br>
+                                • A parcela final é composta quase 100% de amortização pura.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="highlight-box" style="margin-top:1rem;">
+                        <strong>Efeito Financeiro:</strong> A empresa começa pagando um valor superior, mas a cada mês o compromisso alivia as saídas de caixa da tesouraria!
+                    </div>
+                </div>
+            </div>
+
+            <!-- SLIDE 5: CASO NUMÉRICO INTRODUTÓRIO -->
+            <div class="slide">
+                <span class="slide-tag">Exemplo Resolvido</span>
+                <h2 class="slide-title">Exemplo Numérico: Operação Comercial em 3 Meses</h2>
+                <div class="slide-content">
+                    <p><strong>Cenário:</strong> Uma distribuidora em São Luís contrata financiamento de <strong>R$ 60.000,00</strong> a <strong>2% ao mês</strong> em <strong>3 parcelas mensais</strong> no Sistema SAC:</p>
+                    <div class="card-panel" style="margin-top:0.8rem;">
+                        <h4 style="color:var(--primary); margin-bottom:0.5rem;">Passo a Passo dos Cálculos:</h4>
+                        <p>1. <strong>Cálculo da Amortização Fixa:</strong> A = 60.000 / 3 = <strong>R$ 20.000,00 por mês</strong>.</p>
+                        <p style="margin-top:0.3rem;">2. <strong>Mês 1:</strong> Juros = 60.000 × 0,02 = R$ 1.200,00 | Prestação 1 = 20.000 + 1.200 = <strong style="color:var(--primary);">R$ 21.200,00</strong> | Saldo = R$ 40.000,00</p>
+                        <p style="margin-top:0.3rem;">3. <strong>Mês 2:</strong> Juros = 40.000 × 0,02 = R$ 800,00 | Prestação 2 = 20.000 + 800 = <strong style="color:var(--primary);">R$ 20.800,00</strong> | Saldo = R$ 20.000,00</p>
+                        <p style="margin-top:0.3rem;">4. <strong>Mês 3:</strong> Juros = 20.000 × 0,02 = R$ 400,00 | Prestação 3 = 20.000 + 400 = <strong style="color:var(--primary);">R$ 20.400,00</strong> | Saldo = R$ 0,00</p>
+                        <p style="margin-top:0.4rem; border-top:1px solid var(--border); padding-top:0.4rem;">
+                            <strong>Observe a Queda:</strong> A cada mês a parcela caiu exatamente <strong>R$ 400,00</strong> (20.000 × 0,02)!
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SLIDE 6: SIMULADOR INTERATIVO -->
+            <div class="slide">
+                <span class="slide-tag">Laboratório Dinâmico com SVG</span>
+                <h2 class="slide-title">Simulador: O Perfil Decrescente da Prestação SAC</h2>
+                <div class="slide-content">
+                    <div class="sim-container">
+                        <div class="sim-form">
+                            <div class="form-row">
+                                <label>Capital Financiado (PV em R$):</label>
+                                <input type="number" id="s1_pv" value="60000" step="5000">
+                            </div>
+                            <div class="form-row">
+                                <label>Prazo de Vigência (Meses):</label>
+                                <input type="number" id="s1_n" value="6" min="2" max="24" step="1">
+                            </div>
+                            <div class="form-row">
+                                <label>Taxa de Juros Mensal (% a.m.):</label>
+                                <input type="number" id="s1_i" value="2.0" step="0.1">
+                            </div>
+                            <button class="btn-calc" onclick="calcularSimulador1()">Atualizar Gráfico SAC</button>
+                        </div>
+                        <div class="sim-results">
+                            <div>
+                                <span style="font-size:0.8rem; color:var(--text-muted); font-weight:600;">Amortização Mensal Fixa:</span>
+                                <div id="s1_res_amort" class="res-highlight">R$ 10.000,00</div>
+                                <div id="s1_res_info" style="font-size:0.85rem; color:var(--text-secondary); font-weight:600; margin-top:4px;">
+                                    1ª Parcela: R$ 11.200,00 | Última: R$ 10.200,00 | Queda Mensal: R$ 200,00
+                                </div>
+                            </div>
+                            <div class="chart-box">
+                                <span style="font-size:0.75rem; font-weight:700; color:var(--text-muted); margin-bottom:4px;">PRESTAÇÕES DECRESCENTES: AMORTIZAÇÃO (VERDE) + JUROS (VERMELHO)</span>
+                                <svg id="s1_svg_chart" viewBox="0 0 340 90" style="width:100%; height:85px;"></svg>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SLIDE 7: VERIFICAÇÃO FORMATIVA EM SALA -->
+            <div class="slide">
+                <span class="slide-tag">Verificação Rápida</span>
+                <h2 class="slide-title">Desafio em Sala: Dinâmica do SAC</h2>
+                <div class="slide-content">
+                    <p style="font-size:1.15rem; margin-bottom:1rem;">
+                        Uma indústria obtém um financiamento no Sistema de Amortização Constante (SAC) de <strong>R$ 120.000,00</strong> em <strong>12 parcelas mensais</strong> com taxa de <strong>1,5% ao mês</strong>. O gestor financeiro pode afirmar que a amortização no 6º mês é de R$ 10.000,00?
+                    </p>
+                    <div style="display:flex; flex-direction:column; gap:0.6rem; margin:1rem 0;">
+                        <button class="btn-nav" onclick="checkQuiz1(1, this)" style="justify-content:flex-start; padding:0.75rem 1rem;">
+                            A) Não, porque no SAC a amortização cresce mês a mês acompanhando o saldo devedor.
+                        </button>
+                        <button class="btn-nav" onclick="checkQuiz1(2, this)" style="justify-content:flex-start; padding:0.75rem 1rem;">
+                            B) Sim, porque no SAC a amortização é rigorosamente constante em todos os meses: 120.000 / 12 = R$ 10.000,00.
+                        </button>
+                        <button class="btn-nav" onclick="checkQuiz1(3, this)" style="justify-content:flex-start; padding:0.75rem 1rem;">
+                            C) Não, porque a amortização só é calculada após a dedução dos juros compostos da prestação.
+                        </button>
+                    </div>
+                    <div id="quiz-fb-1" class="highlight-box" style="display:none; margin-top:0.4rem;"></div>
+                </div>
+            </div>
+
+            <!-- SLIDE 8: SÍNTESE E PRÓXIMA PARTE -->
+            <div class="slide">
+                <span class="slide-tag">Fechamento da Parte 1</span>
+                <h2 class="slide-title">Síntese da Aula 3 • Parte 1</h2>
+                <div class="slide-content">
+                    <div class="card-panel">
+                        <h3 style="color:var(--primary); margin-bottom:0.6rem;">Pontos Centrais Dominados:</h3>
+                        <p>✔ O Sistema de Amortização Constante (SAC) caracteriza-se por ter cotas de amortização idênticas em todas as parcelas.</p>
+                        <p>✔ As prestações diminuem a cada mês porque os juros são calculados sobre um saldo devedor que encolhe linearmente.</p>
+                        <p>✔ A primeira prestação é sempre a mais elevada de toda a vida contratual.</p>
+                    </div>
+                    <div class="highlight-box" style="margin-top:1.2rem; text-align:center;">
+                        <h4 style="color:var(--secondary); font-size:1.15rem;">Próxima Apresentação (2.html):</h4>
+                        <p style="margin-top:0.3rem;">Vamos aprofundar o <strong>Cálculo da Amortização Fixa</strong> e investigar por que ela é totalmente independente da taxa de juros do contrato.</p>
+                        <a href="2.html" class="btn-nav" style="display:inline-flex; margin-top:0.8rem; background:var(--secondary); color:#fff; border:none; padding:0.65rem 1.5rem;">
+                            Avançar para Aula 3 • Parte 2 (2.html) &rarr;
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="slide-footer">
+            <div class="nav-controls">
+                <button class="btn-nav" id="btnPrev">← Anterior (↑)</button>
+                <button class="btn-nav" id="btnNext">Próximo (↓) →</button>
+            </div>
+            <div class="progress-indicator" id="slideIndicator">Slide 01 de 08</div>
+            <div>
+                <a href="../index.html" class="btn-nav" style="text-decoration:none;">⌂ Portal Principal</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const slides = document.querySelectorAll('.slide');
+        const totalSlides = slides.length;
+        let currentSlide = 0;
+        const slideIndicator = document.getElementById('slideIndicator');
+        const btnPrev = document.getElementById('btnPrev');
+        const btnNext = document.getElementById('btnNext');
+        const btnFullscreen = document.getElementById('btnFullscreen');
+
+        function updateSlide(index) {
+            slides.forEach((s, idx) => s.classList.toggle('active', idx === index));
+            slideIndicator.textContent = `Slide ${String(index + 1).padStart(2, '0')} de ${String(totalSlides).padStart(2, '0')}`;
+        }
+
+        function nextSlide() {
+            if (currentSlide < totalSlides - 1) {
+                currentSlide++;
+                updateSlide(currentSlide);
+            } else {
+                window.location.href = "2.html";
+            }
+        }
+
+        function prevSlide() {
+            if (currentSlide > 0) {
+                currentSlide--;
+                updateSlide(currentSlide);
+            } else {
+                window.location.href = "../index.html";
+            }
+        }
+
+        btnNext.addEventListener('click', nextSlide);
+        btnPrev.addEventListener('click', prevSlide);
+
+        window.addEventListener('keydown', (e) => {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') return;
+            if (e.key === 'ArrowDown' || e.key === 'PageDown' || e.key === 'ArrowRight') {
+                e.preventDefault();
+                nextSlide();
+            } else if (e.key === 'ArrowUp' || e.key === 'PageUp' || e.key === 'ArrowLeft') {
+                e.preventDefault();
+                prevSlide();
+            } else if (e.key === 'f' || e.key === 'F') {
+                toggleFullscreen();
+            }
+        });
+
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(() => {});
+            } else {
+                if (document.exitFullscreen) document.exitFullscreen();
+            }
+        }
+        btnFullscreen.addEventListener('click', toggleFullscreen);
+
+        const fmtBRL = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
+
+        function calcularSimulador1() {
+            const pv = parseFloat(document.getElementById('s1_pv').value) || 0;
+            const n = Math.min(24, Math.max(2, parseInt(document.getElementById('s1_n').value) || 6));
+            const i = (parseFloat(document.getElementById('s1_i').value) || 0) / 100;
+
+            const amort = pv / n;
+            const pmt1 = amort + (pv * i);
+            const pmtN = amort + (amort * i);
+            const decrescimo = amort * i;
+
+            document.getElementById('s1_res_amort').textContent = fmtBRL.format(amort);
+            document.getElementById('s1_res_info').textContent = 
+                `1ª Parcela: ${fmtBRL.format(pmt1)} | Última (${n}ª): ${fmtBRL.format(pmtN)} | Redução Mensal: ${fmtBRL.format(decrescimo)}`;
+
+            desenharGraficoS1(pv, n, i, amort);
+        }
+
+        function desenharGraficoS1(pv, n, i, amort) {
+            const svg = document.getElementById('s1_svg_chart');
+            const maxPmt = amort + (pv * i);
+            const maxVal = Math.max(maxPmt, 1);
+            
+            const totalWidth = 300;
+            const barWidth = Math.min(26, Math.max(10, Math.floor((totalWidth - (n * 6)) / n)));
+            const gap = Math.floor((totalWidth - (n * barWidth)) / (n + 1));
+            
+            let html = `<line x1="20" y1="72" x2="320" y2="72" stroke="#CBD5E1" stroke-width="1.5"/>`;
+
+            let sdAnterior = pv;
+            for (let m = 1; m <= n; m++) {
+                const juros = sdAnterior * i;
+                const pmt = amort + juros;
+                sdAnterior -= amort;
+
+                const hTotal = (pmt / maxVal) * 58;
+                const hAmort = (amort / pmt) * hTotal;
+                const hJuros = hTotal - hAmort;
+
+                const x = 20 + gap + (m - 1) * (barWidth + gap);
+                const yAmort = 72 - hAmort;
+                const yJuros = yAmort - hJuros;
+
+                html += `
+                    <rect x="${x}" y="${yAmort}" width="${barWidth}" height="${hAmort}" fill="#059669" rx="2"/>
+                    <rect x="${x}" y="${yJuros}" width="${barWidth}" height="${hJuros}" fill="#DC2626" rx="2"/>
+                    <text x="${x + barWidth/2}" y="82" font-size="7.5" fill="#64748B" text-anchor="middle">M${m}</text>
+                `;
+            }
+
+            svg.innerHTML = html;
+        }
+
+        calcularSimulador1();
+
+        function checkQuiz1(op, btn) {
+            const fb = document.getElementById('quiz-fb-1');
+            fb.style.display = 'block';
+            if (op === 2) {
+                fb.style.borderLeftColor = 'var(--success)';
+                fb.innerHTML = `<h4 style="color:var(--success);">Correto! (Alternativa B)</h4>
+                <p>No SAC a amortização é invariável em todos os períodos: A = PV / n. Com PV = R$ 120.000 e n = 12 meses, cada mês recebe amortização exata de R$ 10.000,00.</p>`;
+            } else {
+                fb.style.borderLeftColor = 'var(--danger)';
+                fb.innerHTML = `<h4 style="color:var(--danger);">Atenção!</h4>
+                <p>No SAC a amortização não muda: é a prestação que diminui mês a mês em decorrência da queda dos juros.</p>`;
+            }
+        }
+    </script>
+</body>
+</html>

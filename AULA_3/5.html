@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aula 3 • Parte 5 — Sistema Americano de Amortização (SAA) | CEST</title>
+    <meta name="author" content="Prof. Msc. Philipe Sampaio Lima">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23002060'/><circle cx='50' cy='50' r='30' fill='%230080FF'/><text x='50' y='58' font-size='24' font-weight='bold' fill='white' text-anchor='middle'>5</text></svg>">
+    
+    <style>
+        :root {
+            --primary: #002060;
+            --primary-dark: #001138;
+            --primary-light: #003399;
+            --secondary: #0080FF;
+            --secondary-light: #E6F2FF;
+            --accent: #00A3FF;
+            --background: #F4F7FA;
+            --surface: #FFFFFF;
+            --text-primary: #0F172A;
+            --text-secondary: #475569;
+            --text-muted: #64748B;
+            --border: #CBD5E1;
+            --success: #059669;
+            --warning: #D97706;
+            --danger: #DC2626;
+            --radius-md: 12px;
+            --shadow-md: 0 8px 24px -4px rgba(0, 32, 96, 0.12);
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: #0b1329;
+            color: var(--text-primary);
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .stage {
+            width: 96vw;
+            height: 54vw;
+            max-width: 1600px;
+            max-height: 900px;
+            background-color: var(--background);
+            border-radius: var(--radius-md);
+            box-shadow: 0 15px 45px rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .slide-topbar {
+            height: 52px;
+            background-color: var(--primary);
+            color: #FFFFFF;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 1.5rem;
+            flex-shrink: 0;
+            border-bottom: 2px solid var(--secondary);
+        }
+        .topbar-left { display: flex; align-items: center; gap: 12px; font-weight: 700; font-size: 0.9rem; }
+        .topbar-badge {
+            background-color: rgba(255,255,255,0.15); padding: 3px 8px; border-radius: 4px; color: var(--secondary-light); font-size: 0.75rem;
+        }
+        .topbar-right { display: flex; align-items: center; gap: 15px; font-size: 0.85rem; color: rgba(255,255,255,0.85); }
+
+        .slide-viewport { flex-grow: 1; position: relative; overflow: hidden; }
+        .slide {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            padding: 2.2rem 3rem; display: flex; flex-direction: column; opacity: 0; visibility: hidden;
+            transform: translateX(30px); transition: all 0.28s ease-out; overflow-y: auto;
+        }
+        .slide.active { opacity: 1; visibility: visible; transform: translateX(0); z-index: 2; }
+
+        .slide-tag { color: var(--secondary); font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.35rem; }
+        .slide-title { font-size: 1.85rem; font-weight: 800; color: var(--primary); line-height: 1.25; margin-bottom: 1.25rem; }
+        .slide-content { font-size: 1.08rem; line-height: 1.6; color: var(--text-secondary); flex-grow: 1; display: flex; flex-direction: column; justify-content: center; }
+
+        .highlight-box {
+            background-color: var(--surface); border-left: 5px solid var(--secondary); padding: 1.25rem 1.75rem;
+            border-radius: 0 var(--radius-md) var(--radius-md) 0; box-shadow: var(--shadow-md); margin: 1rem 0;
+        }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.2rem; }
+        .card-panel { background: var(--surface); padding: 1.4rem; border-radius: var(--radius-md); border: 1px solid var(--border); }
+
+        .sim-container {
+            display: grid; grid-template-columns: 0.95fr 1.05fr; gap: 1.5rem; background: var(--surface); padding: 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--border);
+        }
+        .form-row { display: flex; flex-direction: column; gap: 0.2rem; margin-bottom: 0.5rem; }
+        .form-row label { font-weight: 600; color: var(--primary); font-size: 0.82rem; }
+        .form-row input { padding: 0.45rem 0.65rem; border: 1px solid var(--border); border-radius: 6px; font-weight: 600; }
+        .btn-calc { background: var(--secondary); color: #fff; border: none; padding: 0.65rem; border-radius: 6px; font-weight: 700; cursor: pointer; transition: 0.2s; width: 100%; }
+        .btn-calc:hover { background: var(--primary); }
+
+        .chart-box {
+            background: #fff; border: 1px solid var(--border); border-radius: 6px; padding: 0.75rem; display: flex; flex-direction: column; align-items: center; justify-content: center; margin-top: 0.5rem;
+        }
+
+        .slide-footer {
+            height: 56px; background-color: var(--surface); border-top: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: space-between; padding: 0 1.5rem; flex-shrink: 0;
+        }
+        .nav-controls { display: flex; align-items: center; gap: 10px; }
+        .btn-nav {
+            background-color: var(--background); border: 1px solid var(--border); color: var(--primary);
+            padding: 6px 14px; border-radius: 6px; font-weight: 700; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; gap: 6px;
+        }
+        .btn-nav:hover { background-color: var(--secondary); color: #FFFFFF; }
+        .progress-indicator { font-weight: 700; font-size: 0.88rem; color: var(--text-muted); }
+    </style>
+</head>
+<body>
+
+    <div class="stage">
+        <div class="slide-topbar">
+            <div class="topbar-left">
+                <span>CEST • MATEMÁTICA FINANCEIRA</span>
+                <span class="topbar-badge">Aula 3 • Parte 5</span>
+            </div>
+            <div class="topbar-right">
+                <span>Prof. Msc. Philipe Sampaio Lima</span>
+                <button class="btn-nav" id="btnFullscreen" style="padding:4px 8px; font-size:0.75rem;">⛶ Tela Cheia</button>
+            </div>
+        </div>
+
+        <div class="slide-viewport">
+            
+            <!-- SLIDE 1: ABERTURA -->
+            <div class="slide active">
+                <span class="slide-tag">Sistemas Alternativos de Amortização</span>
+                <h1 class="slide-title" style="font-size:2.35rem;">Sistema Americano de Amortização (SAA)</h1>
+                <div class="slide-content">
+                    <div class="highlight-box">
+                        <h3 style="color:var(--primary); font-size:1.25rem; margin-bottom:0.5rem;">Objetivos Desta Sessão:</h3>
+                        <p>1. Compreender o funcionamento do <strong>Sistema Americano (SAA)</strong>: juros periódicos simples e quitação do principal em parcela única final (bullet).</p>
+                        <p>2. Analisar por que o saldo devedor permanece integralmente inalterado do primeiro ao penúltimo mês.</p>
+                        <p>3. Avaliar as aplicações corporativas: emissão de debêntures, títulos de dívida pública e crédito para safras agrícolas.</p>
+                        <p>4. Manipular um simulador dinâmico observando o pico de desembolso no vencimento final da operação.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SLIDE 2: MECÂNICA OPERACIONAL DO SAA -->
+            <div class="slide">
+                <span class="slide-tag">Regra de Funcionamento</span>
+                <h2 class="slide-title">A Mecânica do Sistema Americano</h2>
+                <div class="slide-content">
+                    <p style="margin-bottom:0.8rem;">No Sistema Americano, a empresa tomadora não amortiza nenhum centavo durante a vigência do contrato:</p>
+                    <div class="grid-2">
+                        <div class="card-panel" style="border-left:5px solid var(--secondary);">
+                            <h4 style="color:var(--primary); margin-bottom:0.4rem;">Períodos Intermediários (1 até n-1)</h4>
+                            <p style="font-size:0.92rem;">
+                                • Amortização = R$ 0,00.<br>
+                                • Prestação = Juros do Período (PV × Taxa).<br>
+                                • O saldo devedor permanece rigorosamente igual a 100% do capital inicial.
+                            </p>
+                        </div>
+                        <div class="card-panel" style="border-left:5px solid var(--danger);">
+                            <h4 style="color:var(--danger); margin-bottom:0.4rem;">Período Final (Mês n — Parcela Bullet)</h4>
+                            <p style="font-size:0.92rem;">
+                                • Amortização = Capital Financiado Integral (PV).<br>
+                                • Prestação = PV + Juros do Último Mês.<br>
+                                • A dívida é extinta integralmente de uma única vez no último pagamento.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SLIDE 3: O FUNDO DE AMORTIZAÇÃO (SINKING FUND) -->
+            <div class="slide">
+                <span class="slide-tag">Gestão de Riscos</span>
+                <h2 class="slide-title">O Risco de Liquidez e o Sinking Fund</h2>
+                <div class="slide-content">
+                    <p style="margin-bottom:0.8rem;">O maior perigo do Sistema Americano é a empresa não ter liquidez acumulada no dia final para quitar o principal:</p>
+                    <div class="card-panel" style="background:var(--background); padding:1.2rem;">
+                        <h4 style="color:var(--primary); margin-bottom:0.4rem;">Fundo de Amortização (Sinking Fund):</h4>
+                        <p style="font-size:0.95rem;">
+                            Para mitigar o risco de inadimplência no vencimento, muitas empresas criam uma aplicação financeira paralela (fundo de reserva) onde realizam depósitos mensais que rendem juros no mercado para acumular exatamente o valor do principal (PV) até o vencimento final do contrato.
+                        </p>
+                    </div>
+                    <div class="highlight-box" style="margin-top:1rem;">
+                        <strong>Aplicações Reais:</strong> Títulos do Tesouro Direto (como Tesouro IPCA+ com juros semestrais) e debêntures corporativas funcionam sob a lógica do Sistema Americano!
+                    </div>
+                </div>
+            </div>
+
+            <!-- SLIDE 4: EXEMPLO NUMÉRICO COMPARATIVO -->
+            <div class="slide">
+                <span class="slide-tag">Demonstração Prática</span>
+                <h2 class="slide-title">Exemplo: R$ 60.000 em 4 Meses a 2% a.m. no SAA</h2>
+                <div class="slide-content">
+                    <p>Financiamento de <strong>R$ 60.000,00</strong> contratado a <strong>2% ao mês</strong> em 4 meses no Sistema Americano:</p>
+                    <div class="card-panel" style="font-size:0.92rem; margin-top:0.6rem;">
+                        <p>• Juros mensais constantes = 60.000 × 0,02 = <strong>R$ 1.200,00 por mês</strong>.</p>
+                        <p style="margin-top:0.3rem;">• <strong>Mês 1:</strong> Juros = R$ 1.200,00 | Amortização = R$ 0,00 | Prestação = <strong style="color:var(--primary);">R$ 1.200,00</strong> | Saldo = R$ 60.000,00</p>
+                        <p style="margin-top:0.3rem;">• <strong>Mês 2:</strong> Juros = R$ 1.200,00 | Amortização = R$ 0,00 | Prestação = <strong style="color:var(--primary);">R$ 1.200,00</strong> | Saldo = R$ 60.000,00</p>
+                        <p style="margin-top:0.3rem;">• <strong>Mês 3:</strong> Juros = R$ 1.200,00 | Amortização = R$ 0,00 | Prestação = <strong style="color:var(--primary);">R$ 1.200,00</strong> | Saldo = R$ 60.000,00</p>
+                        <p style="margin-top:0.3rem;">• <strong>Mês 4:</strong> Juros = R$ 1.200,00 | Amortização = R$ 60.000,00 | Prestação = <strong style="color:var(--danger);">R$ 61.200,00</strong> | Saldo = <strong style="color:var(--success);">R$ 0,00</strong></p>
+                        <p style="margin-top:0.4rem; border-top:1px solid var(--border); padding-top:0.4rem;">
+                            <strong>Total de Juros Pagos:</strong> 4 × 1.200 = R$ 4.800,00 (maior do que no Price e no SAC!).
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SLIDE 5: SIMULADOR INTERATIVO SAA -->
+            <div class="slide">
+                <span class="slide-tag">Laboratório de Simulação</span>
+                <h2 class="slide-title">Simulador: O Impacto da Parcela Bullet no Caixa</h2>
+                <div class="slide-content">
+                    <div class="sim-container">
+                        <div>
+                            <div class="form-row">
+                                <label>Capital Financiado (PV em R$):</label>
+                                <input type="number" id="s5_pv" value="60000" step="5000">
+                            </div>
+                            <div class="form-row">
+                                <label>Prazo de Vigência (Meses):</label>
+                                <input type="number" id="s5_n" value="4" min="2" max="12" step="1">
+                            </div>
+                            <div class="form-row">
+                                <label>Taxa de Juros Mensal (% a.m.):</label>
+                                <input type="number" id="s5_i" value="2.0" step="0.1">
+                            </div>
+                            <button class="btn-calc" onclick="calcularSimulador5()">Simular Sistema Americano</button>
+                        </div>
+                        <div style="background:var(--background); padding:1rem; border-radius:8px; display:flex; flex-direction:column; justify-content:space-between; border:1px solid var(--border);">
+                            <div id="s5_res_metricas" style="font-size:0.85rem; line-height:1.6;">
+                                <!-- Preenchido dinamicamente via JS -->
+                            </div>
+                            <div class="chart-box">
+                                <span style="font-size:0.75rem; font-weight:700; color:var(--text-muted); margin-bottom:4px;">DESEMBOLSO NO SAA: JUROS (MESES 1 A N-1) vs. PARCELA BULLET</span>
+                                <svg id="s5_svg_chart" viewBox="0 0 320 75" style="width:100%; height:70px;"></svg>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SLIDE 6: VANTAGENS E DESVANTAGENS CORPORATIVAS -->
+            <div class="slide">
+                <span class="slide-tag">Avaliação Gerencial</span>
+                <h2 class="slide-title">Quando Adotar o Sistema Americano?</h2>
+                <div class="slide-content">
+                    <div class="grid-2">
+                        <div class="card-panel" style="border-top:4px solid var(--success);">
+                            <h4 style="color:var(--success); margin-bottom:0.4rem;">Vantagens para a Empresa</h4>
+                            <p style="font-size:0.92rem;">
+                                • Saídas mínimas de caixa durante a fase de implantação de um projeto produtivo.<br>
+                                • Ideal para safras agrícolas onde a receita só ingressa na colheita final.<br>
+                                • Facilidade de negociação em empréstimos de capital de giro de curto prazo.
+                            </p>
+                        </div>
+                        <div class="card-panel" style="border-top:4px solid var(--danger);">
+                            <h4 style="color:var(--danger); margin-bottom:0.4rem;">Desvantagens e Riscos</h4>
+                            <p style="font-size:0.92rem;">
+                                • É o sistema com o <strong>maior custo total de juros</strong> entre todos os modelos tradicionais.<br>
+                                • Elevadíssimo risco de inadimplência no vencimento caso as receitas finais sofram atraso.<br>
+                                • O saldo devedor não diminui nem um único centavo durante o contrato.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SLIDE 7: VERIFICAÇÃO FORMATIVA EM SALA -->
+            <div class="slide">
+                <span class="slide-tag">Verificação Rápida</span>
+                <h2 class="slide-title">Desafio em Sala: Juros no Sistema Americano</h2>
+                <div class="slide-content">
+                    <p style="font-size:1.15rem; margin-bottom:1rem;">
+                        Uma empresa contrai <strong>R$ 100.000,00</strong> pelo Sistema Americano a <strong>2% ao mês</strong> por <strong>6 meses</strong>. Qual é o valor total de juros pagos ao final da operação?
+                    </p>
+                    <div style="display:flex; flex-direction:column; gap:0.6rem; margin:1rem 0;">
+                        <button class="btn-nav" onclick="checkQuiz5(1, this)" style="justify-content:flex-start; padding:0.75rem 1rem;">
+                            A) R$ 12.000,00, pois os juros são fixos em 100.000 × 2% = R$ 2.000 por mês, totalizando 6 × 2.000.
+                        </button>
+                        <button class="btn-nav" onclick="checkQuiz5(2, this)" style="justify-content:flex-start; padding:0.75rem 1rem;">
+                            B) R$ 7.000,00, porque os juros diminuem com o tempo.
+                        </button>
+                        <button class="btn-nav" onclick="checkQuiz5(3, this)" style="justify-content:flex-start; padding:0.75rem 1rem;">
+                            C) Zero, pois no Sistema Americano os juros só são calculados no ato do resgate.
+                        </button>
+                    </div>
+                    <div id="quiz-fb-5" class="highlight-box" style="display:none; margin-top:0.4rem;"></div>
+                </div>
+            </div>
+
+            <!-- SLIDE 8: SÍNTESE E PRÓXIMA PARTE -->
+            <div class="slide">
+                <span class="slide-tag">Fechamento da Parte 5</span>
+                <h2 class="slide-title">Síntese e Encaminhamento</h2>
+                <div class="slide-content">
+                    <div class="card-panel">
+                        <h3 style="color:var(--primary); margin-bottom:0.6rem;">Pontos Centrais Consolidados:</h3>
+                        <p>✔ No SAA a empresa paga apenas os juros mensais e devolve o principal integralmente no último mês.</p>
+                        <p>✔ É o modelo com menor desembolso intermediário, porém com o maior volume acumulado de juros.</p>
+                        <p>✔ Exige governança rigorosa de liquidez (ou sinking fund) para evitar inadimplência na data final.</p>
+                    </div>
+                    <div class="highlight-box" style="margin-top:1.2rem; text-align:center;">
+                        <h4 style="color:var(--secondary); font-size:1.15rem;">Próxima Apresentação (6.html):</h4>
+                        <p style="margin-top:0.3rem;">Vamos confrontar diretamente os dois gigantes do mercado de crédito: <strong>Confronto Direto SAC versus Price</strong>.</p>
+                        <a href="6.html" class="btn-nav" style="display:inline-flex; margin-top:0.8rem; background:var(--secondary); color:#fff; border:none; padding:0.65rem 1.5rem;">
+                            Avançar para Aula 3 • Parte 6 (6.html) &rarr;
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="slide-footer">
+            <div class="nav-controls">
+                <button class="btn-nav" id="btnPrev">← Anterior (↑)</button>
+                <button class="btn-nav" id="btnNext">Próximo (↓) →</button>
+            </div>
+            <div class="progress-indicator" id="slideIndicator">Slide 01 de 08</div>
+            <div>
+                <a href="4.html" class="btn-nav" style="text-decoration:none;">⮌ Voltar à Parte 4</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const slides = document.querySelectorAll('.slide');
+        const totalSlides = slides.length;
+        let currentSlide = 0;
+        const slideIndicator = document.getElementById('slideIndicator');
+        const btnPrev = document.getElementById('btnPrev');
+        const btnNext = document.getElementById('btnNext');
+        const btnFullscreen = document.getElementById('btnFullscreen');
+
+        function updateSlide(index) {
+            slides.forEach((s, idx) => s.classList.toggle('active', idx === index));
+            slideIndicator.textContent = `Slide ${String(index + 1).padStart(2, '0')} de ${String(totalSlides).padStart(2, '0')}`;
+        }
+
+        function nextSlide() {
+            if (currentSlide < totalSlides - 1) {
+                currentSlide++;
+                updateSlide(currentSlide);
+            } else {
+                window.location.href = "6.html";
+            }
+        }
+
+        function prevSlide() {
+            if (currentSlide > 0) {
+                currentSlide--;
+                updateSlide(currentSlide);
+            } else {
+                window.location.href = "4.html";
+            }
+        }
+
+        btnNext.addEventListener('click', nextSlide);
+        btnPrev.addEventListener('click', prevSlide);
+
+        window.addEventListener('keydown', (e) => {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') return;
+            if (e.key === 'ArrowDown' || e.key === 'PageDown' || e.key === 'ArrowRight') {
+                e.preventDefault();
+                nextSlide();
+            } else if (e.key === 'ArrowUp' || e.key === 'PageUp' || e.key === 'ArrowLeft') {
+                e.preventDefault();
+                prevSlide();
+            } else if (e.key === 'f' || e.key === 'F') {
+                toggleFullscreen();
+            }
+        });
+
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(() => {});
+            } else {
+                if (document.exitFullscreen) document.exitFullscreen();
+            }
+        }
+        btnFullscreen.addEventListener('click', toggleFullscreen);
+
+        const fmtBRL = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
+
+        function calcularSimulador5() {
+            const pv = parseFloat(document.getElementById('s5_pv').value) || 0;
+            const n = Math.min(12, Math.max(2, parseInt(document.getElementById('s5_n').value) || 4));
+            const i = (parseFloat(document.getElementById('s5_i').value) || 0) / 100;
+
+            const jurosMes = pv * i;
+            const jurosTotais = jurosMes * n;
+            const parcelaFinal = pv + jurosMes;
+            const desembolsoTotal = pv + jurosTotais;
+
+            document.getElementById('s5_res_metricas').innerHTML = `
+                <div>• Prestações dos Meses 1 a ${n - 1}: <strong>${fmtBRL.format(jurosMes)}</strong> (apenas juros)</div>
+                <div>• Última Prestação (${n}º mês): <strong style="color:var(--danger);">${fmtBRL.format(parcelaFinal)}</strong></div>
+                <div>• Total de Juros Pagos: <strong style="color:var(--danger);">${fmtBRL.format(jurosTotais)}</strong></div>
+                <div>• Desembolso Total: <strong>${fmtBRL.format(desembolsoTotal)}</strong></div>
+            `;
+
+            desenharGraficoS5(pv, jurosMes, n);
+        }
+
+        function desenharGraficoS5(pv, jurosMes, n) {
+            const svg = document.getElementById('s5_svg_chart');
+            const maxVal = pv + jurosMes;
+            const totalWidth = 300;
+            const barWidth = Math.min(26, Math.max(12, Math.floor((totalWidth - (n * 8)) / n)));
+            const gap = Math.floor((totalWidth - (n * barWidth)) / (n + 1));
+
+            let html = `<line x1="20" y1="65" x2="310" y2="65" stroke="#CBD5E1" stroke-width="1.5"/>`;
+
+            for (let m = 1; m <= n; m++) {
+                const x = 20 + gap + (m - 1) * (barWidth + gap);
+                if (m < n) {
+                    const hJuros = Math.max(8, (jurosMes / maxVal) * 55);
+                    const yJuros = 65 - hJuros;
+                    html += `
+                        <rect x="${x}" y="${yJuros}" width="${barWidth}" height="${hJuros}" fill="#DC2626" rx="2"/>
+                        <text x="${x + barWidth/2}" y="75" font-size="7.5" fill="#64748B" text-anchor="middle">M${m}</text>
+                    `;
+                } else {
+                    const hAmort = (pv / maxVal) * 55;
+                    const hJuros = (jurosMes / maxVal) * 55;
+                    const yAmort = 65 - hAmort;
+                    const yJuros = yAmort - hJuros;
+                    html += `
+                        <rect x="${x}" y="${yAmort}" width="${barWidth}" height="${hAmort}" fill="#059669" rx="2"/>
+                        <rect x="${x}" y="${yJuros}" width="${barWidth}" height="${hJuros}" fill="#DC2626" rx="2"/>
+                        <text x="${x + barWidth/2}" y="75" font-size="7.5" font-weight="bold" fill="#002060" text-anchor="middle">M${n}</text>
+                    `;
+                }
+            }
+
+            svg.innerHTML = html;
+        }
+
+        calcularSimulador5();
+
+        function checkQuiz5(op, btn) {
+            const fb = document.getElementById('quiz-fb-5');
+            fb.style.display = 'block';
+            if (op === 1) {
+                fb.style.borderLeftColor = 'var(--success)';
+                fb.innerHTML = `<h4 style="color:var(--success);">Correto! (Alternativa A)</h4>
+                <p>Como o saldo devedor permanece em R$ 100.000 durante todos os períodos, cada mês gera rigorosamente: 100.000 × 0,02 = R$ 2.000,00 de juros. Em 6 meses: 6 × 2.000 = <strong>R$ 12.000,00</strong>.</p>`;
+            } else {
+                fb.style.borderLeftColor = 'var(--danger)';
+                fb.innerHTML = `<h4 style="color:var(--danger);">Atenção!</h4>
+                <p>No SAA não há abatimento do principal antes do final. Portanto, a dívida permanece 100% ativa, gerando juros integrais em todos os meses.</p>`;
+            }
+        }
+    </script>
+</body>
+</html>

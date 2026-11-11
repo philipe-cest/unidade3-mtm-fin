@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aula 3 • Parte 9 — Grande Simulador Comparativo Multissistema | CEST</title>
+    <meta name="author" content="Prof. Msc. Philipe Sampaio Lima">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23002060'/><circle cx='50' cy='50' r='30' fill='%230080FF'/><text x='50' y='58' font-size='24' font-weight='bold' fill='white' text-anchor='middle'>9</text></svg>">
+    
+    <style>
+        :root {
+            --primary: #002060;
+            --primary-dark: #001138;
+            --primary-light: #003399;
+            --secondary: #0080FF;
+            --secondary-light: #E6F2FF;
+            --accent: #00A3FF;
+            --background: #F4F7FA;
+            --surface: #FFFFFF;
+            --text-primary: #0F172A;
+            --text-secondary: #475569;
+            --text-muted: #64748B;
+            --border: #CBD5E1;
+            --success: #059669;
+            --warning: #D97706;
+            --danger: #DC2626;
+            --radius-md: 12px;
+            --shadow-md: 0 8px 24px -4px rgba(0, 32, 96, 0.12);
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: #0b1329;
+            color: var(--text-primary);
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .stage {
+            width: 96vw;
+            height: 54vw;
+            max-width: 1600px;
+            max-height: 900px;
+            background-color: var(--background);
+            border-radius: var(--radius-md);
+            box-shadow: 0 15px 45px rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .slide-topbar {
+            height: 52px;
+            background-color: var(--primary);
+            color: #FFFFFF;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 1.5rem;
+            flex-shrink: 0;
+            border-bottom: 2px solid var(--secondary);
+        }
+        .topbar-left { display: flex; align-items: center; gap: 12px; font-weight: 700; font-size: 0.9rem; }
+        .topbar-badge {
+            background-color: rgba(255,255,255,0.15); padding: 3px 8px; border-radius: 4px; color: var(--secondary-light); font-size: 0.75rem;
+        }
+        .topbar-right { display: flex; align-items: center; gap: 15px; font-size: 0.85rem; color: rgba(255,255,255,0.85); }
+
+        .slide-viewport { flex-grow: 1; position: relative; overflow: hidden; }
+        .slide {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            padding: 2.2rem 3rem; display: flex; flex-direction: column; opacity: 0; visibility: hidden;
+            transform: translateX(30px); transition: all 0.28s ease-out; overflow-y: auto;
+        }
+        .slide.active { opacity: 1; visibility: visible; transform: translateX(0); z-index: 2; }
+
+        .slide-tag { color: var(--secondary); font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.35rem; }
+        .slide-title { font-size: 1.85rem; font-weight: 800; color: var(--primary); line-height: 1.25; margin-bottom: 1.25rem; }
+        .slide-content { font-size: 1.08rem; line-height: 1.6; color: var(--text-secondary); flex-grow: 1; display: flex; flex-direction: column; justify-content: center; }
+
+        .highlight-box {
+            background-color: var(--surface); border-left: 5px solid var(--secondary); padding: 1.25rem 1.75rem;
+            border-radius: 0 var(--radius-md) var(--radius-md) 0; box-shadow: var(--shadow-md); margin: 0.8rem 0;
+        }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.2rem; }
+        .card-panel { background: var(--surface); padding: 1.3rem; border-radius: var(--radius-md); border: 1px solid var(--border); }
+
+        .sim-container {
+            display: grid; grid-template-columns: 0.85fr 1.15fr; gap: 1.25rem; background: var(--surface); padding: 1.1rem; border-radius: var(--radius-md); border: 1px solid var(--border);
+        }
+        .form-row { display: flex; flex-direction: column; gap: 0.2rem; margin-bottom: 0.4rem; }
+        .form-row label { font-weight: 600; color: var(--primary); font-size: 0.82rem; }
+        .form-row input { padding: 0.45rem 0.65rem; border: 1px solid var(--border); border-radius: 6px; font-weight: 600; }
+        .btn-calc { background: var(--secondary); color: #fff; border: none; padding: 0.65rem; border-radius: 6px; font-weight: 700; cursor: pointer; transition: 0.2s; width: 100%; }
+        .btn-calc:hover { background: var(--primary); }
+
+        .table-mini { width: 100%; border-collapse: collapse; font-size: 0.8rem; margin-top: 0.4rem; }
+        .table-mini th { background-color: var(--primary); color: #fff; padding: 0.4rem 0.5rem; text-align: center; }
+        .table-mini td { padding: 0.4rem 0.5rem; border-bottom: 1px solid var(--border); text-align: right; }
+        .table-mini tr:nth-child(even) { background-color: var(--background); }
+
+        .chart-box {
+            background: #fff; border: 1px solid var(--border); border-radius: 6px; padding: 0.75rem; display: flex; flex-direction: column; align-items: center; justify-content: center; margin-top: 0.5rem;
+        }
+
+        .slide-footer {
+            height: 56px; background-color: var(--surface); border-top: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: space-between; padding: 0 1.5rem; flex-shrink: 0;
+        }
+        .nav-controls { display: flex; align-items: center; gap: 10px; }
+        .btn-nav {
+            background-color: var(--background); border: 1px solid var(--border); color: var(--primary);
+            padding: 6px 14px; border-radius: 6px; font-weight: 700; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; gap: 6px;
+        }
+        .btn-nav:hover { background-color: var(--secondary); color: #FFFFFF; }
+        .progress-indicator { font-weight: 700; font-size: 0.88rem; color: var(--text-muted); }
+    </style>
+</head>
+<body>
+
+    <div class="stage">
+        <div class="slide-topbar">
+            <div class="topbar-left">
+                <span>CEST • MATEMÁTICA FINANCEIRA</span>
+                <span class="topbar-badge">Aula 3 • Parte 9</span>
+            </div>
+            <div class="topbar-right">
+                <span>Prof. Msc. Philipe Sampaio Lima</span>
+                <button class="btn-nav" id="btnFullscreen" style="padding:4px 8px; font-size:0.75rem;">⛶ Tela Cheia</button>
+            </div>
+        </div>
+
+        <div class="slide-viewport">
+            
+            <!-- SLIDE 1: ABERTURA -->
+            <div class="slide active">
+                <span class="slide-tag">Laboratório de Simulação Comparativa</span>
+                <h1 class="slide-title" style="font-size:2.35rem;">Grande Simulador Comparativo Multissistema</h1>
+                <div class="slide-content">
+                    <div class="highlight-box">
+                        <h3 style="color:var(--primary); font-size:1.25rem; margin-bottom:0.5rem;">Objetivos Deste Laboratório Executivo:</h3>
+                        <p>1. Confrontar instantaneamente os 3 sistemas clássicos de amortização: <strong>SAC vs. Price vs. Americano (SAA)</strong>.</p>
+                        <p>2. Comparar em tempo real a 1ª parcela, a última parcela, o desembolso total e o volume consolidado de juros.</p>
+                        <p>3. Observar a distribuição gráfica em SVG das três propostas para qualquer valor de capital, prazo e taxa.</p>
+                        <p>4. Subsidiar a mesa de negociação bancária da diretoria financeira.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SLIDE 2: OS PARÂMETROS DO SIMULADOR -->
+            <div class="slide">
+                <span class="slide-tag">Ambiente de Teste</span>
+                <h2 class="slide-title">Simulador em Tempo Real: SAC vs. Price vs. SAA</h2>
+                <div class="slide-content">
+                    <div class="sim-container">
+                        <div>
+                            <div class="form-row">
+                                <label>Capital Financiado (PV em R$):</label>
+                                <input type="number" id="s9_pv" value="120000" step="10000">
+                            </div>
+                            <div class="form-row">
+                                <label>Prazo de Vigência (Meses):</label>
+                                <input type="number" id="s9_n" value="6" min="3" max="24" step="1">
+                            </div>
+                            <div class="form-row">
+                                <label>Taxa de Juros Mensal (% a.m.):</label>
+                                <input type="number" id="s9_i" value="2.0" step="0.1">
+                            </div>
+                            <button class="btn-calc" onclick="calcularSimulador9()">Simular e Comparar Cenários</button>
+                        </div>
+
+                        <div style="background:var(--background); padding:0.8rem; border-radius:8px; border:1px solid var(--border); display:flex; flex-direction:column; justify-content:space-between;">
+                            <div>
+                                <table class="table-mini" id="s9_tabela">
+                                    <thead>
+                                        <tr>
+                                            <th style="text-align:left;">Sistema</th>
+                                            <th>1ª Prestação</th>
+                                            <th>Última Prest.</th>
+                                            <th>Juros Totais</th>
+                                            <th>Total Pago</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="s9_tbody">
+                                        <!-- Preenchido dinamicamente via JS -->
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div class="chart-box">
+                                <span style="font-size:0.75rem; font-weight:700; color:var(--text-muted); margin-bottom:4px;">CUSTO TOTAL DE JUROS: SAC (VERDE) vs. PRICE (AZUL) vs. AMERICANO (VERMELHO)</span>
+                                <svg id="s9_svg_chart" viewBox="0 0 320 80" style="width:100%; height:75px;"></svg>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SLIDE 3: ANÁLISE DOS RESULTADOS -->
+            <div class="slide">
+                <span class="slide-tag">Auditoria de Resultados</span>
+                <h2 class="slide-title">O que os Números Revelam ao Administrador?</h2>
+                <div class="slide-content">
+                    <div class="grid-3">
+                        <div class="card-panel" style="border-top:4px solid var(--success);">
+                            <h4 style="color:var(--success); margin-bottom:0.3rem;">O Campeão do Custo: SAC</h4>
+                            <p style="font-size:0.88rem;">Ao amortizar parcelas iguais de principal todos os meses, o SAC encerra o contrato com a menor transferência líquida de juros ao sistema bancário.</p>
+                        </div>
+                        <div class="card-panel" style="border-top:4px solid var(--primary);">
+                            <h4 style="color:var(--primary); margin-bottom:0.3rem;">O Campeão da Previsibilidade: Price</h4>
+                            <p style="font-size:0.88rem;">Permite travar saídas absolutamente uniformes na tesouraria, viabilizando compras parceladas sem solavancos nas contas operacionais.</p>
+                        </div>
+                        <div class="card-panel" style="border-top:4px solid var(--danger);">
+                            <h4 style="color:var(--danger); margin-bottom:0.3rem;">O Caso Específico: SAA</h4>
+                            <p style="font-size:0.88rem;">Exige desembolsos mensais muito baixos (apenas juros), mas impõe a maior despesa total acumulada e o maior risco de solvência no final.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SLIDE 4: SÍNTESE E PRÓXIMA PARTE -->
+            <div class="slide">
+                <span class="slide-tag">Fechamento da Parte 9</span>
+                <h2 class="slide-title">Síntese do Laboratório Comparativo</h2>
+                <div class="slide-content">
+                    <div class="card-panel">
+                        <h3 style="color:var(--primary); margin-bottom:0.6rem;">Regras Fundamentais de Seleção:</h3>
+                        <p>✔ Taxa e prazo idênticos geram resultados totalmente diferentes de acordo com a regra de amortização contratada.</p>
+                        <p>✔ A economia do SAC sobre a Price amplia-se exponencialmente quanto maior for o prazo do financiamento.</p>
+                        <p>✔ O administrador precisa cruzar o custo total com a projeção de fluxo de caixa mensal da empresa.</p>
+                    </div>
+                    <div class="highlight-box" style="margin-top:1.2rem; text-align:center;">
+                        <h4 style="color:var(--secondary); font-size:1.15rem;">Próxima Apresentação (10.html):</h4>
+                        <p style="margin-top:0.3rem;">Vamos concluir a Aula 3 com a <strong>Matriz de Decisão Gerencial</strong> e um Estudo de Caso Integrador completo antes da Atividade Prática 3.</p>
+                        <a href="10.html" class="btn-nav" style="display:inline-flex; margin-top:0.8rem; background:var(--secondary); color:#fff; border:none; padding:0.65rem 1.5rem;">
+                            Avançar para Aula 3 • Parte 10 (10.html) &rarr;
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="slide-footer">
+            <div class="nav-controls">
+                <button class="btn-nav" id="btnPrev">← Anterior (↑)</button>
+                <button class="btn-nav" id="btnNext">Próximo (↓) →</button>
+            </div>
+            <div class="progress-indicator" id="slideIndicator">Slide 01 de 04</div>
+            <div>
+                <a href="8.html" class="btn-nav" style="text-decoration:none;">⮌ Voltar à Parte 8</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const slides = document.querySelectorAll('.slide');
+        const totalSlides = slides.length;
+        let currentSlide = 0;
+        const slideIndicator = document.getElementById('slideIndicator');
+        const btnPrev = document.getElementById('btnPrev');
+        const btnNext = document.getElementById('btnNext');
+        const btnFullscreen = document.getElementById('btnFullscreen');
+
+        function updateSlide(index) {
+            slides.forEach((s, idx) => s.classList.toggle('active', idx === index));
+            slideIndicator.textContent = `Slide ${String(index + 1).padStart(2, '0')} de ${String(totalSlides).padStart(2, '0')}`;
+        }
+
+        function nextSlide() {
+            if (currentSlide < totalSlides - 1) {
+                currentSlide++;
+                updateSlide(currentSlide);
+            } else {
+                window.location.href = "10.html";
+            }
+        }
+
+        function prevSlide() {
+            if (currentSlide > 0) {
+                currentSlide--;
+                updateSlide(currentSlide);
+            } else {
+                window.location.href = "8.html";
+            }
+        }
+
+        btnNext.addEventListener('click', nextSlide);
+        btnPrev.addEventListener('click', prevSlide);
+
+        window.addEventListener('keydown', (e) => {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') return;
+            if (e.key === 'ArrowDown' || e.key === 'PageDown' || e.key === 'ArrowRight') {
+                e.preventDefault();
+                nextSlide();
+            } else if (e.key === 'ArrowUp' || e.key === 'PageUp' || e.key === 'ArrowLeft') {
+                e.preventDefault();
+                prevSlide();
+            } else if (e.key === 'f' || e.key === 'F') {
+                toggleFullscreen();
+            }
+        });
+
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(() => {});
+            } else {
+                if (document.exitFullscreen) document.exitFullscreen();
+            }
+        }
+        btnFullscreen.addEventListener('click', toggleFullscreen);
+
+        const fmtBRL = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
+
+        function calcularSimulador9() {
+            const pv = parseFloat(document.getElementById('s9_pv').value) || 0;
+            const n = Math.min(24, Math.max(3, parseInt(document.getElementById('s9_n').value) || 6));
+            const i = (parseFloat(document.getElementById('s9_i').value) || 0) / 100;
+
+            // SAC
+            const amortSAC = pv / n;
+            const pmt1SAC = amortSAC + (pv * i);
+            const pmtNSAC = amortSAC + (amortSAC * i);
+            const jurosSAC = pv * i * (n + 1) / 2;
+            const totalSAC = pv + jurosSAC;
+
+            // Price
+            const pmtPrice = i > 0 ? pv * (i / (1 - Math.pow(1 + i, -n))) : pv / n;
+            const jurosPrice = (pmtPrice * n) - pv;
+            const totalPrice = pv + jurosPrice;
+
+            // Americano
+            const jurosMesSAA = pv * i;
+            const jurosSAA = jurosMesSAA * n;
+            const pmt1SAA = jurosMesSAA;
+            const pmtNSAA = pv + jurosMesSAA;
+            const totalSAA = pv + jurosSAA;
+
+            const tbody = document.getElementById('s9_tbody');
+            tbody.innerHTML = `
+                <tr>
+                    <td style="text-align:left; font-weight:700; color:var(--success);">SAC</td>
+                    <td>${fmtBRL.format(pmt1SAC)}</td>
+                    <td>${fmtBRL.format(pmtNSAC)}</td>
+                    <td style="color:var(--success); font-weight:700;">${fmtBRL.format(jurosSAC)}</td>
+                    <td>${fmtBRL.format(totalSAC)}</td>
+                </tr>
+                <tr>
+                    <td style="text-align:left; font-weight:700; color:var(--primary);">Price</td>
+                    <td>${fmtBRL.format(pmtPrice)}</td>
+                    <td>${fmtBRL.format(pmtPrice)}</td>
+                    <td style="color:var(--primary); font-weight:700;">${fmtBRL.format(jurosPrice)}</td>
+                    <td>${fmtBRL.format(totalPrice)}</td>
+                </tr>
+                <tr>
+                    <td style="text-align:left; font-weight:700; color:var(--danger);">Americano</td>
+                    <td>${fmtBRL.format(pmt1SAA)}</td>
+                    <td>${fmtBRL.format(pmtNSAA)}</td>
+                    <td style="color:var(--danger); font-weight:700;">${fmtBRL.format(jurosSAA)}</td>
+                    <td>${fmtBRL.format(totalSAA)}</td>
+                </tr>
+            `;
+
+            desenharGraficoS9(jurosSAC, jurosPrice, jurosSAA);
+        }
+
+        function desenharGraficoS9(jSAC, jPrice, jSAA) {
+            const svg = document.getElementById('s9_svg_chart');
+            const maxVal = Math.max(jSAA, 1);
+
+            const hSAC = Math.max(12, (jSAC / maxVal) * 55);
+            const hPrice = Math.max(12, (jPrice / maxVal) * 55);
+            const hSAA = Math.max(12, (jSAA / maxVal) * 55);
+
+            svg.innerHTML = `
+                <line x1="20" y1="65" x2="300" y2="65" stroke="#CBD5E1" stroke-width="1.5"/>
+                
+                <!-- Barra SAC -->
+                <rect x="40" y="${65 - hSAC}" width="50" height="${hSAC}" rx="3" fill="#059669"/>
+                <text x="65" y="${60 - hSAC}" font-size="8" font-weight="bold" fill="#059669" text-anchor="middle">${fmtBRL.format(jSAC)}</text>
+                <text x="65" y="75" font-size="8" fill="#059669" font-weight="bold" text-anchor="middle">SAC</text>
+
+                <!-- Barra Price -->
+                <rect x="135" y="${65 - hPrice}" width="50" height="${hPrice}" rx="3" fill="#002060"/>
+                <text x="160" y="${60 - hPrice}" font-size="8" font-weight="bold" fill="#002060" text-anchor="middle">${fmtBRL.format(jPrice)}</text>
+                <text x="160" y="75" font-size="8" fill="#002060" font-weight="bold" text-anchor="middle">Price</text>
+
+                <!-- Barra SAA -->
+                <rect x="230" y="${65 - hSAA}" width="50" height="${hSAA}" rx="3" fill="#DC2626"/>
+                <text x="255" y="${60 - hSAA}" font-size="8" font-weight="bold" fill="#DC2626" text-anchor="middle">${fmtBRL.format(jSAA)}</text>
+                <text x="255" y="75" font-size="8" fill="#DC2626" font-weight="bold" text-anchor="middle">Americano</text>
+            `;
+        }
+
+        calcularSimulador9();
+    </script>
+</body>
+</html>
